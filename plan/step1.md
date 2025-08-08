@@ -1,13 +1,9 @@
-Here's the blueprint for the minimal setup of the OrchestraOS MLIR Compiler, as requested:
-
-```markdown
 # OrchestraOS MLIR Compiler: Smallest Sensible Success (Compilation Blueprint)
 
 This document provides a concrete, step-by-step guide to setting up the basic MLIR dialect development environment and successfully compiling the OrchestraIR dialect with a minimal operation. The goal is to validate the TableGen generation and C++ compilation process for a custom dialect, establishing the foundation for all subsequent OrchestraOS compiler development.
 
 The OrchestraIR dialect is the core proprietary technology of the OrchestraOS compiler, explicitly materializing the decisions of a high-level, topology-aware scheduling pass into the Intermediate Representation (IR). MLIR dialects are defined declaratively using TableGen (`.td` files), which `mlir-tblgen` then uses to generate C++ classes and helper functions. This generated code, along with custom C++ implementation (e.g., for dialect initialization or verifiers), is then compiled, typically managed by CMake.
 
-As prerequisites you have to install LLVM (and thus `mlir-tblgen`) (e.g., via Homebrew), providing the necessary MLIR tools.
 
 ## Mini-Step Guide: Compiling the OrchestraIR Dialect
 
@@ -242,4 +238,3 @@ make                # Compile the project
 **If `make` successfully completes, this is your first concrete success.** You will observe `mlir-tblgen` being invoked in the background to generate C++ code from your `.td` file, and this code will then be compiled alongside `OrchestraDialect.cpp`. The output will be a static library (or shared library, depending on CMake configuration) containing your `OrchestraDialect` and the `orchestra.yield` operation.
 
 This step confirms that your local MLIR development environment is correctly set up and that you have a basic understanding of dialect definition and the build process. From this point, you can progressively define more complex operations like `orchestra.task` and `orchestra.commit` and implement their associated C++ logic, with the fundamental compilation process remaining stable.
-```
