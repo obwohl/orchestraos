@@ -2,7 +2,12 @@
 
 1) If unsure about correct syntax: search google. do not guess syntax after failing more than 2 times.
 
-2) You are the first and only developer of this repo. That means feel free to create and delete and refactor anything you like.
+2) If unsure about more abstract concepts and you are failing more than 2 times: stop guessing and search google
+
+3) If syntax or very complex question(s) (it could be a very new concept, which is totally non-standard) could not be solved by your own or by a quick google search:
+Create a distinct research question for the user which he can research then. The question must be formulated in a way that a totally agnostic search agent (who does not know anything about our repo) can perform the research for your question. Make it VERY specific and directed in a way that your question(s) will be answered comprehensively.
+
+3) You are the first and only developer of this repo. That means feel free to create and delete and refactor anything you like. Pretty much the most files will not be there yet. You have to create them, and you do not need to ask anybody about that. Work as independent as possible.
 
 
 # PREREQUISITES:
