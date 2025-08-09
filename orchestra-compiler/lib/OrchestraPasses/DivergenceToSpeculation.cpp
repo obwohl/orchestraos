@@ -3,6 +3,7 @@
 #include "llvm/ADT/StringRef.h"
 
 #include "Orchestra/OrchestraDialect.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 
 namespace {
 struct DivergenceToSpeculation
@@ -12,10 +13,11 @@ public:
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(DivergenceToSpeculation)
 
   void runOnOperation() override {
-    // The following line is a test to ensure that the pass can see the
-    // definitions of the Orchestra dialect's operations.
-    orchestra::YieldOp *myOp = nullptr;
-    (void)myOp; // Avoid unused variable warning.
+    getOperation()->walk([&](mlir::Operation *op) {
+      if (auto ifOp = mlir::dyn_cast<mlir::scf::IfOp>(op)) {
+        // The logic to transform the scf.if operation will be added here.
+      }
+    });
   }
 
   llvm::StringRef getArgument() const final {

@@ -366,4 +366,46 @@ lib/OrchestraPasses/CMakeFiles/OrchestraPasses.dir/DivergenceToSpeculation.cpp.o
  /usr/lib/llvm-18/include/mlir/Interfaces/DataLayoutTypeInterface.h.inc \
  /usr/lib/llvm-18/include/mlir/Interfaces/SideEffectInterfaces.h \
  /usr/lib/llvm-18/include/mlir/Interfaces/SideEffectInterfaces.h.inc \
- /usr/lib/llvm-18/include/mlir/IR/BuiltinOps.h.inc
+ /usr/lib/llvm-18/include/mlir/IR/BuiltinOps.h.inc \
+ /app/orchestra-compiler/include/Orchestra/OrchestraDialect.h \
+ /app/build/include/Orchestra/OrchestraOpsDialect.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/SCF/IR/SCF.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/Utils/Utils.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/Arith.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/CastInterfaces.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/CastInterfaces.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/InferIntRangeInterface.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/InferIntRangeInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/InferTypeOpInterface.h \
+ /usr/lib/llvm-18/include/mlir/IR/Builders.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/InferTypeOpInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/VectorInterfaces.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/VectorInterfaces.h.inc \
+ /usr/lib/llvm-18/include/llvm/ADT/StringExtras.h \
+ /usr/lib/llvm-18/include/llvm/ADT/APSInt.h \
+ /usr/lib/llvm-18/include/llvm/ADT/SmallString.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/ArithOpsDialect.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/ArithOpsEnums.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/ArithOpsAttributes.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/ArithOpsInterfaces.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/Arith/IR/ArithOps.h.inc \
+ /usr/lib/llvm-18/include/mlir/IR/Matchers.h \
+ /usr/lib/llvm-18/include/mlir/IR/PatternMatch.h \
+ /usr/lib/llvm-18/include/mlir/IR/PDLPatternMatch.h.inc \
+ /usr/lib/llvm-18/include/mlir/Config/mlir-config.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/SCF/IR/DeviceMappingInterface.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/SCF/IR/DeviceMappingAttrInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ControlFlowInterfaces.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ControlFlowInterfaces.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/DestinationStyleOpInterface.h \
+ /usr/lib/llvm-18/include/mlir/IR/IRMapping.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/DestinationStyleOpInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/LoopLikeInterface.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/LoopLikeInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ParallelCombiningOpInterface.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ParallelCombiningOpInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ViewLikeInterface.h \
+ /usr/lib/llvm-18/include/mlir/Dialect/Utils/StaticValueUtils.h \
+ /usr/lib/llvm-18/include/mlir/Interfaces/ViewLikeInterface.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/SCF/IR/SCFOpsDialect.h.inc \
+ /usr/lib/llvm-18/include/mlir/Dialect/SCF/IR/SCFOps.h.inc

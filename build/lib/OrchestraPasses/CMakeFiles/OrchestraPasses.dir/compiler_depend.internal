@@ -3,6 +3,8 @@
 
 lib/OrchestraPasses/CMakeFiles/OrchestraPasses.dir/DivergenceToSpeculation.cpp.o
  /app/orchestra-compiler/lib/OrchestraPasses/DivergenceToSpeculation.cpp
+ /app/build/include/Orchestra/OrchestraOpsDialect.h.inc
+ /app/orchestra-compiler/include/Orchestra/OrchestraDialect.h
  /usr/include/alloca.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h
