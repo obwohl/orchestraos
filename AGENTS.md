@@ -1,3 +1,5 @@
+before you start with anything else:
+
 First:
 sudo apt-get update
 
