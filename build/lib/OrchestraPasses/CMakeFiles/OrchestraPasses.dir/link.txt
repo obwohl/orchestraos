@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc libOrchestraPasses.a CMakeFiles/OrchestraPasses.dir/DivergenceToSpeculation.cpp.o
+/usr/bin/ranlib -D libOrchestraPasses.a

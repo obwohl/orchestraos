@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc libOrchestra.a CMakeFiles/obj.Orchestra.dir/OrchestraDialect.cpp.o
+/usr/bin/ranlib -D libOrchestra.a
