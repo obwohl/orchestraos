@@ -1,1 +1,9 @@
-As prerequisite you have to install LLVM, libmlir (e.g., via Homebrew, apt-get or whatever you prefer) - preferable in the dev version (if applicable), providing the necessary MLIR tools. DO NOT GUESS what the latest version is, but rather install it the way such that the latest stable version is installed.
+First:
+sudo apt-get update
+
+
+then install
+
+1. libmlir-18-dev
+2. llvm-18-dev
+3. mlir-18-tools
