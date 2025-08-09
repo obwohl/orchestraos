@@ -1,0 +1,1 @@
+As prerequisite you have to install LLVM (and thus `mlir-tblgen`) (e.g., via Homebrew, apt-get or whatever you prefer) - preferable in the most comprehensive variant , like the dev version (if applicable), providing the necessary MLIR tools. DO NOT GUESS what the latest version of LLVM is, but rather install it the way such that the latest stable version is installed.
