@@ -11,7 +11,11 @@ The repository contains the foundational elements for an MLIR-based compiler for
 
 *   **Builds Cleanly:** The project successfully compiles and links, producing the dialect and passes libraries (`libOrchestra.a`, `libOrchestraPasses.a`).
 
+**What has been done:**
+
+*   **Created `orchestra-opt` tool:** A basic `orchestra-opt` executable has been created in `orchestra-compiler/tools/orchestra-opt/` that can parse MLIR with `builtin`, `func`, and `orchestra` dialects. It successfully compiles and runs.
+
 **What is missing:**
 
-*   There is no main executable tool (like `orchestra-opt`) to parse MLIR files and run passes.
 *   The testing infrastructure is not set up.
+*   The `orchestra-opt` tool does not yet register custom Orchestra passes.

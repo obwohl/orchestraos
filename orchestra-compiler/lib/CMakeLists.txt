@@ -1,1 +1,2 @@
 add_subdirectory(Orchestra)
+add_subdirectory(OrchestraPasses)
