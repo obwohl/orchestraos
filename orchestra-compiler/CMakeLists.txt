@@ -39,6 +39,5 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 # This is the core of the solution. Process the 'include' directory first
 # to define the TableGen targets. Then, process the 'lib' directory, which
 # can now safely depend on the targets from 'include'.
-add_subdirectory(include/Orchestra)
-add_subdirectory(lib/Orchestra)
-add_subdirectory(lib/OrchestraPasses)
+add_subdirectory(include)
+add_subdirectory(lib)
