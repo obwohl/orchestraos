@@ -10,6 +10,7 @@ The repository contains the foundational elements for an MLIR-based compiler for
 **What it factually does:**
 
 *   **Builds Cleanly:** The project successfully compiles and links, producing the dialect and passes libraries (`libOrchestra.a`, `libOrchestraPasses.a`).
+*   **DummyPass Registered:** The `dummy-pass` is now registered and available to `orchestra-opt`.
 
 **What has been done:**
 
@@ -18,4 +19,4 @@ The repository contains the foundational elements for an MLIR-based compiler for
 **What is missing:**
 
 *   The testing infrastructure is not set up.
-*   The `orchestra-opt` tool does not yet register custom Orchestra passes.
+*   The `orchestra.dummy_op` (and potentially other custom operations) is not being registered by the Orchestra dialect, preventing custom passes from operating on them. This is a blocking issue.

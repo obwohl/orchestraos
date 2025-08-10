@@ -4,6 +4,7 @@ target_include_directories(orchestra-opt PUBLIC
   ${MLIR_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/lib # Add this line
   ${PROJECT_BINARY_DIR}/include
 )
 

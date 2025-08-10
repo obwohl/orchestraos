@@ -39,4 +39,13 @@ def YieldOp : Orchestra_Op<"yield", [Terminator]> {
   let arguments = (ins Variadic<AnyType>:$operands);
 }
 
+def Orchestra_DummyOp : Orchestra_Op<"dummy_op"> {
+  let summary = "A dummy operation for testing purposes.";
+  let description = [{
+    This is a dummy operation used to test the DummyPass.
+  }];
+  let arguments = (ins);
+  let results = (outs);
+}
+
 #endif // ORCHESTRA_OPS_TD

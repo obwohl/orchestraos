@@ -13,13 +13,19 @@
 #include "llvm/Support/ToolOutputFile.h"
 
 #include "Orchestra/OrchestraDialect.h"
+#include "OrchestraPasses/OrchestraPasses.h"
 
 int main(int argc, char **argv) {
+  llvm::InitLLVM y(argc, argv);
 
   mlir::DialectRegistry registry;
   registry.insert<mlir::func::FuncDialect>();
   registry.insert<orchestra::OrchestraDialect>();
 
+  // Register all MLIR passes, including our custom ones.
+  registerOrchestraPasses();
+
   return mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "Orchestra optimizer\\n", registry));
+      mlir::MlirOptMain(argc, argv, "Orchestra optimizer\n", registry));
 }
+
