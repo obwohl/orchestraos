@@ -1,4 +1,6 @@
-func.func @test() {
-  orchestra.my_op
-  orchestra.yield
+module {
+  func.func @main() {
+    "orchestra.dummy_op"() : () -> ()
+    func.return
+  }
 }
