@@ -2,6 +2,7 @@
 #define ORCHESTRA_OPS_TD
 
 include "mlir/IR/OpBase.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
 // Define the dialect itself. This provides the C++ namespace, summary, etc.
 def Orchestra_Dialect : Dialect {
@@ -26,6 +27,16 @@ def MyOp : Orchestra_Op<"my_op"> {
 
   let arguments = (ins);
   let results = (outs);
+}
+
+def YieldOp : Orchestra_Op<"yield", [Terminator]> {
+  let summary = "Terminator for regions in OrchestraIR operations.";
+  let description = [{
+    A terminator operation for regions within `orchestra.schedule` and
+    `orchestra.task`. It yields values from the region to the parent op.
+  }];
+
+  let arguments = (ins Variadic<AnyType>:$operands);
 }
 
 #endif // ORCHESTRA_OPS_TD
