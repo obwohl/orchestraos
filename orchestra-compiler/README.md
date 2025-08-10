@@ -6,7 +6,7 @@ This directory contains the core components of the OrchestraOS compiler, built u
 
 The Orchestra compiler leverages MLIR's extensible, multi-level dialect system to represent programs at various levels of abstraction. It progressively lowers high-level representations through a series of custom dialects and optimization passes, ultimately targeting specific hardware backends.
 
-For a comprehensive blueprint of the compiler's architectural vision, the OrchestraIR dialect, and the planned optimization passes, please refer to: [MLIR Implementation Plan Modernization](../../docs/orchestra%20-%20PRIO%20-%20tech%20-%20%20MLIR%20Implementation%20Plan%20Modernization.md)
+For a comprehensive blueprint of the compiler's architectural vision, the OrchestraIR dialect, and the planned optimization passes, please refer to: [MLIR Implementation Plan Modernization](../../docs/architecture/mlir-implementation-plan.md)
 
 ## Build Instructions
 
@@ -18,7 +18,7 @@ cmake -G "Unix Makefiles" .. -DMLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir # Adjust
 cmake --build .
 ```
 
-For detailed instructions on setting up the CMake build system for out-of-tree MLIR dialects, including common pitfalls and their solutions, please consult: [Correcting MLIR Dialect CMake Build](../../docs/orchestra%20-%20PRIO%20-%20tech%20-%20Correcting%20MLIR%20Dialect%20CMake%20Build.md)
+For detailed instructions on setting up the CMake build system for out-of-tree MLIR dialects, including common pitfalls and their solutions, please consult: [Correcting MLIR Dialect CMake Build](../../docs/guides/cmake-build-guide.md)
 
 ### Important Build Tip: CMake Structure for MLIR Dialects
 

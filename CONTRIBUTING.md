@@ -22,7 +22,7 @@ Every significant directory or component should contain a `README.md` file. Thes
 
 *   **Purpose:** Clearly state the purpose and role of the directory/component within the larger OrchestraOS project.
 *   **Key Files:** List and briefly describe the most important files within the directory.
-*   **Build/Test Instructions:** If applicable, provide concise instructions for building and testing the component in isolation or as part of the larger system. Link to more detailed build documentation (e.g., `docs/orchestra - PRIO - tech - Correcting MLIR Dialect CMake Build.md`).
+*   **Build/Test Instructions:** If applicable, provide concise instructions for building and testing the component in isolation or as part of the larger system. Link to more detailed build documentation (e.g., `docs/guides/cmake-build-guide.md`).
 *   **Common Pitfalls & Hot Tips:** Include a dedicated section for common issues, workarounds, and hard-won knowledge specific to this component. This is where subtle MLIR interactions, unexpected build behaviors, or non-obvious API usages should be documented.
 
 ### Code Comment Guidelines
