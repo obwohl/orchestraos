@@ -1,24 +1,93 @@
 #ifndef ORCHESTRA_OPS_TD
 #define ORCHESTRA_OPS_TD
 
-include "mlir/IR/OpBase.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/IR/OpBase.td";
+include "mlir/IR/SymbolInterfaces.td";
+include "mlir/Interfaces/SideEffectInterfaces.td";
 
-// Define the dialect itself. This provides the C++ namespace, summary, etc.
+// Define the dialect itself.
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
   let cppNamespace = "::orchestra";
-  let summary = "A dialect for a hypothetical orchestra compiler.";
+  let summary = "The Orchestra dialect, for orchestrating computation.";
   let description = [{
-    The Orchestra dialect is for a hypothetical orchestra compiler.
+    The Orchestra dialect is a mid-level dialect designed to serve as the
+    crucial bridge between a purely logical, framework-agnostic representation
+    of a computation and the concrete, hardware-specific representations
+    required for final code generation.
   }];
 }
 
-// A base class for all operations in this dialect.
+// Base class for Orchestra operations.
 class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
     Op<Orchestra_Dialect, mnemonic, traits>;
 
-def YieldOp : Orchestra_Op<"yield", [Terminator]> {
+//===----------------------------------------------------------------------===//
+// Orchestra Operations
+//===----------------------------------------------------------------------===//
+
+def Orchestra_ScheduleOp : Orchestra_Op<"schedule"> {
+  let summary = "Container for a physically scheduled DAG of tasks.";
+  let description = [{
+    This operation acts as a container for a physically scheduled subgraph.
+    It contains a single region holding a Directed Acyclic Graph (DAG) of
+    orchestra.task operations, where the edges of the DAG are represented
+    by the SSA use-def chain.
+  }];
+
+  let results = (outs Variadic<AnyType>:$results);
+  let regions = (region SizedRegion<1>:$body);
+  let hasCanonicalizer = 1;
+}
+
+def Orchestra_TaskOp : Orchestra_Op<"task"> {
+  let summary = "An asynchronous unit of computation assigned to a resource.";
+  let description = [{
+    This operation encapsulates an atomic unit of computation assigned to a
+    specific hardware resource. Its target attribute is defined as a
+    DictionaryAttr, providing a flexible and extensible mechanism for
+    specifying fine-grained placement constraints.
+  }];
+
+  let arguments = (ins Variadic<AnyType>:$operands);
+  let results = (outs Variadic<AnyType>:$results);
+
+  let attributes = (ins DictionaryAttr:$target);
+  let regions = (region SizedRegion<1>:$body);
+}
+
+def Orchestra_TransferOp : Orchestra_Op<"transfer"> {
+  let summary = "Explicitly represents data movement between memory spaces.";
+  let description = [{
+    This operation makes data movement between different logical memory spaces
+    an explicit, first-class citizen of the IR. The from and to locations are
+    represented by SymbolRefAttr, which will be resolved to physical memory
+    spaces during a later lowering stage.
+  }];
+
+  let arguments = (ins AnyShaped:$source);
+  let results = (outs SameAs<"$source">:$result);
+
+  let attributes = (ins SymbolRefAttr:$from, SymbolRefAttr:$to);
+}
+
+def Orchestra_CommitOp : Orchestra_Op<"commit"> {
+  let summary = "Selects one of two SSA values based on a boolean condition.";
+  let description = [{
+    This operation is essential for the speculative execution pattern.
+    It selects one of two sets of SSA values based on a boolean condition,
+    materializing the result of the speculation.
+  }];
+
+  let arguments = (ins I1:$condition,
+                       Variadic<AnyType>:$true_values,
+                       Variadic<AnyType>:$false_values);
+  let results = (outs Variadic<AnyType>:$results);
+
+  let hasVerifier = 1;
+}
+
+def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
   let summary = "Terminator for regions in OrchestraIR operations.";
   let description = [{
     A terminator operation for regions within `orchestra.schedule` and

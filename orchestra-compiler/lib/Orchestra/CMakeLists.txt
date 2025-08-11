@@ -1,8 +1,9 @@
+# This file's responsibility is to compile the C++ sources into a library.
 add_mlir_dialect_library(Orchestra
-  # List of C++ source files to compile.
   OrchestraDialect.cpp
 
   # CRITICAL: This establishes the build-time dependency.
+  # It ensures that the .inc files are generated before OrchestraDialect.cpp is compiled.
   DEPENDS
   MLIROrchestraOpsIncGen
 

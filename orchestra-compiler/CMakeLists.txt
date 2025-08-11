@@ -35,7 +35,6 @@ include_directories(${LLVM_INCLUDE_DIRS})
 # directory (for generated headers) to the path.
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_BINARY_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/lib/OrchestraPasses)
 
 # This is the core of the solution. Process the 'include' directory first
 # to define the TableGen targets. Then, process the 'lib' directory, which
