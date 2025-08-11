@@ -22,7 +22,7 @@ list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 
 # Include the necessary MLIR and LLVM CMake modules.
-include(MyAddMLIR.cmake)
+include(AddMLIR)
 include(AddLLVM)
 include(TableGen)
 include(HandleLLVMOptions)
@@ -39,6 +39,6 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 # This is the core of the solution. Process the 'include' directory first
 # to define the TableGen targets. Then, process the 'lib' directory, which
 # can now safely depend on the targets from 'include'.
-add_subdirectory(include)
-add_subdirectory(lib)
-add_subdirectory(tools)
+add_subdirectory(include/Orchestra)
+add_subdirectory(lib/Orchestra)
+add_subdirectory(orchestra-opt)

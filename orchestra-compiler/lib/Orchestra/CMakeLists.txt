@@ -14,5 +14,3 @@ add_mlir_dialect_library(Orchestra
   MLIRSupport
   MLIRParser
 )
-
-target_include_directories(Orchestra PUBLIC ${CMAKE_BINARY_DIR}/include)

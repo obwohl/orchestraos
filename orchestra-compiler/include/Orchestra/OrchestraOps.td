@@ -16,6 +16,7 @@ def Orchestra_Dialect : Dialect {
     of a computation and the concrete, hardware-specific representations
     required for final code generation.
   }];
+  let usePropertiesForAttributes = 0; // Temporarily disable properties for MLIR 18.1 compatibility
 }
 
 // Base class for Orchestra operations.
