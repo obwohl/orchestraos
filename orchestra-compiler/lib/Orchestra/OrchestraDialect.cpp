@@ -1,4 +1,5 @@
 #include "Orchestra/OrchestraDialect.h"
+#include "Orchestra/OrchestraOps.h.inc"
 
 // Include the header for the operation definitions.
 // While not strictly required by this file, it's good practice.
@@ -12,7 +13,7 @@ using namespace mlir;
 using namespace orchestra;
 
 // CRITICAL: This includes the TableGen-generated implementation of the
-// dialect class, such as the `initialize` method shell.
+// dialect class, suchs as the `initialize` method shell.
 #include "Orchestra/OrchestraOpsDialect.cpp.inc"
 
 // Dialect initialization hook.

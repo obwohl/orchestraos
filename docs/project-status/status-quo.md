@@ -30,5 +30,8 @@ Despite successful compilation and verification of `orchestra.dummy_op` definiti
 *   Verifying the standard MLIR operation registration mechanism in `OrchestraDialect.cpp`.
 *   Attempting to explicitly register `orchestra.dummy_op` in `OrchestraDialect.cpp` (which led to compilation errors, indicating the standard mechanism is indeed the intended one).
 *   Performing a clean build of the entire project.
+*   Adding verbose logging to `OrchestraDialect::initialize()` and `orchestra-opt/main.cpp`, which confirmed both are being called.
+*   Comparing the project's dialect and operation registration setup with a minimal working example of an out-of-tree MLIR dialect (`jmgorius/mlir-standalone-template`).
+*   Applying the identified difference (including `OrchestraOps.h.inc` at the top of `OrchestraDialect.cpp`) to ensure class visibility.
 
 This indicates a deeper, unresolved issue with the dialect's operation registration or `orchestra-opt`'s dialect loading, which remains a blocking issue for further development of custom passes. The testing infrastructure is still not set up.
