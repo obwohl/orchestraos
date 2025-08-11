@@ -1,57 +1,45 @@
-# Current Build Status and Troubleshooting Guide
+# Current Project Status: Build Fixed, Runtime Issue Identified
 
 Last updated: 2025-08-11
 
 ## 1. Overview
 
-This document provides a summary of the current build status of the `orchestra-compiler` project and a guide for troubleshooting the issues that have been encountered.
+This document provides a summary of the current status of the `orchestra-compiler` project.
 
-**The project is currently unbuildable.** The build now fails with persistent C++ compilation errors related to MLIR 18.1's internal types and TableGen-generated code, despite correct project structure and CMake configuration.
+**The project is now buildable.** A comprehensive effort has been undertaken to refactor and correct the project's build system and source files to align with canonical MLIR out-of-tree dialect practices.
 
-This guide will walk through the debugging process that has been performed so far and provide a clear path to resolving the remaining build issues.
+However, the project is **not yet functional**. While the `orchestra-opt` tool compiles and links successfully, it fails at runtime with an "unregistered operation" error. This document details the fixes applied and the analysis of the new blocking issue.
 
-## 2. Project Structure and CMake Configuration
+## 2. Build System and Source Code Fixes
 
-The fundamental issue of incorrect project structure and CMake configuration has been resolved. The project now adheres to the canonical MLIR out-of-tree project structure, as detailed in `cmake-build-guide.md`.
+The initial "unbuildable" state of the project has been resolved. The following actions were taken:
 
-## 3. Debugging Log and Resolved Issues
+*   **CMake Refactoring**: All `CMakeLists.txt` files (root, `include/`, `lib/`, `orchestra-opt/`) were overwritten with correct, canonical versions based on official MLIR examples and best practices. This resolved all CMake configuration and dependency issues.
+*   **C++ and TableGen Correction**: The C++ source files (`.h`, `.cpp`) and the TableGen definition file (`.td`) for the `Orchestra` dialect were corrected to ensure proper dialect and operation definition and registration.
+*   **MLIR 18.1 Compatibility**: A known issue with MLIR 18.1's new "Properties" system was proactively addressed by setting `usePropertiesForAttributes = 0;` in the dialect's TableGen definition, which resolved the initial C++ compilation errors.
+*   **Linker Debugging**: Several linker issues were resolved by adding the necessary MLIR libraries (`MLIRMlirOptMain`) to the executable's link list.
 
-The following is a log of the issues that have been encountered and resolved so far.
+## 3. Current Blocking Issue: "Unregistered Operation" Runtime Error
 
-### 3.1. TableGen Syntax Errors
+Despite the successful build, running the `orchestra-opt` tool on a test file containing a custom dialect operation fails with the following error:
 
-The initial build failed due to syntax errors in `include/Orchestra/OrchestraOps.td`. These were corrected.
+```
+error: unregistered operation 'orchestra.my_op' found in dialect ('orchestra') that does not allow unknown operations
+```
 
-### 3.2. Missing `BytecodeOpInterface` Header
+### 3.1. Diagnostic Analysis
 
-After fixing the TableGen errors, the build failed with errors indicating that `mlir::BytecodeOpInterface` was not defined. This was resolved by adding `#include "mlir/Bytecode/BytecodeOpInterface.h"` to `lib/Orchestra/OrchestraDialect.cpp`.
+This error indicates that while the `Orchestra` dialect itself is being loaded, its custom operations (like `my_op`) are not being registered with the MLIR context. An extensive investigation has traced this to a subtle and persistent linker issue.
 
-### 3.3. Structural and CMake-related "Type Not Found" Errors
+Using the `nm` utility, we have definitively confirmed that the C++ symbols for the operation classes (e.g., `orchestra::MyOp`) are being stripped from the final `orchestra-opt` executable during the link stage. This happens because the linker's static library optimization (elision) incorrectly determines that the operation's code is "unused," as it is only referenced via static initializers.
 
-Previous errors related to incorrect project structure and CMake configuration, such as `‘CommitOpGenericAdaptorBase’ does not name a type` and issues with `GET_OP_LIST` scope, have been resolved by restructuring the project and updating CMake files to follow canonical MLIR practices.
+The standard solution for this problem, linking the dialect library with the `--whole-archive` flag, has been implemented but **did not solve the issue**. The symbols are still being stripped.
 
-### 3.4. Persistent MLIR 18.1 Compilation Errors
+## 4. Next Steps
 
-Despite resolving structural and CMake issues, the build now consistently fails with specific C++ compilation errors related to MLIR 18.1. These include:
-*   **Incomplete type `mlir::EmptyProperties`**: This error occurs even when `usePropertiesForAttributes = 0` is explicitly set in the TableGen dialect definition, suggesting a deeper issue with how MLIR 18.1's TableGen-generated code interacts with the C++ compiler regarding properties.
-*   **`expected template-name before ‘<’ token` for `mlir::Op`**: This indicates a problem with the `mlir::Op` template instantiation, possibly due to an underlying issue with type definitions or how MLIR's core components are being resolved.
+The project is currently blocked on this advanced linker issue. The immediate next step is to conduct deep research to understand why the GNU linker (`ld`) is ignoring the `--whole-archive` flag in this specific context. The research should investigate:
+*   Potential negative interactions between CMake, LLVM/MLIR's build scripts, and the GNU linker.
+*   Quirks in the specific version of the toolchain being used.
+*   Alternative methods or linker flags to more forcefully prevent static library symbol stripping.
 
-## 4. Path to Resolution
-
-The project's structure and CMake configuration now align with canonical MLIR practices. The path to fixing the build now involves investigating and resolving the persistent MLIR 18.1 specific compilation errors.
-
-## 5. Current Blocking Issues
-
-The project is currently blocked on the following issues:
-
-*   **MLIR 18.1 `mlir::EmptyProperties` incomplete type error**: This prevents successful compilation of the dialect's C++ implementation.
-*   **MLIR 18.1 `mlir::Op` template instantiation errors**: These errors indicate a fundamental problem with how operations are being defined or recognized by the compiler in this MLIR version.
-
-## 6. Next Steps
-
-The next steps are to investigate the specific MLIR 18.1 compilation errors. This may involve:
-
-1.  Consulting MLIR 18.1 release notes and documentation for known issues or specific requirements related to properties and operation definitions.
-2.  Searching MLIR community forums or bug trackers for similar issues.
-3.  Attempting to find a known working example of an out-of-tree MLIR dialect that successfully compiles with MLIR 18.1 to compare configurations and code.
-4.  Potentially simplifying the dialect's `.td` file further or experimenting with different MLIR core includes to isolate the exact cause of the `EmptyProperties` and `mlir::Op` template errors.
+Once this linker issue is understood and resolved, the project should become fully functional.
