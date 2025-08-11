@@ -1,0 +1,18 @@
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
+--- !FileInfo:
+  filepath: "/app/orchestra-compiler/include/Orchestra/OrchestraOps.td"
+  includes: "/app/orchestra-compiler/include/Orchestra;/usr/lib/llvm-18/include;/usr/lib/llvm-18/include;/app/orchestra-compiler/include;/app/build/include;/app/orchestra-compiler/lib/OrchestraPasses"
