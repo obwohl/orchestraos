@@ -7,7 +7,7 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 // Define the dialect itself. This provides the C++ namespace, summary, etc.
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
-  let cppNamespace = "::orchestra";
+  let cppNamespace = "orchestra";
   let summary = "A dialect for a hypothetical orchestra compiler.";
   let description = [{
     The Orchestra dialect is for a hypothetical orchestra compiler.

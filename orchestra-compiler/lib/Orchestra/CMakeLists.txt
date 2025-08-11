@@ -1,15 +1,15 @@
-add_library(Orchestra
+add_mlir_dialect_library(Orchestra
+  # List of C++ source files to compile.
   OrchestraDialect.cpp
-  "${PROJECT_BINARY_DIR}/include/Orchestra/OrchestraOps.cpp.inc"
-)
 
-set_target_properties(Orchestra PROPERTIES LINK_WHOLE_ARCHIVE ON)
+  # CRITICAL: This establishes the build-time dependency.
+  DEPENDS
+  MLIROrchestraOpsIncGen
 
-target_link_libraries(Orchestra
+  # Establish link-time dependencies.
+  LINK_LIBS
   PUBLIC
   MLIRIR
   MLIRSupport
   MLIRParser
 )
-
-add_dependencies(Orchestra MLIROrchestraOpsIncGen)
