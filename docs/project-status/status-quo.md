@@ -1,38 +1,55 @@
 # Project Status
 
-Last updated: 2025-08-10
+Last updated: 2025-08-11
 
-## What's Working
+## High-Level Summary
 
-*   The project now compiles successfully after fixing an issue with the `GET_OP_LIST` macro in `OrchestraDialect.cpp`.
+The `orchestra-compiler` project is currently **unbuildable**. The primary blocker is a series of cascading C++ compilation errors in the `Orchestra` dialect library (`lib/Orchestra`). These errors stem from a non-standard and problematic interaction between the custom CMake build scripts and the MLIR TableGen code generation process.
 
-## What's Not Working
+The core issue is that the generated C++ header files for the dialect's operations do not correctly separate declarations from definitions, leading to circular dependencies and "type not found" errors that are extremely difficult to resolve by modifying the C++ source code alone.
 
-*   **Operation Registration:** Despite a successful build, the operations of the `Orchestra` dialect are not being correctly registered. The `orchestra-opt` tool fails with an `unregistered operation` error when parsing MLIR that contains orchestra operations.
+## Detailed Build Failure Analysis
 
-## Investigation Summary
+The process of attempting to build the project revealed the following sequence of issues:
 
-A deep investigation into the registration issue was performed. Here are the key findings:
+1.  **TableGen Syntax Errors:** The initial build failed due to several syntax errors in `include/Orchestra/OrchestraOps.td`. These were corrected.
 
-1.  **Dialect Initialization is Called:** Debug prints have confirmed that the `OrchestraDialect::initialize()` method, which is responsible for registering the operations, is being called when `orchestra-opt` starts.
+2.  **Missing `BytecodeOpInterface` Header:** After fixing the TableGen errors, the build failed with errors indicating that `mlir::BytecodeOpInterface` was not defined. This was resolved by adding `#include "mlir/Bytecode/BytecodeOpInterface.h"` to `lib/Orchestra/OrchestraDialect.cpp`.
 
-2.  **`addOperations` Fails Silently:** The `addOperations<...>()` call within the `initialize()` method is the point of failure. While the code compiles, it does not seem to register the operations with the dialect.
+3.  **Persistent "Type Not Found" Errors:** The final and most persistent error is `‘CommitOpGenericAdaptorBase’ does not name a type`. This error, and many others like it, occurs during the compilation of `lib/Orchestra/OrchestraDialect.cpp`.
 
-3.  **Compiler Errors Point to Declaration Issues:** Attempts to use the `.cpp.inc` file for `GET_OP_LIST` (a common pattern) fail with a "not a member of namespace" error. This indicates that the C++ classes for the operations are not being correctly declared or found by the compiler, despite the include paths and file structures appearing correct.
+## Investigation and Failed Attempts
 
-4.  **Multiple Fixes Attempted:** Several standard solutions for this type of issue in MLIR were attempted without success:
-    *   Correcting the `cppNamespace` in the TableGen file to use a global qualifier (`::orchestra`).
-    *   Verifying and correcting the include order of generated files.
-    *   Simplifying the dialect to a single, trivial operation to rule out issues with specific op definitions.
+Extensive efforts were made to resolve the compilation errors by restructuring `lib/Orchestra/OrchestraDialect.cpp`. The following standard MLIR patterns were attempted, and all of them failed:
+
+*   **Standard Include Order:** Arranging the file to first include dialect and op headers, then the generated `...Dialect.cpp.inc` file, and finally the op definitions via `#define GET_OP_CLASSES` and `#include "...Ops.cpp.inc"`.
+*   **Manual `initialize()` function:** Several variations of a manually implemented `OrchestraDialect::initialize()` function were tried, using different combinations of `GET_OP_LIST` and includes of `.h.inc` and `.cpp.inc` files.
+*   **Pre-emptive Declaration:** Using `#define GET_OP_CLASSES` before including `OrchestraOps.h` to force the inclusion of the class declarations.
+
+All of these attempts failed, which strongly indicates that the problem is not in the C++ source file's structure, but in the generated files themselves.
+
+## Root Cause Analysis
+
+The root cause is the custom CMake function `add_mlir_dialect` in `MyAddMLIR.cmake`. It generates the TableGen files in a way that is inconsistent with modern MLIR standards. Specifically:
+
+```cmake
+function(add_mlir_dialect dialect dialect_namespace)
+  set(LLVM_TARGET_DEFINITIONS ${dialect}.td)
+  mlir_tablegen(${dialect}.h.inc -gen-op-decls)
+  mlir_tablegen(${dialect}.h -gen-op-decls)
+  mlir_tablegen(${dialect}.cpp.inc -gen-op-defs)
+  ...
+endfunction()
+```
+
+The line `mlir_tablegen(${dialect}.h -gen-op-decls)` is intended to create a header file with only declarations. However, the build process seems to be producing a `.h` file that also contains implementations, guarded by a `#define`. This creates an unresolvable dependency cycle.
 
 ## Next Steps
 
-The root cause of the registration failure is still unknown. It seems to be a subtle issue related to the interaction between the build system (CMake/Ninja), the TableGen code generation, and the C++ compiler.
+**The primary focus for the next developer must be to fix the TableGen file generation process.**
 
-**Recommended next steps for investigation:**
+1.  **Correct `add_mlir_dialect`:** The `add_mlir_dialect` function in `MyAddMLIR.cmake` must be corrected to generate clean header files (`.h` and `.h.inc`) with only declarations, and a single source file (`.cpp.inc`) with only definitions. The current implementation is flawed. A direct comparison with the `add_mlir_dialect` function in a recent version of MLIR or the `mlir-standalone-template` is the recommended approach.
 
-1.  **Compare with a Working Example:** A meticulous, line-by-line comparison against a known-good MLIR standalone dialect example (like the official `mlir-standalone-template`) is the most promising next step. This should be done for the CMake files, `.td` files, and C++ source files.
-2.  **Inspect Generated Files:** Manually inspect the contents of the files generated by TableGen in the `build/` directory (e.g., `OrchestraOps.h.inc`, `OrchestraOps.cpp.inc`). This might reveal incorrect namespace usage or other errors in the generated code itself.
-3.  **Build Environment Verification:** There might be an issue with the versions of the installed tools (CMake, GCC, LLVM/MLIR) or their interaction. Verifying the build with a different compiler or on a different system could help isolate the problem.
+2.  **Standardize `OrchestraDialect.cpp`:** Once the file generation is corrected, the `lib/Orchestra/OrchestraDialect.cpp` file should be updated to use the standard, simplified MLIR pattern for dialect implementation.
 
-The primary blocker for any further development on the compiler is this operation registration issue.
+Fixing the build is the absolute prerequisite for any other work on this project.

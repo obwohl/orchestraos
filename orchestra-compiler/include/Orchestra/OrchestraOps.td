@@ -1,9 +1,9 @@
 #ifndef ORCHESTRA_OPS_TD
 #define ORCHESTRA_OPS_TD
 
-include "mlir/IR/OpBase.td";
-include "mlir/IR/SymbolInterfaces.td";
-include "mlir/Interfaces/SideEffectInterfaces.td";
+include "mlir/IR/OpBase.td"
+include "mlir/IR/SymbolInterfaces.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
 // Define the dialect itself.
 def Orchestra_Dialect : Dialect {
@@ -49,14 +49,14 @@ def Orchestra_TaskOp : Orchestra_Op<"task"> {
     specifying fine-grained placement constraints.
   }];
 
-  let arguments = (ins Variadic<AnyType>:$operands);
+  let arguments = (ins Variadic<AnyType>:$operands,
+                       DictionaryAttr:$target);
   let results = (outs Variadic<AnyType>:$results);
 
-  let attributes = (ins DictionaryAttr:$target);
   let regions = (region SizedRegion<1>:$body);
 }
 
-def Orchestra_TransferOp : Orchestra_Op<"transfer"> {
+def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "result"]>]> {
   let summary = "Explicitly represents data movement between memory spaces.";
   let description = [{
     This operation makes data movement between different logical memory spaces
@@ -65,13 +65,13 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer"> {
     spaces during a later lowering stage.
   }];
 
-  let arguments = (ins AnyShaped:$source);
-  let results = (outs SameAs<"$source">:$result);
-
-  let attributes = (ins SymbolRefAttr:$from, SymbolRefAttr:$to);
+  let arguments = (ins AnyShaped:$source,
+                       SymbolRefAttr:$from,
+                       SymbolRefAttr:$to);
+  let results = (outs AnyShaped:$result);
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit"> {
+def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize, SameVariadicResultSize]> {
   let summary = "Selects one of two SSA values based on a boolean condition.";
   let description = [{
     This operation is essential for the speculative execution pattern.

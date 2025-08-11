@@ -22,7 +22,7 @@ list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 
 # Include the necessary MLIR and LLVM CMake modules.
-include(AddMLIR)
+include(MyAddMLIR.cmake)
 include(AddLLVM)
 include(TableGen)
 include(HandleLLVMOptions)

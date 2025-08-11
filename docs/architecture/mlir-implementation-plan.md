@@ -1,5 +1,13 @@
 
 
+> **🛑 Implementation Status Notice**
+>
+> This document outlines the **intended architecture and a future implementation plan** for the Orchestra compiler. It describes features and components that are the *goal* of this project.
+>
+> The current implementation is **incomplete and not in a buildable state**. Significant work is required to realize the design described here. For a detailed analysis of the current blockers and the actual state of the codebase, please refer to the project's primary status document:
+>
+> **[Current Project Status](../project-status/status-quo.md)**
+
 # **A Comprehensive Implementation Blueprint for the OrchestraOS MLIR Compiler Core**
 
 ## **Introduction**
