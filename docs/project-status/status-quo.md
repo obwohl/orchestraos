@@ -1,55 +1,41 @@
-# Project Status
+# Current Build Status and Troubleshooting Guide
 
 Last updated: 2025-08-11
 
-## High-Level Summary
+## 1. Overview
 
-The `orchestra-compiler` project is currently **unbuildable**. The primary blocker is a series of cascading C++ compilation errors in the `Orchestra` dialect library (`lib/Orchestra`). These errors stem from a non-standard and problematic interaction between the custom CMake build scripts and the MLIR TableGen code generation process.
+This document provides a summary of the current build status of the `orchestra-compiler` project and a guide for troubleshooting the issues that have been encountered.
 
-The core issue is that the generated C++ header files for the dialect's operations do not correctly separate declarations from definitions, leading to circular dependencies and "type not found" errors that are extremely difficult to resolve by modifying the C++ source code alone.
+**The project is currently unbuildable.** The build fails with a series of C++ compilation errors that stem from a non-standard project structure and incorrect handling of MLIR's TableGen-generated files.
 
-## Detailed Build Failure Analysis
+This guide will walk through the debugging process that has been performed so far and provide a clear path to resolving the build issues.
 
-The process of attempting to build the project revealed the following sequence of issues:
+## 2. The Core Problem: Project Structure
 
-1.  **TableGen Syntax Errors:** The initial build failed due to several syntax errors in `include/Orchestra/OrchestraOps.td`. These were corrected.
+The fundamental issue is that this project does not follow the canonical MLIR out-of-tree project structure. The `cmake-build-guide.md` in this directory provides a detailed explanation of the correct structure, which is to separate the project into `include/` and `lib/` directories. This project has a flat structure, which leads to a number of problems with CMake's dependency management.
 
-2.  **Missing `BytecodeOpInterface` Header:** After fixing the TableGen errors, the build failed with errors indicating that `mlir::BytecodeOpInterface` was not defined. This was resolved by adding `#include "mlir/Bytecode/BytecodeOpInterface.h"` to `lib/Orchestra/OrchestraDialect.cpp`.
+## 3. Debugging Log and Resolved Issues
 
-3.  **Persistent "Type Not Found" Errors:** The final and most persistent error is `‘CommitOpGenericAdaptorBase’ does not name a type`. This error, and many others like it, occurs during the compilation of `lib/Orchestra/OrchestraDialect.cpp`.
+The following is a log of the issues that have been encountered and resolved so far.
 
-## Investigation and Failed Attempts
+### 3.1. TableGen Syntax Errors
 
-Extensive efforts were made to resolve the compilation errors by restructuring `lib/Orchestra/OrchestraDialect.cpp`. The following standard MLIR patterns were attempted, and all of them failed:
+The initial build failed due to syntax errors in `include/Orchestra/OrchestraOps.td`. These were corrected.
 
-*   **Standard Include Order:** Arranging the file to first include dialect and op headers, then the generated `...Dialect.cpp.inc` file, and finally the op definitions via `#define GET_OP_CLASSES` and `#include "...Ops.cpp.inc"`.
-*   **Manual `initialize()` function:** Several variations of a manually implemented `OrchestraDialect::initialize()` function were tried, using different combinations of `GET_OP_LIST` and includes of `.h.inc` and `.cpp.inc` files.
-*   **Pre-emptive Declaration:** Using `#define GET_OP_CLASSES` before including `OrchestraOps.h` to force the inclusion of the class declarations.
+### 3.2. Missing `BytecodeOpInterface` Header
 
-All of these attempts failed, which strongly indicates that the problem is not in the C++ source file's structure, but in the generated files themselves.
+After fixing the TableGen errors, the build failed with errors indicating that `mlir::BytecodeOpInterface` was not defined. This was resolved by adding `#include "mlir/Bytecode/BytecodeOpInterface.h"` to `lib/Orchestra/OrchestraDialect.cpp`.
 
-## Root Cause Analysis
+### 3.3. Persistent "Type Not Found" Errors
 
-The root cause is the custom CMake function `add_mlir_dialect` in `MyAddMLIR.cmake`. It generates the TableGen files in a way that is inconsistent with modern MLIR standards. Specifically:
+The final and most persistent error is `‘CommitOpGenericAdaptorBase’ does not name a type`. This error, and many others like it, occurs during the compilation of `lib/Orchestra/OrchestraDialect.cpp`. This error is a direct result of the incorrect project structure.
 
-```cmake
-function(add_mlir_dialect dialect dialect_namespace)
-  set(LLVM_TARGET_DEFINITIONS ${dialect}.td)
-  mlir_tablegen(${dialect}.h.inc -gen-op-decls)
-  mlir_tablegen(${dialect}.h -gen-op-decls)
-  mlir_tablegen(${dialect}.cpp.inc -gen-op-defs)
-  ...
-endfunction()
-```
+## 4. Path to Resolution
 
-The line `mlir_tablegen(${dialect}.h -gen-op-decls)` is intended to create a header file with only declarations. However, the build process seems to be producing a `.h` file that also contains implementations, guarded by a `#define`. This creates an unresolvable dependency cycle.
+The path to fixing the build is to restructure the project to follow the guidelines in `cmake-build-guide.md`. This involves the following steps:
 
-## Next Steps
+1.  **Restructure the project:** Create `include/` and `lib/` directories and move the files as described in the guide.
+2.  **Update the CMakeLists.txt files:** The root `CMakeLists.txt` and the new `CMakeLists.txt` files in the `include/` and `lib/` directories must be updated to match the guide.
+3.  **Standardize `OrchestraDialect.cpp`:** The `lib/Orchestra/OrchestraDialect.cpp` file should be updated to use the standard, simplified MLIR pattern for dialect implementation, as described in the guide.
 
-**The primary focus for the next developer must be to fix the TableGen file generation process.**
-
-1.  **Correct `add_mlir_dialect`:** The `add_mlir_dialect` function in `MyAddMLIR.cmake` must be corrected to generate clean header files (`.h` and `.h.inc`) with only declarations, and a single source file (`.cpp.inc`) with only definitions. The current implementation is flawed. A direct comparison with the `add_mlir_dialect` function in a recent version of MLIR or the `mlir-standalone-template` is the recommended approach.
-
-2.  **Standardize `OrchestraDialect.cpp`:** Once the file generation is corrected, the `lib/Orchestra/OrchestraDialect.cpp` file should be updated to use the standard, simplified MLIR pattern for dialect implementation.
-
-Fixing the build is the absolute prerequisite for any other work on this project.
+By following these steps, the build should be successfully restored.
