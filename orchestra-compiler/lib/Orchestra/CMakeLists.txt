@@ -1,19 +1,23 @@
-# This file's responsibility is to compile the C++ sources into a library.
-add_mlir_dialect_library(Orchestra
-  # List of C++ source files to compile.
+# This file's responsibility is to compile C++ sources into object files.
+
+# Define the source files.
+set(ORCHESTRA_SOURCES
   OrchestraDialect.cpp
+)
 
-  # CRITICAL: This establishes the build-time dependency.
-  # It ensures that the .inc files are generated before OrchestraDialect.cpp is compiled.
-  # Note the target name is MLIROrchestraOpsIncGen, not OrchestraOpsIncGen.
-  DEPENDS
-  MLIROrchestraOpsIncGen
+# Create an OBJECT library. This compiles the sources to object files,
+# but does not archive them into a static library.
+add_library(Orchestra OBJECT
+  ${ORCHESTRA_SOURCES}
+)
 
-  # Establish link-time dependencies.
-  # All dialects need MLIRIR. Add others as needed (e.g., MLIRParser).
-  # PUBLIC visibility propagates this link dependency to any target that links against Orchestra.
-  LINK_LIBS
-  PUBLIC
+# Add a dependency to ensure the .inc files are generated before compiling.
+add_dependencies(Orchestra MLIROrchestraOpsIncGen)
+
+# Associate the necessary MLIR libraries with the object library.
+# These link dependencies will be forwarded to any target that
+# consumes these object files.
+target_link_libraries(Orchestra PUBLIC
   MLIRIR
   MLIRSupport
   MLIRParser
