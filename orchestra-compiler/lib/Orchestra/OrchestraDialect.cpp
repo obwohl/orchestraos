@@ -3,32 +3,32 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/OpImplementation.h"
-
-// For the registration function
-#include "Orchestra/OrchestraRegistration.h"
-
-// For the op class definitions
-#define GET_OP_CLASSES
-#include "Orchestra/OrchestraOps.h.inc"
-#undef GET_OP_CLASSES
+#include "mlir/IR/DialectRegistry.h"
 
 using namespace mlir;
 using namespace orchestra;
 
+// Get the C++ class declarations for our ops.
+#define GET_OP_CLASSES
+#include "Orchestra/OrchestraOps.h.inc"
+#undef GET_OP_CLASSES
+
 #include "Orchestra/OrchestraOpsDialect.cpp.inc"
+
+// Get the C++ class definitions for our ops.
+#define GET_OP_CLASSES
+#include "Orchestra/OrchestraOps.cpp.inc"
+#undef GET_OP_CLASSES
 
 void OrchestraDialect::initialize() {
   addOperations<
     #define GET_OP_LIST
-    #include "Orchestra/OrchestraOps.h.inc"
+    #include "Orchestra/OrchestraOps.cpp.inc"
   >();
 }
 
-namespace orchestra {
-// Definition of the registration function.
-void ensureOrchestraDialectRegistered() {
-  // This dummy reference is enough to force the compiler to
-  // instantiate the MyOp class and its static registration logic.
-  (void)MyOp::getOperationName();
+// This function provides an explicit hook for the main executable to call.
+// It is marked 'extern "C"' to ensure a stable, unmangled name.
+extern "C" void registerOrchestraDialect(mlir::DialectRegistry &registry) {
+    registry.insert<orchestra::OrchestraDialect>();
 }
-} // namespace orchestra

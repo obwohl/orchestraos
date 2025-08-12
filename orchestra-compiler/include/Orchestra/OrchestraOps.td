@@ -6,7 +6,7 @@ include "mlir/IR/OpBase.td"
 // Define the dialect itself. This provides the C++ namespace, summary, etc.
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
-  let cppNamespace = "::orchestra";
+  let cppNamespace = "orchestra";
   let summary = "A dialect for a hypothetical orchestra compiler.";
   let description = [{
     This dialect is part of the Orchestra compiler project.
@@ -27,9 +27,6 @@ def MyOp : Orchestra_Op<"my_op"> {
   let description = [{
     A simple placeholder operation.
   }];
-
-  let arguments = (ins);
-  let results = (outs);
 }
 
 #endif // ORCHESTRA_OPS_TD

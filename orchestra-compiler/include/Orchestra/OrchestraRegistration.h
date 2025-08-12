@@ -1,11 +1,13 @@
-#ifndef ORCHESTRA_REGISTRATION_H
-#define ORCHESTRA_REGISTRATION_H
+#ifndef ORCHESTRA_ORCHESTRAREGISTRATION_H
+#define ORCHESTRA_ORCHESTRAREGISTRATION_H
 
-namespace orchestra {
-// This function should be called from the main function of any executable
-// that needs to use the Orchestra dialect. It will ensure that the
-// dialect's operations are registered with the MLIR context.
-void ensureOrchestraDialectRegistered();
-} // namespace orchestra
+namespace mlir {
+class DialectRegistry;
+} // namespace mlir
 
-#endif // ORCHESTRA_REGISTRATION_H
+// This function provides an explicit hook for the main executable to call to
+// register the Orchestra dialect. It is marked 'extern "C"' to ensure a stable,
+// unmangled name that can be easily linked from the main executable.
+extern "C" void registerOrchestraDialect(mlir::DialectRegistry &registry);
+
+#endif // ORCHESTRA_ORCHESTRAREGISTRATION_H
