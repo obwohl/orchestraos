@@ -1,44 +1,38 @@
-# Require a modern CMake version. MLIR itself requires at least 3.20.0.
+# Set the minimum required version of CMake. MLIR requires a modern version.
 cmake_minimum_required(VERSION 3.20.0)
 
-# Define the project name and languages.
-project(OrchestraCompiler LANGUAGES CXX C)
+# Define the project.
+project(Orchestra LANGUAGES CXX C)
 
-# Set the C++ standard. MLIR requires C++17.
+# Set the C++ standard. MLIR uses C++17 features.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find the MLIR package provided by the Debian/Ubuntu installation.
-# The user specified version 18.1. The CONFIG mode looks for MLIRConfig.cmake.
-# The user must point CMake to the right location, e.g., by setting:
-# -DMLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir
+# Find the MLIR package provided by the system installation (e.g., from apt).
+# The CONFIG mode is crucial for finding the MLIRConfig.cmake file.
+# The version number ensures compatibility.
 find_package(MLIR 18.1 REQUIRED CONFIG)
-message(STATUS "Found MLIR_DIR: ${MLIR_DIR}")
-message(STATUS "Found LLVM_DIR: ${LLVM_DIR}")
+message(STATUS "Found MLIR ${MLIR_VERSION_STRING} in ${MLIR_DIR}")
+message(STATUS "MLIR_INCLUDE_DIRS: ${MLIR_INCLUDE_DIRS}")
 
-# Add the MLIR and LLVM CMake module directories to the search path.
-# This is essential for finding AddMLIR.cmake, AddLLVM.cmake, and TableGen.cmake.
+# Add the MLIR and LLVM CMake module paths to our project. This allows us to use
+# helper functions like add_mlir_dialect_library.
 list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-
-# Include the necessary MLIR and LLVM CMake modules.
 include(AddMLIR)
 include(AddLLVM)
 include(TableGen)
 include(HandleLLVMOptions)
 
-# Add the MLIR and LLVM include directories to the project's include path.
-include_directories(${MLIR_INCLUDE_DIRS})
-include_directories(${LLVM_INCLUDE_DIRS})
+# Add the project's own include directory.
+include_directories(include)
 
-# Add the project's own include directory and the build directory's include
-# directory (for generated headers) to the path.
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_BINARY_DIR}/include)
-
-# This is the core of the solution. Process the 'include' directory first
-# to define the TableGen targets. Then, process the 'lib' directory, which
-# can now safely depend on the targets from 'include'.
+# Add subdirectories in the correct order.
+# 1. Define the dialect's public interface and TableGen files.
 add_subdirectory(include/Orchestra)
+# 2. Define the dialect's implementation library. This depends on step 1.
 add_subdirectory(lib/Orchestra)
-add_subdirectory(orchestra-opt)
+# 3. Define the conversion pass. This depends on step 2.
+add_subdirectory(lib/Conversion/OrchestraToLLVM)
+# 4. Define the main executable tool. This depends on all previous steps.
+add_subdirectory(tools/orchestra-opt)
