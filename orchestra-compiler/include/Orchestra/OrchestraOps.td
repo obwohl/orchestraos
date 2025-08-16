@@ -66,7 +66,7 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   ];
 }
 
-def Orchestra_TransferOp : Orchestra_Op<"transfer"> {
+def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "result"]>]> {
   let summary = "Explicitly represents data movement between memory spaces.";
   let description = [{
     Makes data movement between different logical memory spaces an explicit,

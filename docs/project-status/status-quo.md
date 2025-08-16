@@ -10,11 +10,19 @@ The project has a functional and robust test suite built with CMake and the LLVM
 
 Key characteristics of the current project state:
 - **Build System:** CMake-based, aligned with standard MLIR practices.
-- **Dependencies:** LLVM/MLIR 20, `lit`.
+- **Dependencies:** LLVM/MLIR 20, `lit`, `zstd`.
 - **Core Tool:** `orchestra-opt` is functional and includes custom passes.
 - **Testing:** A standard, CMake-integrated `lit` test suite is in place and all tests are passing.
 
 ## 2. Recent History
+
+### Improving Dialect Robustness and Build Stability
+
+Recent work has focused on hardening the `Orchestra` dialect and improving the stability of the development environment.
+
+- **Improved Type Safety:** The `orchestra.transfer` operation has been updated to use the `AllTypesMatch` trait. This provides a compile-time guarantee that the source and result of a transfer have the same type, making the dialect more robust and preventing potential type-related bugs.
+
+- **Build System Hardening:** The build and test environment has been made more reliable by explicitly adding `zstd` as a dependency and fixing an issue with the `llvm-lit` test driver symlink in `pyenv` environments. These changes are documented in a new troubleshooting guide.
 
 ### Implementing the `DivergenceToSpeculation` Pass
 

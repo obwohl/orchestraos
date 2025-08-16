@@ -86,15 +86,18 @@ def Orchestra\_TaskOp : Orchestra\_Op\<"task"\> {
 
 Code-Snippet
 
-// In OrchestraOps.td  
-def Orchestra\_TransferOp : Orchestra\_Op\<"transfer"\> {  
-  let summary \= "Explicitly represents data movement between memory spaces.";  
-  let description \=;
+// In OrchestraOps.td
+def Orchestra\_TransferOp : Orchestra\_Op\<"transfer", [AllTypesMatch<["source", "result"]>]> {
+  let summary \= "Explicitly represents data movement between memory spaces.";
+  let description \= \[{
+    Makes data movement between different logical memory spaces an explicit,
+    first-class citizen of the IR. The `from` and `to` locations are
+    represented by `SymbolRefAttr`, which will be resolved to physical memory
+    spaces during a later lowering stage.
+  }\];
 
-  let arguments \= (ins AnyShaped:$source);  
-  let results \= (outs SameAs\<"$source"\>:$result);
-
-  let attributes \= (ins SymbolRefAttr:$from, SymbolRefAttr:$to);  
+  let arguments \= (ins AnyShaped:$source, SymbolRefAttr:$from, SymbolRefAttr:$to);
+  let results \= (outs AnyShaped:$result);
 }
 
 **orchestra.commit:** This operation is essential for the speculative execution pattern but was missing from formal specifications in the source material.1 The following definition synthesizes its intended semantics. It selects one of two sets of SSA values based on a boolean condition, materializing the result of the speculation.
