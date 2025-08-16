@@ -4,6 +4,12 @@ Welcome to the OrchestraOS project! We appreciate your interest in contributing.
 
 This document outlines the guidelines and best practices for contributing to the OrchestraOS codebase, with a particular focus on documentation. Given the complexity and rapid evolution of this project, clear and consistent documentation is paramount.
 
+## Development Workflow
+
+This project uses a standard CMake-based build system. For detailed instructions on how to set up your environment, build the compiler, and run the test suite, please refer to the main [README.md](./README.md) file.
+
+A key part of the development process is testing. All new features must be accompanied by tests, and all tests must pass before a change is submitted. The test suite is built on top of LLVM's `lit` and can be run using the `check-orchestra` target in CMake.
+
 ## Documentation Principles
 
 Our documentation strategy is designed to support developers working on the core compiler, especially during the scaffolding and iterative development phases. It aims to capture critical insights, common pitfalls, and design rationale that might not be immediately obvious from the code alone.

@@ -181,7 +181,7 @@ void orchestra::TaskOp::build(mlir::OpBuilder \&builder,
 | orchestra.transfer | %gpu\_data \= orchestra.transfer %host\_data from @host to @gpu0 | The data to be transferred. | from, to: SymbolRefAttr pointing to resource handles. | Explicitly represents the movement of data between two distinct memory locations, making communication a first-class optimizable operation. |
 | orchestra.commit | %res \= orchestra.commit %cond, %true\_val, %false\_val | i1 condition, variadic true values, variadic false values. | None | Selects one of two sets of SSA values based on a boolean condition. Core op for materializing the result of speculative execution. |
 
-## **Section 2: Implementation of the Divergence-to-Speculation Pass**
+## **Section 2: Implementation of the Divergence-to-Speculation Pass (✅ Implemented)**
 
 ### **2.1. The SpeculateIfOpPattern: A Pattern-Based Rewrite for scf.if**
 

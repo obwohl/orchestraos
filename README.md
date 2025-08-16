@@ -18,12 +18,13 @@ This project requires a C++17 compiler and the following dependencies:
 - LLVM and MLIR, version 20 or newer
 - CMake (3.20.0 or newer)
 - Ninja (recommended)
+- `lit` (LLVM Integrated Tester)
 
 For **Ubuntu 24.04**, you can set up the complete environment by running the following commands:
 ```bash
 # 1. Update package lists and install prerequisite tools
 sudo apt-get update
-sudo apt-get install -y wget software-properties-common ninja-build
+sudo apt-get install -y wget software-properties-common ninja-build python3-pip
 
 # 2. Download and run the official LLVM installer script
 wget https://apt.llvm.org/llvm.sh
@@ -47,34 +48,37 @@ sudo apt-get install -y \
     libclang-cpp20-dev \
     liblldb-20-dev \
     libunwind-20-dev
+
+# 4. Install the LLVM Integrated Tester (lit)
+pip install lit
+
+# 5. (Workaround) Create a symlink for llvm-lit, which is expected by the build
+#    This may require sudo if you are not the owner of the target directory.
+sudo ln -s "$(which lit)" /usr/lib/llvm-20/bin/llvm-lit
 ```
 
-### Build Instructions
+### Build and Test Instructions
 
-Once the prerequisites are installed, you can build the compiler using CMake and Ninja:
+The project uses a standard CMake-based workflow.
 
 ```bash
-# 1. Create a build directory
-mkdir -p orchestra-compiler/build
-cd orchestra-compiler/build
+# 1. Configure the build using CMake.
+#    This command should be run from the root of the repository.
+#    It tells CMake where the source code is (-S) and where to put the build artifacts (-B).
+cmake -S orchestra-compiler -B orchestra-compiler/build -G Ninja \
+  -DMLIR_DIR=/usr/lib/llvm-20/lib/cmake/mlir \
+  -DLLVM_DIR=/usr/lib/llvm-20/lib/cmake/llvm \
+  -DLLVM_TOOLS_DIR=/usr/lib/llvm-20/bin
 
-# 2. Configure the build using CMake
-#    (The CMAKE_PREFIX_PATH should point to your LLVM/MLIR installation)
-cmake -G Ninja .. -DCMAKE_PREFIX_PATH=/usr/lib/llvm-20
+# 2. Build the compiler and its tools.
+cmake --build orchestra-compiler/build
 
-# 3. Run the build
-ninja
+# 3. Run the test suite.
+#    This will build and run all tests, including the new ones for any new features.
+cmake --build orchestra-compiler/build --target check-orchestra
 ```
 
-This will produce the `orchestra-opt` executable in the `orchestra-compiler/build/orchestra-opt/` directory.
-
-### Testing
-
-The project includes a test suite using the LLVM Integrated Tester (lit). To run the tests, execute the following command from the root of the repository:
-
-```bash
-python3 tests/run.py
-```
+This will produce the `orchestra-opt` executable in the `orchestra-compiler/build/orchestra-opt/` directory and run the full test suite to verify correctness.
 
 ## Documentation
 

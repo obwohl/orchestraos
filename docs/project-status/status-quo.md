@@ -6,34 +6,32 @@
 
 The Orchestra compiler is in a **stable, buildable, and verifiable state**. The core infrastructure, including the custom `Orchestra` dialect and the `orchestra-opt` tool, compiles successfully against LLVM 20.
 
-The project has a functional test suite built with the LLVM Integrated Tester (`lit`), which can be executed via the `tests/run.py` script. All existing tests are passing, confirming that the basic dialect and operations are correctly registered and processed.
+The project has a functional and robust test suite built with CMake and the LLVM Integrated Tester (`lit`). The test suite can be executed directly via `ctest` or by invoking the `check-orchestra` target in the build system. All existing tests are passing.
 
 Key characteristics of the current project state:
 - **Build System:** CMake-based, aligned with standard MLIR practices.
-- **Dependencies:** LLVM/MLIR 20.
-- **Core Tool:** `orchestra-opt` is functional.
-- **Testing:** A `lit` test suite is in place and passing.
+- **Dependencies:** LLVM/MLIR 20, `lit`.
+- **Core Tool:** `orchestra-opt` is functional and includes custom passes.
+- **Testing:** A standard, CMake-integrated `lit` test suite is in place and all tests are passing.
 
 ## 2. Recent History
 
-### Formalizing the OrchestraIR Dialect
-The `OrchestraIR` dialect has been formally implemented as specified in Section 1 of the
-[MLIR Implementation Plan](../architecture/mlir-implementation-plan.md).
-This work included:
-- Defining the `schedule`, `task`, `transfer`, `commit`, and `yield` operations in TableGen.
-- Implementing C++ verifiers for the `commit` and `transfer` operations to ensure their semantic correctness.
-- Correcting several issues in the initial TableGen definitions that were causing build failures.
-- Adding a new test case to verify that the core dialect operations are registered and parsable.
+### Implementing the `DivergenceToSpeculation` Pass
 
-This foundational work stabilizes the core dialect, allowing for the implementation of higher-level passes.
+A new compiler pass, `DivergenceToSpeculation`, has been implemented. This pass is a key step in the compiler's semantic development, transforming standard control flow (`scf.if`) into a speculative execution model using the `orchestra` dialect.
 
-### Implementing Operation Verifiers
-As a continuation of formalizing the dialect, verifiers for the `orchestra.schedule` and `orchestra.task` operations have been implemented.
-- The `schedule` verifier ensures that the operation is always a top-level operation within the IR.
-- The `task` verifier, which is handled by the operation's parser, ensures that a `target` attribute is always present.
-- New test cases were added to the `lit` test suite to validate this new error-checking logic.
+- The pass introduces a `SpeculateIfOpPattern` that converts suitable `scf.if` operations into `orchestra.task` and `orchestra.commit` operations.
+- The new pass is registered with the `orchestra-opt` tool and can be invoked with the `--divergence-to-speculation` flag.
+- A new test case, `speculate.mlir`, has been added to verify the pass's functionality, including its behavior on both valid candidates and operations that should not be transformed.
 
-This change further strengthens the semantic correctness of the OrchestraIR dialect.
+### Modernizing the Test Infrastructure
+
+The project's testing infrastructure has been significantly refactored to align with modern MLIR/LLVM standards. The previous system, which relied on a standalone Python script (`tests/run.py`), has been replaced with a fully integrated CMake/`lit` setup.
+
+- The `tests` directory has been moved into the main `orchestra-compiler` source tree.
+- The test suite is now configured via CMake, which generates the necessary `lit.cfg.py` file from a template, making the test environment aware of build-time paths and tool locations.
+- The `check-orchestra` build target now correctly builds all dependencies and executes the full test suite.
+- This change resolves numerous build and test execution issues, including race conditions and hardcoded paths, making the development workflow more robust and reliable.
 
 ### Previously: Resolving the "Unregistered Operation" Blocker
 
