@@ -1,4 +1,4 @@
-// RUN: orchestra-opt %s | FileCheck %s
+// RUN: %orchestra-opt %s | %FileCheck %s
 
 // CHECK-LABEL: "orchestra.schedule"
 "orchestra.schedule"() ({

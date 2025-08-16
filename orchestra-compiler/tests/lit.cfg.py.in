@@ -1,0 +1,21 @@
+# -*- Python -*-
+
+import os
+import lit.formats
+
+config.name = 'Orchestra'
+config.test_format = lit.formats.ShTest(not lit.util.is_string)
+config.suffixes = ['.mlir']
+
+# test_source_root: The root path where tests are located.
+# This is set by CMake.
+config.test_source_root = r"@TEST_SOURCE_ROOT@"
+
+# Tell lit where to find the tools.
+config.llvm_tools_dir = r"@LLVM_TOOLS_DIR@"
+config.environment['PATH'] = config.llvm_tools_dir + os.pathsep + config.environment['PATH']
+
+# The path to the orchestra-opt executable.
+config.substitutions.append(('%orchestra-opt', r'@ORCHESTRA_OPT_EXECUTABLE@'))
+# The path to the FileCheck executable.
+config.substitutions.append(('%FileCheck', r'@LLVM_FILECHECK_EXECUTABLE@'))

@@ -6,6 +6,7 @@ add_executable(orchestra-opt main.cpp)
 # CMake will automatically link orchestra-opt against them as well.
 target_link_libraries(orchestra-opt PRIVATE
   Orchestra
+  OrchestraTransforms
   MLIRPass
   MLIRMlirOptMain
 )

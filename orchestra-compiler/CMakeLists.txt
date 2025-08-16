@@ -41,4 +41,6 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 # can now safely depend on the targets from 'include'.
 add_subdirectory(include/Orchestra)
 add_subdirectory(lib/Orchestra)
+add_subdirectory(lib/Orchestra/Transforms)
 add_subdirectory(orchestra-opt)
+add_subdirectory(tests)

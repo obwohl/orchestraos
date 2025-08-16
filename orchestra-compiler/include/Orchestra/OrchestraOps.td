@@ -6,7 +6,7 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
-  let cppNamespace = "orchestra";
+  let cppNamespace = "::mlir::orchestra";
   let summary = "A dialect for the Orchestra meta-OS compiler.";
   let description = [{
     The OrchestraIR dialect is the heart of the OrchestraOS compiler's

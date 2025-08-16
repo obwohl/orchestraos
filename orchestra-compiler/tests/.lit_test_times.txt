@@ -1,0 +1,4 @@
+4.941726e-02 test.mlir
+4.797363e-02 invalid_schedule.mlir
+4.765797e-02 invalid_task.mlir
+-5.275226e-02 speculate.mlir
