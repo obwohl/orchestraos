@@ -31,6 +31,7 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
 
   let results = (outs Variadic<AnyType>:$results);
   let regions = (region AnyRegion:$body);
+  let hasCanonicalizer = 1;
 }
 
 def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
@@ -45,6 +46,22 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   let results = (outs Variadic<AnyType>:$results);
 
   let regions = (region AnyRegion:$body);
+
+  let builders = [
+    OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,
+                   "mlir::DictionaryAttr":$target),
+      [{
+        odsState.addOperands(operands);
+        odsState.addTypes(resultTypes);
+        odsState.addAttribute("target", target);
+        mlir::Region *bodyRegion = odsState.addRegion();
+        mlir::Block *bodyBlock = new mlir::Block();
+        bodyRegion->push_back(bodyBlock);
+        bodyBlock->addArguments(
+            operands.getTypes(),
+            llvm::SmallVector<mlir::Location>(operands.size(), odsState.location));
+      }]>
+  ];
 }
 
 def Orchestra_TransferOp : Orchestra_Op<"transfer"> {
