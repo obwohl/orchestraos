@@ -8,11 +8,11 @@ project(OrchestraCompiler LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find the MLIR package provided by the Debian/Ubuntu installation.
-# The user specified version 18.1. The CONFIG mode looks for MLIRConfig.cmake.
-# The user must point CMake to the right location, e.g., by setting:
-# -DMLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir
-find_package(MLIR 18.1 REQUIRED CONFIG)
+# Find the MLIR package.
+# We will use version 20, as requested by the user.
+# The CONFIG mode looks for MLIRConfig.cmake.
+# The path needs to point to the LLVM 20 installation.
+find_package(MLIR 20.1 REQUIRED CONFIG)
 message(STATUS "Found MLIR_DIR: ${MLIR_DIR}")
 message(STATUS "Found LLVM_DIR: ${LLVM_DIR}")
 

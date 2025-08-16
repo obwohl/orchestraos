@@ -1,6 +1,6 @@
 # Project Status: Resolved
 
-**Last Updated:** 2025-08-11
+**Last Updated:** 2025-08-15
 
 ## 1. Overview
 
@@ -59,7 +59,17 @@ The crucial mistake was missing the second step. Without the inclusion of the `.
 
 With all three issues addressed, the `orchestra-opt` tool now compiles successfully and correctly processes the `test.mlir` file without any "unregistered operation" errors. The project is unblocked and development can proceed.
 
-## 4. Documentation Consolidation
+## 4. Build System Overhaul and LLVM 20 Upgrade
+
+The project was unbuildable from a clean checkout due to a combination of missing dependencies and a misconfigured build system. A full audit and refactoring were performed to fix this.
+
+*   **Dependency Resolution:** The required LLVM, Clang, and MLIR packages for Ubuntu 24.04 were identified, and a setup script was provided. The project is now explicitly configured to build against **LLVM 20**.
+*   **Build System Refactoring:** The entire CMake build system for the `orchestra-compiler` was overhauled to align with the official MLIR dialect example patterns. This involved rewriting all `CMakeLists.txt` files, creating missing source files (`OrchestraOps.h`, `OrchestraOps.cpp`), and fixing incorrect C++ dialect registration code.
+*   **Documentation Correction:** The internal build guide (`docs/guides/cmake-build-guide.md`), which was found to be incomplete and misleading, has been removed. The main `README.md` has been updated with correct, simplified build instructions.
+
+**Current Status:** The project is now in a clean, buildable state using LLVM 20.
+
+## 5. Documentation Consolidation
 
 As part of ongoing project maintenance and to ensure a lean and accurate documentation set, a review of existing documentation was conducted. The following changes have been made:
 

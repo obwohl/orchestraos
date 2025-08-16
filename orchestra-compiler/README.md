@@ -8,23 +8,30 @@ The Orchestra compiler leverages MLIR's extensible, multi-level dialect system t
 
 For a comprehensive blueprint of the compiler's architectural vision, the OrchestraIR dialect, and the planned optimization passes, please refer to: [MLIR Implementation Plan Modernization](../../docs/architecture/mlir-implementation-plan.md)
 
+## Prerequisites
+
+This project requires a C++17 compiler and the following dependencies:
+- LLVM and MLIR, version 20 or newer
+- CMake (3.20.0 or newer)
+- Ninja (recommended)
+
+For Ubuntu 24.04, I have provided a complete environment setup script in a previous message.
+
 ## Build Instructions
 
-To build the Orchestra compiler, navigate to the `build` directory within this `orchestra-compiler` directory and run CMake and your build tool (e.g., Make or Ninja).
+To build the Orchestra compiler, create a build directory and run CMake and Ninja.
 
 ```bash
+# From the root of the repository
+mkdir -p orchestra-compiler/build
 cd orchestra-compiler/build
-cmake -G "Unix Makefiles" .. -DMLIR_DIR=/usr/lib/llvm-18/lib/cmake/mlir # Adjust MLIR_DIR as necessary
-cmake --build .
+
+# Configure the build using CMake.
+# CMAKE_PREFIX_PATH should point to your LLVM/MLIR installation directory.
+cmake -G Ninja .. -DCMAKE_PREFIX_PATH=/usr/lib/llvm-20
+
+# Run the build
+ninja
 ```
 
-For detailed instructions on setting up the CMake build system for out-of-tree MLIR dialects, including common pitfalls and their solutions, please consult: [Correcting MLIR Dialect CMake Build](../../docs/guides/cmake-build-guide.md)
-
-### Important Build Tip: CMake Structure for MLIR Dialects
-
-A recurring challenge in MLIR development is correctly configuring CMake for out-of-tree dialects. The canonical solution, which this project adheres to, involves a strict separation of interface (`include/`) and implementation (`lib/`) directories, processed in a specific order by CMake.
-
-*   The `include/` directory defines the dialect's public API (TableGen `.td` files) and is processed first to generate necessary C++ headers.
-*   The `lib/` directory contains the dialect's C++ implementation, which depends on the headers generated from `include/`.
-
-This structure is crucial for resolving dependency issues during the CMake configuration phase. Always refer to the `Correcting MLIR Dialect CMake Build` document for a deep dive into this pattern and to troubleshoot any build-related errors.
+This will produce the `orchestra-opt` executable in the `orchestra-compiler/build/orchestra-opt/` directory.

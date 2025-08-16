@@ -1,21 +1,11 @@
-# Create the orchestra-opt executable.
-add_executable(orchestra-opt
-  main.cpp
-  )
+add_executable(orchestra-opt main.cpp)
 
-# Link the executable against the Orchestra dialect's object files and the
-# necessary MLIR libraries for a basic '-opt' style tool.
+# Link against the dialect library and the MLIR libraries needed for an opt tool.
+# The `Orchestra` target was defined in lib/Orchestra/CMakeLists.txt.
+# Because we used PUBLIC linkage for its dependencies (MLIRIR, etc.),
+# CMake will automatically link orchestra-opt against them as well.
 target_link_libraries(orchestra-opt PRIVATE
-  # By using $<TARGET_OBJECTS:Orchestra>, we link the compiled .o files
-  # directly into the executable, completely bypassing the static library
-  # symbol elision problem.
-  $<TARGET_OBJECTS:Orchestra>
-
-  # Link against the necessary MLIR libraries.
-  MLIRIR
-  MLIRSupport
+  Orchestra
   MLIRPass
-  MLIRDialect
-  MLIRParser
   MLIRMlirOptMain
 )
