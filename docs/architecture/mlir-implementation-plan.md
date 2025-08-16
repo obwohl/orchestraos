@@ -136,6 +136,8 @@ While TableGen generates the core C++ class definitions, certain logic must be h
 
 **Verifiers:** Each operation should have a verifier to enforce semantic invariants that cannot be captured by the type system alone. For example, the orchestra.commit verifier must ensure that the types and number of values from the true\_values and false\_values operands match each other and the operation's result types.
 
+Verifiers for `orchestra.schedule` and `orchestra.task` have also been implemented. The `schedule` verifier enforces that the operation is top-level, and the `task` verifier (through its declaration in TableGen) enforces the presence of the `target` attribute.
+
 C++
 
 // In OrchestraOps.cpp  

@@ -32,6 +32,7 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
   let results = (outs Variadic<AnyType>:$results);
   let regions = (region AnyRegion:$body);
   let hasCanonicalizer = 1;
+  let hasVerifier = 1;
 }
 
 def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
@@ -46,6 +47,7 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   let results = (outs Variadic<AnyType>:$results);
 
   let regions = (region AnyRegion:$body);
+  let hasVerifier = 1;
 
   let builders = [
     OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,

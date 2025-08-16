@@ -14,8 +14,9 @@ Key characteristics of the current project state:
 - **Core Tool:** `orchestra-opt` is functional.
 - **Testing:** A `lit` test suite is in place and passing.
 
-## 2. Recent History: Formalizing the OrchestraIR Dialect
+## 2. Recent History
 
+### Formalizing the OrchestraIR Dialect
 The `OrchestraIR` dialect has been formally implemented as specified in Section 1 of the
 [MLIR Implementation Plan](../architecture/mlir-implementation-plan.md).
 This work included:
@@ -25,6 +26,14 @@ This work included:
 - Adding a new test case to verify that the core dialect operations are registered and parsable.
 
 This foundational work stabilizes the core dialect, allowing for the implementation of higher-level passes.
+
+### Implementing Operation Verifiers
+As a continuation of formalizing the dialect, verifiers for the `orchestra.schedule` and `orchestra.task` operations have been implemented.
+- The `schedule` verifier ensures that the operation is always a top-level operation within the IR.
+- The `task` verifier, which is handled by the operation's parser, ensures that a `target` attribute is always present.
+- New test cases were added to the `lit` test suite to validate this new error-checking logic.
+
+This change further strengthens the semantic correctness of the OrchestraIR dialect.
 
 ### Previously: Resolving the "Unregistered Operation" Blocker
 

@@ -1,1 +1,3 @@
-2.475994e-01 test.mlir
+6.795406e-02 test.mlir
+6.470442e-02 invalid_schedule.mlir
+6.997848e-02 invalid_task.mlir

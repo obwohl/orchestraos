@@ -36,6 +36,14 @@ mlir::LogicalResult TransferOp::verify() {
 // ScheduleOp
 //===----------------------------------------------------------------------===//
 
+mlir::LogicalResult ScheduleOp::verify() {
+  if (getOperation()->getParentOp() != nullptr &&
+      !isa<mlir::ModuleOp>(getOperation()->getParentOp())) {
+    return emitOpError("must be a top-level operation");
+  }
+  return mlir::success();
+}
+
 namespace {
 // Erase an empty schedule that has no results.
 struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
@@ -57,6 +65,17 @@ struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
 void ScheduleOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                              mlir::MLIRContext *context) {
   results.add<EraseEmptySchedule>(context);
+}
+
+//===----------------------------------------------------------------------===//
+// TaskOp
+//===----------------------------------------------------------------------===//
+
+mlir::LogicalResult TaskOp::verify() {
+  if (!getTarget()) {
+    return emitOpError("requires a 'target' attribute");
+  }
+  return mlir::success();
 }
 
 //===----------------------------------------------------------------------===//
