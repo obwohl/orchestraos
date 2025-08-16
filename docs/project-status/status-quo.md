@@ -14,7 +14,19 @@ Key characteristics of the current project state:
 - **Core Tool:** `orchestra-opt` is functional.
 - **Testing:** A `lit` test suite is in place and passing.
 
-## 2. Recent History: Resolving the "Unregistered Operation" Blocker
+## 2. Recent History: Formalizing the OrchestraIR Dialect
+
+The `OrchestraIR` dialect has been formally implemented as specified in Section 1 of the
+[MLIR Implementation Plan](../architecture/mlir-implementation-plan.md).
+This work included:
+- Defining the `schedule`, `task`, `transfer`, `commit`, and `yield` operations in TableGen.
+- Implementing C++ verifiers for the `commit` and `transfer` operations to ensure their semantic correctness.
+- Correcting several issues in the initial TableGen definitions that were causing build failures.
+- Adding a new test case to verify that the core dialect operations are registered and parsable.
+
+This foundational work stabilizes the core dialect, allowing for the implementation of higher-level passes.
+
+### Previously: Resolving the "Unregistered Operation" Blocker
 
 The project was recently unblocked from a critical runtime issue where the `orchestra-opt` tool would fail with an "unregistered operation" error. This was a complex problem rooted in a combination of:
 1.  **Fragile Dialect Registration:** The initial static registration of the dialect was prone to being optimized away by the linker. This was fixed by moving to an explicit registration call in `main`.
