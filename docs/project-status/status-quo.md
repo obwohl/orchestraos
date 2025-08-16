@@ -75,3 +75,15 @@ As part of ongoing project maintenance and to ensure a lean and accurate documen
 
 *   **`docs/architecture/mlir-implementation-plan.md`**: The introductory notice has been updated to reflect that the project is now in a buildable and working state, aligning with the current status.
 *   **`docs/guides/orchestra - tech - prio - MLIR 18.1 CMake SOURCES Issue.md`**: This file was identified as a duplicate of `docs/guides/mlir_troubleshooting_2.md` and has been removed to avoid redundancy and maintain a lean repository.
+
+## 6. Test Suite
+
+A test suite has been added to the project to ensure the correctness of the compiler. The test suite is built using the LLVM Integrated Tester (`lit`).
+
+The tests are located in the `tests` directory. To run the tests, execute the following command from the root of the repository:
+
+```bash
+python3 tests/run.py
+```
+
+This will run all the tests and report the results.
