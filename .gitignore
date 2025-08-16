@@ -1,1 +1,3 @@
 /build/
+/orchestra-compiler/build/
+tests/.lit_test_times.txt
