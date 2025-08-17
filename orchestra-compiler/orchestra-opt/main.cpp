@@ -1,5 +1,6 @@
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/InitAllDialects.h"
+#include "mlir/InitAllPasses.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 
 #include "Orchestra/OrchestraDialect.h"
@@ -12,6 +13,7 @@ int main(int argc, char **argv) {
 
   registry.insert<mlir::orchestra::OrchestraDialect>();
 
+  mlir::registerAllPasses();
   mlir::orchestra::registerOrchestraPasses();
 
   return mlir::asMainReturnCode(

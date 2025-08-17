@@ -98,6 +98,7 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
   let results = (outs Variadic<AnyType>:$results);
 
   let hasVerifier = 1;
+  let hasCanonicalizer = 1;
 }
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {

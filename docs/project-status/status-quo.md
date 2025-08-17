@@ -16,6 +16,14 @@ Key characteristics of the current project state:
 
 ## 2. Recent History
 
+### Implementing Canonicalization for `orchestra.commit`
+
+A canonicalization pattern has been added for the `orchestra.commit` operation. This pattern performs constant folding: if the condition for the `commit` is a compile-time constant, the operation is replaced by either its `true` or `false` values. This simplifies the IR and enables further optimizations.
+
+- The pattern is implemented in `OrchestraOps.cpp`.
+- A new test file, `canonicalize-commit.mlir`, has been added to the test suite to verify this optimization.
+- The build system was also hardened by registering all standard MLIR passes in `orchestra-opt`, making passes like `-canonicalize` available.
+
 ### Implementing the `orchestra.schedule` Operation
 
 The foundational `orchestra.schedule` operation has been implemented. This operation serves as a container for a graph of `orchestra.task` operations, representing a scheduled unit of work.
@@ -35,6 +43,8 @@ A minor bug in the `docs/architecture/mlir-implementation-plan.md` has been corr
 ### Improving Dialect Robustness and Build Stability
 
 Recent work has focused on hardening the `Orchestra` dialect and improving the stability of the development environment.
+
+- **Comprehensive Verifiers:** All core operations in the `Orchestra` dialect (`schedule`, `task`, `commit`, and `transfer`) now have C++ verifiers implemented. These verifiers enforce the structural and semantic invariants of the dialect, improving its overall robustness and providing clear error messages for invalid IR.
 
 - **Improved Type Safety:** The `orchestra.transfer` operation has been updated to use the `AllTypesMatch` trait. This provides a compile-time guarantee that the source and result of a transfer have the same type, making the dialect more robust and preventing potential type-related bugs.
 

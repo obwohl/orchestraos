@@ -1,4 +1,5 @@
 #include "Orchestra/OrchestraOps.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/PatternMatch.h"
@@ -19,6 +20,40 @@ mlir::LogicalResult CommitOp::verify() {
     return emitOpError("requires result types to match operand types");
   }
   return mlir::success();
+}
+
+namespace {
+// Fold a commit op with a constant condition.
+struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
+  using OpRewritePattern<CommitOp>::OpRewritePattern;
+
+  mlir::LogicalResult
+  matchAndRewrite(CommitOp op,
+                  mlir::PatternRewriter &rewriter) const override {
+    auto constant =
+        op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
+    if (!constant) {
+      return mlir::failure();
+    }
+
+    auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
+    if (!value) {
+      return mlir::failure();
+    }
+
+    if (value.getValue()) {
+      rewriter.replaceOp(op, op.getTrueValues());
+    } else {
+      rewriter.replaceOp(op, op.getFalseValues());
+    }
+    return mlir::success();
+  }
+};
+} // namespace
+
+void CommitOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                           mlir::MLIRContext *context) {
+  results.add<FoldConstantCommit>(context);
 }
 
 //===----------------------------------------------------------------------===//
