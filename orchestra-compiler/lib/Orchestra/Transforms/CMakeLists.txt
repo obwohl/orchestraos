@@ -1,6 +1,7 @@
 add_library(OrchestraTransforms
   SpeculateIfOp.cpp
   Passes.cpp
+  LowerOrchestraToStandard.cpp
 )
 
 target_link_libraries(OrchestraTransforms

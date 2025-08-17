@@ -10,6 +10,8 @@ std::unique_ptr<Pass> createDivergenceToSpeculationPass();
 
 void registerOrchestraPasses();
 
+void registerLoweringPasses();
+
 } // namespace orchestra
 } // namespace mlir
 

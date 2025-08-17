@@ -24,6 +24,14 @@ Recent work has focused on hardening the `Orchestra` dialect and improving the s
 
 - **Build System Hardening:** The build and test environment has been made more reliable by explicitly adding `zstd` as a dependency and fixing an issue with the `llvm-lit` test driver symlink in `pyenv` environments. These changes are documented in a new troubleshooting guide.
 
+### Implementing the `LowerOrchestraToStandard` Pass
+
+A new pass, `LowerOrchestraToStandard`, has been implemented to lower the `orchestra` dialect to standard dialects. This is a crucial step in the progressive lowering pipeline, enabling the compiler to translate high-level `orchestra` operations into constructs that are closer to the hardware.
+
+- The pass currently lowers the `orchestra.commit` operation to the `arith.select` operation.
+- A new test case, `lower-commit.mlir`, has been added to verify the pass's functionality.
+- The pass is registered with `orchestra-opt` and can be invoked with the `--lower-orchestra-to-standard` flag.
+
 ### Implementing the `DivergenceToSpeculation` Pass
 
 A new compiler pass, `DivergenceToSpeculation`, has been implemented. This pass is a key step in the compiler's semantic development, transforming standard control flow (`scf.if`) into a speculative execution model using the `orchestra` dialect.
