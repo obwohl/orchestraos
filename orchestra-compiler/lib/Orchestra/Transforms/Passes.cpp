@@ -37,5 +37,6 @@ std::unique_ptr<mlir::Pass> mlir::orchestra::createDivergenceToSpeculationPass()
 
 void mlir::orchestra::registerOrchestraPasses() {
   mlir::PassRegistration<DivergenceToSpeculationPass>();
-  registerLoweringPasses();
+  registerLoweringToStandardPasses();
+  registerLoweringToGPUPasses();
 }

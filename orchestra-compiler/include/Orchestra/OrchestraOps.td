@@ -80,6 +80,8 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let arguments = (ins AnyShaped:$source, SymbolRefAttr:$from, SymbolRefAttr:$to);
   let results = (outs AnyShaped:$result);
   let hasVerifier = 1;
+
+  let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
 def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {

@@ -2,6 +2,7 @@ add_library(OrchestraTransforms
   SpeculateIfOp.cpp
   Passes.cpp
   LowerOrchestraToStandard.cpp
+  LowerOrchestraToGPU.cpp
 )
 
 target_link_libraries(OrchestraTransforms

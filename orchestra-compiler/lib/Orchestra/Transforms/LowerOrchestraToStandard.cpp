@@ -70,6 +70,6 @@ public:
 
 } // namespace
 
-void mlir::orchestra::registerLoweringPasses() {
+void mlir::orchestra::registerLoweringToStandardPasses() {
   mlir::PassRegistration<LowerOrchestraToStandardPass>();
 }

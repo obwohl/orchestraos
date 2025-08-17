@@ -56,6 +56,15 @@ A new pass, `LowerOrchestraToStandard`, has been implemented to lower the `orche
 - A new test case, `lower-commit.mlir`, has been added to verify the pass's functionality.
 - The pass is registered with `orchestra-opt` and can be invoked with the `--lower-orchestra-to-standard` flag.
 
+### Implementing the `LowerOrchestraToGPU` Pass
+
+To begin the process of lowering the `orchestra` dialect to hardware-specific primitives, a new pass, `LowerOrchestraToGPU`, has been created. This pass will house the conversion patterns for GPU targets.
+
+- The initial implementation of the pass includes a pattern to lower the `orchestra.transfer` operation.
+- This pattern converts `orchestra.transfer` into a `memref.alloc` to create the destination buffer, followed by a `gpu.memcpy` to perform the copy. This provides a simple, synchronous lowering that serves as a foundation for future, more complex asynchronous lowering patterns.
+- A new test case, `lower-transfer.mlir`, has been added to verify the pass's functionality.
+- The pass is registered with `orchestra-opt` and can be invoked with the `--lower-orchestra-to-gpu` flag.
+
 ### Implementing the `DivergenceToSpeculation` Pass
 
 A new compiler pass, `DivergenceToSpeculation`, has been implemented. This pass is a key step in the compiler's semantic development, transforming standard control flow (`scf.if`) into a speculative execution model using the `orchestra` dialect.
