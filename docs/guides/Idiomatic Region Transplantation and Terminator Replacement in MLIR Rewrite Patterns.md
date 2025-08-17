@@ -323,19 +323,3 @@ The key principles for successful region manipulation in MLIR can be summarized 
 3. **Leverage High-Level APIs for Structural Surgery:** For complex tasks like moving or cloning regions, methods such as inlineRegionBefore are not merely convenient but are the canonical tools for ensuring correctness. They abstract away the perilous complexity of SSA value remapping and use-list management.
 
 The canonical four-step method—**Prepare, Transplant, Surgically Replace, and Finalize**—provides a robust and repeatable template for this class of transformation. By creating the new container, using inlineRegionBefore for the atomic move, performing a careful "get-create-erase" sequence on the terminator, and finally replacing the original operation, developers can build correct, idiomatic, and maintainable compiler passes that harness the full expressive power of MLIR.
-
-#### **Referenzen**
-
-1. MLIR Language Reference \- MLIR, Zugriff am August 16, 2025, [https://mlir.llvm.org/docs/LangRef/](https://mlir.llvm.org/docs/LangRef/)  
-2. \[RFC\] Arbitrary Regions in MLIR \- Google Groups, Zugriff am August 16, 2025, [https://groups.google.com/a/tensorflow.org/g/mlir/c/gPQFIy9XpVw](https://groups.google.com/a/tensorflow.org/g/mlir/c/gPQFIy9XpVw)  
-3. mlir::Block Class Reference \- MLIR, Zugriff am August 16, 2025, [https://mlir.llvm.org/doxygen/classmlir\_1\_1Block.html](https://mlir.llvm.org/doxygen/classmlir_1_1Block.html)  
-4. My Project: mlir::Block Class Reference, Zugriff am August 16, 2025, [https://bollu.github.io/mlir/html/classmlir\_1\_1Block.html](https://bollu.github.io/mlir/html/classmlir_1_1Block.html)  
-5. 'scf' Dialect \- MLIR \- LLVM, Zugriff am August 16, 2025, [https://mlir.llvm.org/docs/Dialects/SCFDialect/](https://mlir.llvm.org/docs/Dialects/SCFDialect/)  
-6. Multiple Exit MLIR Regions \- LLVM, Zugriff am August 16, 2025, [https://llvm.org/devmtg/2023-05/slides/QuickTalks-May10/01%20-Multiple-Exit%20MLIR%20Blocks-EuroLLVM%202023.pdf](https://llvm.org/devmtg/2023-05/slides/QuickTalks-May10/01%20-Multiple-Exit%20MLIR%20Blocks-EuroLLVM%202023.pdf)  
-7. mlir/docs/PatternRewriter.md · doe \- GitLab, Zugriff am August 16, 2025, [https://code.ornl.gov/llvm-doe/llvm-project/-/blob/doe/mlir/docs/PatternRewriter.md](https://code.ornl.gov/llvm-doe/llvm-project/-/blob/doe/mlir/docs/PatternRewriter.md)  
-8. mlir/docs/PatternRewriter.md · 8b264613260cb5c881b3b5634189bdceae3f93d8 · undefined \- Gricad-gitlab, Zugriff am August 16, 2025, [https://gricad-gitlab.univ-grenoble-alpes.fr/violetf/llvm-project/-/blob/8b264613260cb5c881b3b5634189bdceae3f93d8/mlir/docs/PatternRewriter.md](https://gricad-gitlab.univ-grenoble-alpes.fr/violetf/llvm-project/-/blob/8b264613260cb5c881b3b5634189bdceae3f93d8/mlir/docs/PatternRewriter.md)  
-9. Pattern Rewriting : Generic DAG-to-DAG Rewriting \- MLIR, Zugriff am August 16, 2025, [https://mlir.llvm.org/docs/PatternRewriter/](https://mlir.llvm.org/docs/PatternRewriter/)  
-10. mlir::PatternRewriter Class Reference \- MLIR, Zugriff am August 16, 2025, [https://mlir.llvm.org/doxygen/classmlir\_1\_1PatternRewriter.html](https://mlir.llvm.org/doxygen/classmlir_1_1PatternRewriter.html)  
-11. Dialect Conversion \- MLIR \- LLVM, Zugriff am August 16, 2025, [https://mlir.llvm.org/docs/DialectConversion/](https://mlir.llvm.org/docs/DialectConversion/)  
-12. llvm-project/mlir/lib/Dialect/Linalg/Transforms/Detensorize.cpp at ..., Zugriff am August 16, 2025, [https://github.com/llvm/llvm-project/blob/main/mlir/lib/Dialect/Linalg/Transforms/Detensorize.cpp](https://github.com/llvm/llvm-project/blob/main/mlir/lib/Dialect/Linalg/Transforms/Detensorize.cpp)  
-13. 'cf' Dialect \- MLIR \- LLVM, Zugriff am August 16, 2025, [https://mlir.llvm.org/docs/Dialects/ControlFlowDialect/](https://mlir.llvm.org/docs/Dialects/ControlFlowDialect/)

@@ -296,22 +296,3 @@ MLIR provides multiple strategies for creating operations, and choosing the righ
 
 * **TableGen Declarative Builders:** These are ideal for operations that are relatively simple or have a fixed, default internal structure. The corrected TaskOp builder, which creates a body with a default yield, is a perfect example. This approach is concise, keeps the operation's definition self-contained in the .td file, and is easy to maintain.  
 * **Custom C++ Builders (e.g., the bodyBuilder pattern):** This approach is essential for complex operations where the internal structure of the region is highly variable and depends on the specific context of the call site. It offers maximum flexibility and control and is the standard for the powerful control flow operations in dialects like scf and affine. For the Orchestra dialect, providing both a simple declarative builder for default cases and a flexible C++ bodyBuilder for complex programmatic IR generation would offer the best of both worlds.
-
-#### **Referenzen**
-
-1. mlir::OpTrait::SingleBlock\< ConcreteType \> Struct Template Reference, Zugriff am August 17, 2025, [https://mlir.llvm.org/doxygen/structmlir\_1\_1OpTrait\_1\_1SingleBlock.html](https://mlir.llvm.org/doxygen/structmlir_1_1OpTrait_1_1SingleBlock.html)  
-2. segmentation fault with llvm-ir \- Stack Overflow, Zugriff am August 17, 2025, [https://stackoverflow.com/questions/21498622/segmentation-fault-with-llvm-ir](https://stackoverflow.com/questions/21498622/segmentation-fault-with-llvm-ir)  
-3. Understanding how mlir DialectInterface are loaded \- Beginners \- LLVM Discourse, Zugriff am August 17, 2025, [https://discourse.llvm.org/t/understanding-how-mlir-dialectinterface-are-loaded/66697](https://discourse.llvm.org/t/understanding-how-mlir-dialectinterface-are-loaded/66697)  
-4. mlir::OperationState Struct Reference \- MLIR, Zugriff am August 17, 2025, [https://mlir.llvm.org/doxygen/structmlir\_1\_1OperationState.html](https://mlir.llvm.org/doxygen/structmlir_1_1OperationState.html)  
-5. mlir::OperationState Member List, Zugriff am August 17, 2025, [https://mlir.llvm.org/doxygen/structmlir\_1\_1OperationState-members.html](https://mlir.llvm.org/doxygen/structmlir_1_1OperationState-members.html)  
-6. Traits \- MLIR \- LLVM, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/Traits/](https://mlir.llvm.org/docs/Traits/)  
-7. MLIR — Using Traits \- Math ∩ Programming, Zugriff am August 17, 2025, [https://www.jeremykun.com/2023/09/07/mlir-using-traits/](https://www.jeremykun.com/2023/09/07/mlir-using-traits/)  
-8. \[RFC\] Arbitrary Regions in MLIR \- Google Groups, Zugriff am August 17, 2025, [https://groups.google.com/a/tensorflow.org/g/mlir/c/gPQFIy9XpVw](https://groups.google.com/a/tensorflow.org/g/mlir/c/gPQFIy9XpVw)  
-9. MLIR Language Reference, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/LangRef/](https://mlir.llvm.org/docs/LangRef/)  
-10. 'scf' Dialect \- MLIR \- LLVM, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/Dialects/SCFDialect/](https://mlir.llvm.org/docs/Dialects/SCFDialect/)  
-11. 'func' Dialect \- MLIR, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/Dialects/Func/](https://mlir.llvm.org/docs/Dialects/Func/)  
-12. Interfaces \- MLIR \- LLVM, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/Interfaces/](https://mlir.llvm.org/docs/Interfaces/)  
-13. Operation Definition Specification (ODS) \- MLIR \- LLVM, Zugriff am August 17, 2025, [https://mlir.llvm.org/docs/DefiningDialects/Operations/](https://mlir.llvm.org/docs/DefiningDialects/Operations/)  
-14. mlir/docs/OpDefinitions.md · 89bb0cae46f85bdfb04075b24f75064864708e78 · llvm-doe / llvm-project · GitLab, Zugriff am August 17, 2025, [https://code.ornl.gov/llvm-doe/llvm-project/-/blob/89bb0cae46f85bdfb04075b24f75064864708e78/mlir/docs/OpDefinitions.md](https://code.ornl.gov/llvm-doe/llvm-project/-/blob/89bb0cae46f85bdfb04075b24f75064864708e78/mlir/docs/OpDefinitions.md)  
-15. mlir::scf Namespace Reference \- LLVM, Zugriff am August 17, 2025, [https://mlir.llvm.org/doxygen/namespacemlir\_1\_1scf.html](https://mlir.llvm.org/doxygen/namespacemlir_1_1scf.html)  
-16. TestWhileOpBuilder.cpp source code \[mlir/test/lib/Dialect/SCF/TestWhileOpBuilder.cpp\], Zugriff am August 17, 2025, [https://codebrowser.dev/llvm/mlir/test/lib/Dialect/SCF/TestWhileOpBuilder.cpp.html](https://codebrowser.dev/llvm/mlir/test/lib/Dialect/SCF/TestWhileOpBuilder.cpp.html)
