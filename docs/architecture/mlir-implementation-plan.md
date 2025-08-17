@@ -53,14 +53,18 @@ OrchestraIR operations.
 
 Code-Snippet
 
-// In OrchestraOps.td  
-def Orchestra\_ScheduleOp : Orchestra\_Op\<"schedule"\> {  
-  let summary \= "Container for a physically scheduled DAG of tasks.";  
-  let description \=;
+// In OrchestraOps.td
+def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
+  let summary = "Container for a physically scheduled DAG of tasks.";
+  let description = [{
+    Contains a single region holding a Directed Acyclic Graph (DAG) of
+    `orchestra.task` operations. The schedule operation itself has no
+    operands or results.
+  }];
 
-  let results \= (outs Variadic\<AnyType\>:$results);  
-  let regions \= (region SizedRegion:$body);  
-  let hasCanonicalizer \= 1;  
+  let regions = (region AnyRegion:$body);
+  let hasCanonicalizer = 1;
+  let hasVerifier = 1;
 }
 
 orchestra.task**:** This operation encapsulates an atomic unit of computation assigned to a specific hardware resource. Its target attribute is defined as a DictionaryAttr, providing a flexible and extensible mechanism for specifying fine-grained placement constraints, an enhancement over the simple string attribute initially proposed.1

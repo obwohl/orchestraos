@@ -1,6 +1,6 @@
 # Project Status: Active and Stable
 
-**Last Updated:** 2025-08-16
+**Last Updated:** 2025-08-17
 
 ## 1. Current State
 
@@ -15,6 +15,15 @@ Key characteristics of the current project state:
 - **Testing:** A standard, CMake-integrated `lit` test suite is in place and all tests are passing.
 
 ## 2. Recent History
+
+### Implementing the `orchestra.schedule` Operation
+
+The foundational `orchestra.schedule` operation has been implemented. This operation serves as a container for a graph of `orchestra.task` operations, representing a scheduled unit of work.
+
+-   The operation is defined in `OrchestraOps.td`.
+-   A C++ verifier has been implemented to enforce that the operation is top-level and contains only `orchestra.task` operations.
+-   The definition was updated to have no results, aligning it with the architectural plan.
+-   A new test file, `schedule.mlir`, has been added to the test suite to verify the operation's parser and verifier.
 
 ### Correcting the Implementation Plan Documentation
 

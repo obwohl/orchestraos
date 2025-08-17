@@ -37,23 +37,49 @@ mlir::LogicalResult TransferOp::verify() {
 //===----------------------------------------------------------------------===//
 
 mlir::LogicalResult ScheduleOp::verify() {
+  // Check that the schedule is a top-level operation.
   if (getOperation()->getParentOp() != nullptr &&
       !isa<mlir::ModuleOp>(getOperation()->getParentOp())) {
     return emitOpError("must be a top-level operation");
   }
+
+  // Check the body of the schedule.
+  auto &body = getBody();
+  auto *block = &body.front();
+  auto *terminator = block->getTerminator();
+
+  // The block must end with an orchestra.yield.
+  if (!isa<YieldOp>(terminator)) {
+    return emitOpError("region must terminate with 'orchestra.yield'");
+  }
+
+  // The yield should have no operands, since the schedule has no results.
+  if (terminator->getNumOperands() != 0) {
+    return emitOpError("terminator should have no operands");
+  }
+
+  // All other operations must be orchestra.task ops.
+  for (auto &op : block->without_terminator()) {
+    if (!isa<TaskOp>(op)) {
+      return op.emitError(
+          "only 'orchestra.task' operations are allowed inside a "
+          "'orchestra.schedule'");
+    }
+  }
+
   return mlir::success();
 }
 
 namespace {
-// Erase an empty schedule that has no results.
+// Erase a schedule that has no tasks.
 struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
   using OpRewritePattern<ScheduleOp>::OpRewritePattern;
 
   mlir::LogicalResult
   matchAndRewrite(ScheduleOp op,
                   mlir::PatternRewriter &rewriter) const override {
-    // An empty schedule has a single block with no operations.
-    if (op.getBody().front().empty() && op.getNumResults() == 0) {
+    // A schedule with no tasks has a single block with only a yield op.
+    if (op.getBody().front().without_terminator().empty()) {
       rewriter.eraseOp(op);
       return mlir::success();
     }

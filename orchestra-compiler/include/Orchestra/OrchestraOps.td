@@ -27,10 +27,11 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
   let description = [{
     Contains a single region holding a Directed Acyclic Graph (DAG) of
     `orchestra.task` operations, where the edges of the DAG are represented by
-    the SSA use-def chain.
+    the SSA use-def chain. The schedule operation itself has no operands or
+    results.
   }];
 
-  let results = (outs Variadic<AnyType>:$results);
+  // The schedule operation itself does not produce results.
   let regions = (region AnyRegion:$body);
   let hasCanonicalizer = 1;
   let hasVerifier = 1;
