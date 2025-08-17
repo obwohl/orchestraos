@@ -16,6 +16,13 @@ Key characteristics of the current project state:
 
 ## 2. Recent History
 
+### Laying the Groundwork for Hardware-Aware Optimizations
+
+To enable advanced, hardware-aware optimizations as outlined in the project's implementation plan, the foundational components for a modular optimization framework have been put in place.
+
+- **Fusion Strategy Interface:** A new MLIR interface, `OrchestraFusionStrategyInterface`, has been defined. This interface provides a clean, abstract API (`isFusionProfitable`) for hardware-specific backends to inform the compiler about the profitability of fusing two operations. This is the first step towards building a flexible, target-aware operator fusion pass.
+- **Build System Refactoring:** The CMake build system has been significantly refactored to support a more modular dialect definition. The previous `add_mlir_dialect` convenience function has been replaced with granular `mlir_tablegen` calls. This change separates the TableGen processing for the dialect, its operations, and its interfaces, resolving build errors and aligning the project with modern MLIR best practices for defining complex dialects. The TableGen dialect definitions were also refactored into separate files for clarity and maintainability.
+
 ### Implementing Canonicalization for `orchestra.commit`
 
 A canonicalization pattern has been added for the `orchestra.commit` operation. This pattern performs constant folding: if the condition for the `commit` is a compile-time constant, the operation is replaced by either its `true` or `false` values. This simplifies the IR and enables further optimizations.

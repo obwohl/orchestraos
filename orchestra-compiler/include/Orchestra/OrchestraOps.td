@@ -1,22 +1,9 @@
 #ifndef ORCHESTRA_OPS_TD
 #define ORCHESTRA_OPS_TD
 
-include "mlir/IR/OpBase.td"
+include "Orchestra/OrchestraDialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/OpAsmInterface.td"
-
-def Orchestra_Dialect : Dialect {
-  let name = "orchestra";
-  let cppNamespace = "::mlir::orchestra";
-  let summary = "A dialect for the Orchestra meta-OS compiler.";
-  let description = [{
-    The OrchestraIR dialect is the heart of the OrchestraOS compiler's
-    proprietary technology. It is a mid-level dialect designed to serve as the
-    crucial bridge between a purely logical, framework-agnostic representation
-    of a computation and the concrete, hardware-specific representations
-    required for final code generation.
-  }];
-}
 
 // A base class for all operations in this dialect.
 class Orchestra_Op<string mnemonic, list<Trait> traits = []> :

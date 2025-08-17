@@ -1,0 +1,37 @@
+[0/1] Re-running CMake...
+-- Could NOT find LibEdit (missing: LibEdit_INCLUDE_DIRS LibEdit_LIBRARIES)
+-- Could NOT find CURL (missing: CURL_LIBRARY CURL_INCLUDE_DIR)
+-- Found MLIR_DIR: /usr/lib/llvm-20/lib/cmake/mlir
+-- Found LLVM_DIR: /usr/lib/llvm-20/lib/cmake/llvm
+-- Building with -fPIC
+-- Configuring done (0.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: /app/orchestra-compiler/build
+[1/17] Building OrchestraInterfaces.h.inc...
+[2/17] Building OrchestraDialect.cpp.inc...
+[3/17] Building OrchestraOps.h.inc...
+[4/17] Building OrchestraInterfaces.cpp.inc...
+[5/17] Building OrchestraOps.cpp.inc...
+[6/16] Building OrchestraDialect.h.inc...
+[7/16] Building CXX object lib/Orchestra/CMakeFiles/obj.Orchestra.dir/OrchestraInterfaces.cpp.o
+[8/16] Building CXX object lib/Orchestra/CMakeFiles/obj.Orchestra.dir/OrchestraDialect.cpp.o
+[9/16] Linking CXX static library lib/Orchestra/libOrchestra.a
+[10/16] Building CXX object lib/Orchestra/Transforms/CMakeFiles/OrchestraTransforms.dir/SpeculateIfOp.cpp.o
+[11/16] Building CXX object lib/Orchestra/Transforms/CMakeFiles/OrchestraTransforms.dir/Passes.cpp.o
+[12/16] Building CXX object lib/Orchestra/Transforms/CMakeFiles/OrchestraTransforms.dir/LowerOrchestraToStandard.cpp.o
+In file included from /usr/lib/llvm-20/include/mlir/Dialect/Arith/Utils/Utils.h:21,
+                 from /usr/lib/llvm-20/include/mlir/Dialect/SCF/IR/SCF.h:16,
+                 from /app/orchestra-compiler/lib/Orchestra/Transforms/LowerOrchestraToStandard.cpp:13:
+/usr/lib/llvm-20/include/mlir/Transforms/DialectConversion.h: In instantiation of ‘class mlir::OpConversionPattern<mlir::orchestra::CommitOp>’:
+/app/orchestra-compiler/lib/Orchestra/Transforms/LowerOrchestraToStandard.cpp:25:39:   required from here
+/usr/lib/llvm-20/include/mlir/IR/PatternMatch.h:255:16: warning: ‘virtual void mlir::RewritePattern::rewrite(mlir::Operation*, mlir::PatternRewriter&) const’ was hidden [-Woverloaded-virtual=]
+  255 |   virtual void rewrite(Operation *op, PatternRewriter &rewriter) const;
+      |                ^~~~~~~
+In file included from /app/orchestra-compiler/lib/Orchestra/Transforms/LowerOrchestraToStandard.cpp:19:
+/usr/lib/llvm-20/include/mlir/Transforms/DialectConversion.h:669:16: note:   by ‘mlir::OpConversionPattern<mlir::orchestra::CommitOp>::rewrite’
+  669 |   virtual void rewrite(SourceOp op, OneToNOpAdaptor adaptor,
+      |                ^~~~~~~
+[13/16] Building CXX object lib/Orchestra/Transforms/CMakeFiles/OrchestraTransforms.dir/LowerOrchestraToGPU.cpp.o
+[14/16] Linking CXX static library lib/Orchestra/Transforms/libOrchestraTransforms.a
+[15/16] Building CXX object orchestra-opt/CMakeFiles/orchestra-opt.dir/main.cpp.o
+[16/16] Linking CXX executable orchestra-opt/orchestra-opt
