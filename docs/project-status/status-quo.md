@@ -75,6 +75,15 @@ To begin the process of lowering the `orchestra` dialect to hardware-specific pr
 - A new test case, `lower-transfer.mlir`, has been added to verify the pass's functionality.
 - The pass is registered with `orchestra-opt` and can be invoked with the `--lower-orchestra-to-gpu` flag.
 
+### Upgrading `LowerOrchestraToGPU` to Asynchronous Lowering
+The `LowerOrchestraToGPU` pass has been significantly upgraded to support asynchronous data transfers, a key optimization for overlapping computation and memory operations on the GPU.
+
+- The pass has been refactored to be stateful, allowing it to manage the lifecycle of asynchronous operations.
+- The lowering of `orchestra.transfer` has been changed from a synchronous `gpu.memcpy` to an asynchronous `nvgpu.device_async_copy`.
+- The destination buffer for the copy is now allocated in workgroup shared memory (`#gpu.address_space<workgroup>`), which is a prerequisite for using the `nvgpu.device_async_copy` operation.
+- The pass now inserts `nvgpu.device_async_wait` operations "just-in-time" before the use of the transferred data, ensuring correctness while maximizing the potential for overlap.
+- The build system and test cases have been updated to support and verify this new asynchronous lowering strategy.
+
 ### Implementing the `DivergenceToSpeculation` Pass
 
 A new compiler pass, `DivergenceToSpeculation`, has been implemented. This pass is a key step in the compiler's semantic development, transforming standard control flow (`scf.if`) into a speculative execution model using the `orchestra` dialect.
