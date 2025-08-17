@@ -287,13 +287,13 @@ auto targetAttr \= rewriter.getDictionaryAttr({}); // Placeholder target
 
 // Create the 'then' task and populate its body.  
 auto thenTask \= rewriter.create\<orchestra::TaskOp\>(  
-    loc, resultTypes, thenExternalValues.getArrayRef(), targetAttr);  
+    loc, thenExternalValues.getArrayRef(), resultTypes, targetAttr);
 cloneAndRemapRegion(thenRegion, thenTask.getBodyRegion(),  
                     thenExternalValues.getArrayRef(), rewriter);
 
 // Create the 'else' task and populate its body.  
 auto elseTask \= rewriter.create\<orchestra::TaskOp\>(  
-    loc, resultTypes, elseExternalValues.getArrayRef(), targetAttr);  
+    loc, elseExternalValues.getArrayRef(), resultTypes, targetAttr);
 cloneAndRemapRegion(elseRegion, elseTask.getBodyRegion(),  
                     elseExternalValues.getArrayRef(), rewriter);
 

@@ -16,6 +16,13 @@ Key characteristics of the current project state:
 
 ## 2. Recent History
 
+### Correcting the Implementation Plan Documentation
+
+A minor bug in the `docs/architecture/mlir-implementation-plan.md` has been corrected.
+- The example code for the `rewriter.create<orchestra::TaskOp>` call had its `resultTypes` and `operands` arguments swapped.
+- This was inconsistent with the C++ builder signature defined in the same document and the actual implementation.
+- The example has been corrected to prevent future confusion.
+
 ### Improving Dialect Robustness and Build Stability
 
 Recent work has focused on hardening the `Orchestra` dialect and improving the stability of the development environment.
