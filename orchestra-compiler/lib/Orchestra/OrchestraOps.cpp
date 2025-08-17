@@ -101,6 +101,39 @@ mlir::LogicalResult TaskOp::verify() {
   if (!getTarget()) {
     return emitOpError("requires a 'target' attribute");
   }
+
+  // The region of a task must have a single block.
+  if (getBody().getBlocks().size() != 1) {
+    return emitOpError("expected region to have a single block");
+  }
+
+  // The block must be terminated by an orchestra.yield op.
+  auto terminator = getBody().front().getTerminator();
+  if (!terminator) {
+    return emitOpError("region must be terminated");
+  }
+
+  auto yieldOp = dyn_cast<YieldOp>(terminator);
+  if (!yieldOp) {
+    return emitOpError("region must terminate with 'orchestra.yield'");
+  }
+
+  // The number of yielded values must match the number of task results.
+  if (yieldOp.getNumOperands() != getNumResults()) {
+    return emitOpError("has ")
+           << getNumResults() << " results but its "
+           << "region yields " << yieldOp.getNumOperands() << " values";
+  }
+
+  // The types of the yielded values must match the task's result types.
+  for (auto it : llvm::zip(getResultTypes(), yieldOp.getOperandTypes())) {
+    if (std::get<0>(it) != std::get<1>(it)) {
+      return yieldOp.emitOpError("type of yielded value ")
+             << std::get<0>(it) << " does not match corresponding task result type "
+             << std::get<1>(it);
+    }
+  }
+
   return mlir::success();
 }
 

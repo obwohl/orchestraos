@@ -40,6 +40,14 @@ Recent work has focused on hardening the `Orchestra` dialect and improving the s
 
 - **Build System Hardening:** The build and test environment has been made more reliable by explicitly adding `zstd` as a dependency and fixing an issue with the `llvm-lit` test driver symlink in `pyenv` environments. These changes are documented in a new troubleshooting guide.
 
+### Implementing the `orchestra.task` Verifier
+
+A verifier has been implemented for the `orchestra.task` operation to improve the robustness of the `Orchestra` dialect.
+
+- The verifier ensures that the region inside the `orchestra.task` is terminated by an `orchestra.yield` operation.
+- It also checks that the types of the values yielded by the `orchestra.yield` operation match the result types of the `orchestra.task` operation.
+- This prevents the creation of invalid IR and makes the dialect more robust.
+
 ### Implementing the `LowerOrchestraToStandard` Pass
 
 A new pass, `LowerOrchestraToStandard`, has been implemented to lower the `orchestra` dialect to standard dialects. This is a crucial step in the progressive lowering pipeline, enabling the compiler to translate high-level `orchestra` operations into constructs that are closer to the hardware.
