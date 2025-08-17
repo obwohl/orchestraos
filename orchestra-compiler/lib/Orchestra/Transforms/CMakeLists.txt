@@ -12,6 +12,7 @@ target_link_libraries(OrchestraTransforms
   MLIRTransforms
   MLIRAnalysis
   MLIRSCFDialect
+  MLIRNVGPUDialect
   MLIRSupport
   LLVMSupport
   Orchestra

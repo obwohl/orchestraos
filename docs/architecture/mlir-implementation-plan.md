@@ -503,7 +503,7 @@ public:
   }  
 };
 
-### **4.4. A Stateful Pass for Lowering orchestra.transfer to nvgpu Asynchronous DMA**
+### **4.4. A Stateful Pass for Lowering orchestra.transfer to nvgpu Asynchronous DMA (✅ Implemented)**
 
 Lowering orchestra.transfer to NVIDIA's token-based asynchronous copy model presents a unique challenge. A simple, stateless ConversionPattern that replaces orchestra.transfer with nvgpu.device\_async\_copy followed immediately by nvgpu.device\_async\_wait would render the copy synchronous, defeating the goal of overlapping data movement with computation.1
 

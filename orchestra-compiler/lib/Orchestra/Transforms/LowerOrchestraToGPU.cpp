@@ -1,56 +1,21 @@
-/*===- LowerOrchestraToGPU.cpp - Orchestra to GPU lowering passes -----*- C++ -*-===//
- *
- * This file implements a pass to lower the Orchestra dialect to GPU dialects.
- *
- *===----------------------------------------------------------------------===*/
-
-#include "Orchestra/Transforms/Passes.h"
-
-#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/IR/BuiltinDialect.h"
-#include "mlir/IR/PatternMatch.h"
+#include "mlir/Dialect/NVGPU/IR/NVGPUDialect.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
-#include "mlir/Transforms/DialectConversion.h"
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
+#include "Orchestra/Transforms/Passes.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
+
+namespace mlir {
+namespace orchestra {
 
 namespace {
-
-class TransferOpLowering
-    : public mlir::OpConversionPattern<mlir::orchestra::TransferOp> {
-public:
-  using OpConversionPattern<mlir::orchestra::TransferOp>::OpConversionPattern;
-
-  mlir::LogicalResult
-  matchAndRewrite(mlir::orchestra::TransferOp op, OpAdaptor adaptor,
-                  mlir::ConversionPatternRewriter &rewriter) const override {
-    // For now, we ignore the 'from' and 'to' attributes. A more advanced
-    // lowering would use these to determine memory spaces.
-
-    auto sourceType = mlir::dyn_cast<mlir::MemRefType>(adaptor.getSource().getType());
-    if (!sourceType) {
-      return rewriter.notifyMatchFailure(op, "requires MemRef type");
-    }
-
-    // 1. Allocate the destination buffer.
-    auto destBuffer =
-        rewriter.create<mlir::memref::AllocOp>(op.getLoc(), sourceType);
-
-    // 2. Create the memcpy operation.
-    rewriter.create<mlir::gpu::MemcpyOp>(
-        op.getLoc(), mlir::TypeRange{},
-        mlir::ValueRange{destBuffer.getResult(), adaptor.getSource()});
-
-    // 3. Replace the transfer op with the destination buffer.
-    rewriter.replaceOp(op, {destBuffer.getResult()});
-
-    return mlir::success();
-  }
-};
-
 class LowerOrchestraToGPUPass
     : public mlir::PassWrapper<LowerOrchestraToGPUPass,
                                mlir::OperationPass<mlir::ModuleOp>> {
@@ -58,36 +23,109 @@ public:
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToGPUPass)
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
-    registry.insert<mlir::gpu::GPUDialect, mlir::arith::ArithDialect,
-                    mlir::memref::MemRefDialect>();
+    registry
+        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
+                mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
+                mlir::arith::ArithDialect>();
   }
 
   void runOnOperation() override {
-    mlir::ConversionTarget target(getContext());
-
-    target.addLegalDialect<mlir::gpu::GPUDialect, mlir::arith::ArithDialect,
-                           mlir::memref::MemRefDialect,
-                           mlir::orchestra::OrchestraDialect>();
-
-    // Mark the transfer op as illegal since we are lowering it.
-    target.addIllegalOp<mlir::orchestra::TransferOp>();
-
-    mlir::RewritePatternSet patterns(&getContext());
-    patterns.add<TransferOpLowering>(&getContext());
-
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
-      signalPassFailure();
+    getOperation().walk([this](mlir::gpu::GPUFuncOp funcOp) {
+      runOnGpuFunc(funcOp);
+    });
   }
 
-  mlir::StringRef getArgument() const final { return "lower-orchestra-to-gpu"; }
+private:
+  void runOnGpuFunc(mlir::gpu::GPUFuncOp funcOp) {
+    // Map from destination buffer to async token.
+    llvm::DenseMap<mlir::Value, mlir::Value> asyncTokens;
+
+    // Collect all transfer ops to be rewritten.
+    llvm::SmallVector<mlir::orchestra::TransferOp, 4> transferOps;
+    funcOp.walk([&](mlir::orchestra::TransferOp op) {
+      transferOps.push_back(op);
+    });
+
+    mlir::OpBuilder builder(funcOp.getContext());
+    for (auto op : transferOps) {
+      builder.setInsertionPoint(op);
+      auto loc = op.getLoc();
+      auto source = op.getSource();
+      auto sourceType = mlir::cast<mlir::MemRefType>(source.getType());
+
+      if (!sourceType || !sourceType.hasStaticShape()) {
+        op.emitError("requires a memref with static shape");
+        signalPassFailure();
+        return;
+      }
+
+      // Create a new memref on the GPU in shared memory.
+      auto destType =
+          mlir::MemRefType::get(sourceType.getShape(), sourceType.getElementType(),
+                                sourceType.getLayout(), mlir::gpu::AddressSpaceAttr::get(op.getContext(), mlir::gpu::AddressSpace::Workgroup));
+      auto dest = builder.create<mlir::memref::AllocOp>(loc, destType);
+
+      // Create zero indices for the copy.
+      mlir::SmallVector<mlir::Value, 4> indices;
+      for (unsigned i = 0; i < sourceType.getRank(); ++i) {
+        indices.push_back(builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
+      }
+
+      // Create an async copy.
+      auto asyncCopy = builder.create<mlir::nvgpu::DeviceAsyncCopyOp>(
+          loc, mlir::nvgpu::DeviceAsyncTokenType::get(op.getContext()),
+          dest.getResult(), indices,
+          source, indices,
+          builder.getIndexAttr(sourceType.getNumElements()),
+          mlir::Value{}, mlir::UnitAttr{});
+
+      asyncTokens[dest.getResult()] = asyncCopy.getResult();
+
+      op.getResult().replaceAllUsesWith(dest.getResult());
+      op.erase();
+    }
+
+    // Second phase: insert wait ops.
+    llvm::DenseMap<mlir::Operation *, llvm::SmallVector<mlir::Value, 1>> waitsToInsert;
+    for (auto &pair : asyncTokens) {
+      mlir::Value buffer = pair.first;
+      mlir::Value token = pair.second;
+      for (mlir::OpOperand &use : buffer.getUses()) {
+        mlir::Operation *user = use.getOwner();
+        if (isa<mlir::nvgpu::DeviceAsyncCopyOp>(user)) {
+          continue;
+        }
+        waitsToInsert[user].push_back(token);
+      }
+    }
+
+    for (auto &pair : waitsToInsert) {
+      mlir::Operation *user = pair.first;
+      llvm::SmallVector<mlir::Value, 1> &tokens = pair.second;
+      mlir::OpBuilder wait_builder(user);
+      for (auto token : tokens) {
+        wait_builder.create<mlir::nvgpu::DeviceAsyncWaitOp>(user->getLoc(), token, nullptr);
+      }
+    }
+  }
+
+  mlir::StringRef getArgument() const final {
+    return "lower-orchestra-to-gpu";
+  }
+
   mlir::StringRef getDescription() const final {
-    return "Lower Orchestra dialect to GPU dialects";
+    return "Lower the Orchestra dialect to the GPU dialect using async copies";
   }
 };
-
 } // namespace
 
-void mlir::orchestra::registerLoweringToGPUPasses() {
-  mlir::PassRegistration<LowerOrchestraToGPUPass>();
+std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass() {
+  return std::make_unique<LowerOrchestraToGPUPass>();
 }
+
+void registerLoweringToGPUPasses() {
+  ::mlir::PassRegistration<LowerOrchestraToGPUPass>();
+}
+
+} // namespace orchestra
+} // namespace mlir
