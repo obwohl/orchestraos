@@ -3,12 +3,12 @@ add_mlir_dialect_library(Orchestra
   # List of C++ source files to compile.
   OrchestraDialect.cpp
   OrchestraOps.cpp
+  OrchestraInterfaces.cpp
 
   # CRITICAL: This establishes the build-time dependency.
-  # It ensures that the.inc files are generated before OrchestraDialect.cpp is compiled.
-  # Note the target name is MLIROrchestraOpsIncGen, not OrchestraOpsIncGen.
+  # It ensures that the.inc files are generated before the C++ sources are compiled.
   DEPENDS
-  MLIROrchestraOpsIncGen
+  OrchestraIncGen
 
   # Establish link-time dependencies.
   # All dialects need MLIRIR. Add others as needed (e.g., MLIRParser).
