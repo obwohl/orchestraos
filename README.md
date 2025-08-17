@@ -47,14 +47,20 @@ sudo apt-get install -y \
     libclang-20-dev \
     libclang-cpp20-dev \
     liblldb-20-dev \
-    libunwind-20-dev
+    libunwind-20-dev \
+    libzstd-dev
 
 # 4. Install the LLVM Integrated Tester (lit)
 pip install lit
 
 # 5. (Workaround) Create a symlink for llvm-lit, which is expected by the build
 #    This may require sudo if you are not the owner of the target directory.
-sudo ln -s "$(which lit)" /usr/lib/llvm-20/bin/llvm-lit
+#    If you are using pyenv, you may need to use `pyenv which lit` to get the correct path.
+LIT_PATH=$(which lit)
+if [ -n "$(command -v pyenv)" ]; then
+  LIT_PATH=$(pyenv which lit)
+fi
+sudo ln -s "$LIT_PATH" /usr/lib/llvm-20/bin/llvm-lit
 ```
 
 ### Build and Test Instructions
