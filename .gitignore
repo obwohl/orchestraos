@@ -2,3 +2,6 @@
 /orchestra-compiler/build/
 tests/.lit_test_times.txt
 llvm.sh.1
+
+# macOS
+.DS_Store
