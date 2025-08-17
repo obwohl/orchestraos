@@ -71,19 +71,29 @@ orchestra.task**:** This operation encapsulates an atomic unit of computation as
 
 Code-Snippet
 
-// In OrchestraOps.td  
-def Orchestra\_TaskOp : Orchestra\_Op\<"task"\> {  
-  let summary \= "An asynchronous unit of computation assigned to a resource.";  
-  let description \=;
+// In OrchestraOps.td
+def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
+  let summary = "An asynchronous unit of computation assigned to a resource.";
+  let description = [{
+    Encapsulates an atomic unit of computation assigned to a specific hardware
+    resource. Its `target` attribute provides a flexible mechanism for
+    specifying fine-grained placement constraints.
+  }];
 
-  let arguments \= (ins Variadic\<AnyType\>:$operands);  
-  let results \= (outs Variadic\<AnyType\>:$results);
+  let arguments = (ins
+    Variadic<AnyType>:$operands,
 
-  let attributes \= (ins DictionaryAttr:$target);  
-  let regions \= (region SizedRegion:$body);
+    // Note on attribute syntax: In MLIR's TableGen format, operation
+    // attributes are defined within the 'arguments' list, just like
+    // operands. The distinction is made by the type of the definition.
+    // 'DictionaryAttr' is a subclass of 'AttrConstraint', which marks
+    // '$target' as an attribute.
+    DictionaryAttr:$target
+  );
+  let results = (outs Variadic<AnyType>:$results);
 
-  // Define a custom builder for convenience.  
-  let builders \=;  
+  let regions = (region AnyRegion:$body);
+  let hasVerifier = 1;
 }
 
 **orchestra.transfer:** This operation makes data movement between different logical memory spaces an explicit, first-class citizen of the IR. The from and to locations are represented by SymbolRefAttr, which will be resolved to physical memory spaces during a later lowering stage.1
