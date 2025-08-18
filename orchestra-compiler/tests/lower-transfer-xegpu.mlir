@@ -78,3 +78,45 @@ gpu.module @test_module_memspace {
 // CHECK:        xegpu.create_nd_tdesc %{{.*}} : memref<128x128xf32, #gpu.address_space<workgroup>> -> !xegpu.tensor_desc<32x32xf32, #gpu.address_space<workgroup>>
 // CHECK:      }
 // CHECK:      xegpu.fence
+
+// -----
+
+// CHECK-LABEL: func.func @test_strided_destination
+// CHECK-SAME: (%[[SRC:.*]]: memref<256x256xf32>, %[[DST:.*]]: memref<256x256xf32, strided<[512, 1]>>)
+gpu.module @test_module_strided_dest {
+  gpu.func @test_strided_destination(%src: memref<256x256xf32>, %dst: memref<256x256xf32, strided<[512, 1]>>) {
+    orchestra.transfer %src to %dst : memref<256x256xf32>
+    gpu.return
+  }
+}
+// CHECK:      scf.for
+// CHECK:        xegpu.create_nd_tdesc %arg0, {{.*}} strides: [1, 256]
+// CHECK:        xegpu.create_nd_tdesc %arg1, {{.*}} strides: [1, 512]
+// CHECK:      }
+
+// -----
+
+// CHECK-LABEL: func.func @test_transpose_copy
+// CHECK-SAME: (%[[SRC:.*]]: memref<128x256xf32, strided<[256, 1]>>, %[[DST:.*]]: memref<256x128xf32, strided<[128, 1]>>)
+gpu.module @test_module_transpose {
+  gpu.func @test_transpose_copy(%src: memref<128x256xf32, strided<[256, 1]>>, %dst: memref<256x128xf32, strided<[128, 1]>>) {
+    orchestra.transfer %src to %dst : memref<128x256xf32, strided<[256, 1]>>
+    gpu.return
+  }
+}
+// CHECK:      scf.for
+// CHECK:        xegpu.create_nd_tdesc %arg0, {{.*}} strides: [1, 256]
+// CHECK:        xegpu.create_nd_tdesc %arg1, {{.*}} strides: [1, 128]
+// CHECK:      }
+
+// -----
+
+// CHECK-LABEL: func.func @test_asymmetric_tiling
+// CHECK-SAME: (%[[SRC:.*]]: memref<260x250xf32>, %[[DST:.*]]: memref<260x250xf32>)
+gpu.module @test_asymmetric_tiling {
+  gpu.func @test_asymmetric_tiling(%src: memref<260x250xf32>, %dst: memref<260x250xf32>) {
+    orchestra.transfer %src to %dst : memref<260x250xf32>
+    gpu.return
+  }
+}
+// CHECK:      scf.for %{{.*}} = %c0 to %c260 step %c32

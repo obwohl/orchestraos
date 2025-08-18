@@ -9,6 +9,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "Orchestra/OrchestraDialect.h"
 #include "llvm/ADT/SmallVector.h"
+#include "mlir/Dialect/MemRef/Utils/MemRefUtils.h"
 
 namespace {
 
@@ -80,16 +81,34 @@ mlir::LogicalResult TransferOpLowering::matchAndRewrite(
     offsets.push_back(iv);
     offsets.push_back(rewriter.getIndexAttr(0));
 
+    mlir::MemRefLayoutAttrInterface layout;
+    int64_t offset;
+    llvm::SmallVector<int64_t> strides;
+    if (failed(getStridesAndOffset(type, strides, offset))) {
+      op.emitError("failed to get strides and offset");
+      return (mlir::xegpu::CreateNdDescOp)nullptr;
+    }
+
+    llvm::SmallVector<mlir::OpFoldResult> stride_results;
+    for (int64_t stride : strides) {
+      stride_results.push_back(rewriter.getIndexAttr(stride));
+    }
+
     auto tdescType = mlir::xegpu::TensorDescType::get(
         rewriter.getContext(), tileShape, type.getElementType(),
         type.getMemorySpace(), mlir::Attribute());
 
     return rewriter.create<mlir::xegpu::CreateNdDescOp>(
-        loc, tdescType, memref.getDefiningOp<mlir::OpResult>()->getOwner(), offsets);
+        loc, tdescType, memref, offsets, stride_results,
+        /*bound_check_mode=*/nullptr, /*layout=*/nullptr);
   };
 
   auto srcTdesc = createTdesc(src, srcType);
+  if (!srcTdesc)
+    return mlir::failure();
   auto dstTdesc = createTdesc(dst, dstType);
+  if (!dstTdesc)
+    return mlir::failure();
 
   auto vectorType =
       mlir::VectorType::get(tileShape, srcType.getElementType());
