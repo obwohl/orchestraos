@@ -71,7 +71,7 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
+def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
   let summary = "Selects one of two SSA values based on a boolean condition.";
   let description = [{
     Selects one of two sets of SSA values based on a boolean condition,
@@ -89,6 +89,29 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
 
   let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
 }
+
+//===----------------------------------------------------------------------===//
+// Canonicalization Patterns
+//===----------------------------------------------------------------------===//
+
+include "mlir/IR/PatternBase.td"
+
+// C++ helper to merge attributes and create the new fused op.
+def FuseTransferOps : NativeCodeCall<
+  "fuseTransferOps($_builder, $0, $1)">;
+
+def TransferFusionPattern : Pat<
+  // Match a transfer from another transfer.
+  (Orchestra_TransferOp (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1, $attrs1),
+                    $from2, $to2, $attrs2),
+
+  // Rewrite by calling the C++ helper.
+  (FuseTransferOps $intermediate_op, root),
+
+  // Apply C++ constraints.
+  [(hasOneUse:$intermediate_op)]
+>;
+
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
   let summary = "Terminator for regions in OrchestraIR operations.";

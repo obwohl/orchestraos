@@ -6,7 +6,7 @@ func.func @test_fold_commit_true(%arg0: i32) -> i32 {
   %true = arith.constant true
   %c42 = arith.constant 42 : i32
   // CHECK-NEXT: return [[ARG]] : i32
-  %res = "orchestra.commit"(%true, %arg0, %c42) : (i1, i32, i32) -> i32
+  %res = orchestra.commit %true true(%arg0) false(%c42) : (i1, i32, i32) -> i32
   return %res : i32
 }
 
@@ -17,6 +17,6 @@ func.func @test_fold_commit_false(%arg0: i32) -> i32 {
   %c42 = arith.constant 42 : i32
   // CHECK-NEXT: %[[CST:.*]] = arith.constant 42 : i32
   // CHECK-NEXT: return %[[CST]] : i32
-  %res = "orchestra.commit"(%false, %arg0, %c42) : (i1, i32, i32) -> i32
+  %res = orchestra.commit %false true(%arg0) false(%c42) : (i1, i32, i32) -> i32
   return %res : i32
 }

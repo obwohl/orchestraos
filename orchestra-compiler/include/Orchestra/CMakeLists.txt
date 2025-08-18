@@ -7,6 +7,7 @@ mlir_tablegen(OrchestraDialect.cpp.inc -gen-dialect-defs -dialect=orchestra)
 set(LLVM_TARGET_DEFINITIONS ${CMAKE_CURRENT_SOURCE_DIR}/OrchestraOps.td)
 mlir_tablegen(OrchestraOps.h.inc -gen-op-decls)
 mlir_tablegen(OrchestraOps.cpp.inc -gen-op-defs)
+mlir_tablegen(OrchestraCanonicalization.h.inc -gen-rewriters)
 
 # Process OrchestraInterfaces.td
 set(LLVM_TARGET_DEFINITIONS ${CMAKE_CURRENT_SOURCE_DIR}/OrchestraInterfaces.td)

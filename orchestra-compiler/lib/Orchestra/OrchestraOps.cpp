@@ -14,7 +14,7 @@ using namespace orchestra;
 
 mlir::LogicalResult CommitOp::verify() {
   if (getTrueValues().size() != getFalseValues().size()) {
-    return emitOpError("requires the same number of true and false values");
+    return emitOpError("has mismatched variadic operand sizes");
   }
   if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
     return emitOpError("requires 'true' and 'false' value types to match");
@@ -75,6 +75,50 @@ mlir::LogicalResult TransferOp::verify() {
   }
   return mlir::success();
 }
+
+namespace {
+/// Helper function for the DRR pattern to fuse two transfer ops.
+static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
+                                   orchestra::TransferOp first,
+                                   orchestra::TransferOp second) {
+  // 1. Merge attributes.
+  // Policy: For 'priority', take the maximum value.
+  // A real implementation would need a more robust policy.
+  auto firstPriority = first->getAttrOfType<IntegerAttr>("priority");
+  auto secondPriority = second->getAttrOfType<IntegerAttr>("priority");
+  Attribute finalPriority;
+  if (firstPriority && secondPriority) {
+    if (firstPriority.getInt() > secondPriority.getInt()) {
+      finalPriority = firstPriority;
+    } else {
+      finalPriority = secondPriority;
+    }
+  } else if (firstPriority) {
+    finalPriority = firstPriority;
+  } else if (secondPriority) {
+    finalPriority = secondPriority;
+  }
+
+  SmallVector<NamedAttribute, 4> newAttrs;
+  if (finalPriority) {
+    newAttrs.push_back(rewriter.getNamedAttr("priority", finalPriority));
+  }
+
+  // 2. Fuse locations.
+  auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
+
+  // 3. Create the new fused op.
+  auto newOp = rewriter.create<orchestra::TransferOp>(
+      fusedLoc, second.getResult().getType(), first.getSource(),
+      first.getFrom(), second.getTo(), rewriter.getDictionaryAttr(newAttrs));
+
+  // 4. Replace the second op with the new op.
+  rewriter.replaceOp(second, newOp.getResult());
+
+  // The DRR framework expects the replacement value to be returned.
+  return newOp.getResult();
+}
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // ScheduleOp
