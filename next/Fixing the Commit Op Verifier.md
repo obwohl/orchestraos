@@ -1,0 +1,48 @@
+# **Deep Dive: Diagnosing Silent Parser Failures in MLIR Operation Verification**
+
+## **Question for Deep-Research Agent**
+
+I am working on an MLIR-based compiler called OrchestraOS, using LLVM/MLIR version 20. I am facing a persistent and blocking issue with a failing test case for an operation verifier. The test, `orchestra-compiler/tests/verify-commit.mlir`, is designed to check the verifier for the `orchestra.commit` operation. The test fails because the verifier is not producing the expected error messages for invalid IR.
+
+My investigation has led me to believe that the root cause is not in the C++ verifier itself, but in the MLIR parser. For invalid `orchestra.commit` operations, the parser appears to be failing before the operation is constructed and the C++ verifier is called. However, the parser is failing *silently*, without emitting any diagnostic message. This prevents the test harness from matching an expected error, causing the test to fail.
+
+**Onboarding Context:**
+
+*   **Project:** OrchestraOS Compiler, an MLIR-based compiler for heterogeneous systems.
+*   **Framework:** C++ with LLVM/MLIR version 20.
+*   **Goal:** Understand why the MLIR parser might fail silently for a custom operation and how to fix it, so that the `verify-commit.mlir` test passes.
+*   **Operation Definition (`OrchestraOps.td`):**
+    ```tablegen
+    def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
+      let summary = "Selects one of two SSA values based on a boolean condition.";
+      let arguments = (ins
+        I1:$condition,
+        Variadic<AnyType>:$true_values,
+        Variadic<AnyType>:$false_values
+      );
+      let results = (outs Variadic<AnyType>:$results);
+
+      let hasVerifier = 1;
+      let hasCanonicalizer = 1;
+
+      let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
+    }
+    ```
+*   **The Invalid IR (from `verify-commit.mlir`):**
+    ```mlir
+    func.func @test_invalid_mismatched_true_false_count(%cond: i1, %t1: f32, %f1: f32, %f2: f32) {
+      // expected-error@+1 {{'orchestra.commit' op has mismatched variadic operand sizes}}
+      %0 = orchestra.commit %cond true(%t1) false(%f1, %f2) : (i1, f32, f32, f32) -> f32
+      return
+    }
+    ```
+*   **Key Finding:** When running `orchestra-opt --verify-diagnostics` on a file containing only the invalid op above, it produces no output on stderr. This strongly suggests the parser fails without reporting an error. The `SameVariadicOperandSize` trait is required for the build to succeed, but it does not seem to be emitting a diagnostic at runtime. A comment in MLIR's `OpBase.td` suggests this trait does not generate a verifier.
+
+**My Questions:**
+
+1.  **Silent Parser Failure:** What are the possible reasons that the MLIR parser for a custom operation would fail silently? Is this expected behavior under certain conditions, or does it indicate a bug in my operation's definition or the MLIR framework itself? Specifically, how does the parser generated for the `functional-type` directive interact with variadic operands and the `SameVariadicOperandSize` trait? Could a failure in resolving the variadic segments lead to a silent exit from the parsing logic?
+2.  **Diagnostic Emission in Parsers:** What is the canonical way to emit a diagnostic from within the TableGen-generated parser? If the `SameVariadicOperandSize` trait is indeed just a hint for the parser generator, where is the code that is supposed to enforce this constraint at parse time, and why might it not be emitting an error?
+3.  **Custom Parser Implementation:** If the default parser is failing silently, the only viable solution seems to be to write a custom parser (`hasCustomAssemblyFormat = 1`). What is the best practice for writing a custom parser for an operation with multiple variadic operands? How should the parser determine the split between `true_values` and `false_values` from the flat list of operands in the `functional-type` signature? How can I ensure that my custom parser emits a proper diagnostic if the operand counts do not match?
+4.  **Debugging the Parser:** What are the best tools and techniques for debugging the MLIR parsing process itself? Are there flags similar to `-mlir-print-stacktrace-on-diagnostic` that can trace the execution of the parser and pinpoint the exact location where it fails or exits silently?
+
+I am looking for a deep, technical explanation of the MLIR parsing infrastructure, particularly as it relates to variadic operands and diagnostic reporting. I need concrete strategies to debug and resolve this silent failure to unblock my project.
