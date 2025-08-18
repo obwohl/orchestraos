@@ -86,6 +86,8 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
 
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
+
+  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
 }
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
