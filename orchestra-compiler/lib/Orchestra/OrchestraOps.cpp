@@ -60,11 +60,6 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
 };
 } // namespace
 
-void CommitOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                           mlir::MLIRContext *context) {
-  results.add<FoldConstantCommit>(context);
-}
-
 //===----------------------------------------------------------------------===//
 // TransferOp
 //===----------------------------------------------------------------------===//
@@ -175,11 +170,6 @@ struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
   }
 };
 } // namespace
-
-void ScheduleOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                             mlir::MLIRContext *context) {
-  results.add<EraseEmptySchedule>(context);
-}
 
 //===----------------------------------------------------------------------===//
 // TaskOp

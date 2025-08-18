@@ -191,6 +191,29 @@ void orchestra::TaskOp::build(mlir::OpBuilder \&builder,
                           SmallVector\<mlir::Location\>(operands.size(), state.location));  
 }
 
+### **1.4. Canonicalization Patterns**
+
+Canonicalization patterns are a core feature of MLIR dialects, used to simplify the IR into a more "canonical" form. These patterns are applied by the greedy canonicalization pass (`-canonicalize`).
+
+**`orchestra.transfer` Fusion:** A key canonicalization pattern is the fusion of consecutive `orchestra.transfer` operations. This pattern simplifies the IR by eliminating redundant, intermediate data transfers. For example:
+
+```mlir
+// Before
+%1 = orchestra.transfer %0 from @MEM1 to @MEM2
+%2 = orchestra.transfer %1 from @MEM2 to @MEM3
+
+// After
+%2 = orchestra.transfer %0 from @MEM1 to @MEM3
+```
+
+This transformation is implemented using a Declarative Rewrite Rule (DRR) in TableGen for conciseness and maintainability.
+
+*   **Pattern:** The DRR matches a `transfer` op whose source is the result of another `transfer` op.
+*   **Constraint:** The pattern only applies if the intermediate transfer op has exactly one user. This is a critical safety check to ensure the fusion does not alter the dataflow for other potential consumers.
+*   **Implementation:** The rewrite is handled by a C++ helper function called from the DRR. This function is responsible for:
+    *   **Attribute Merging:** Defining and implementing a policy for combining the attributes of the two original operations. For example, for a `priority` attribute, the policy is to adopt the higher priority of the two.
+    *   **Location Fusing:** Creating a `mlir::FusedLoc` that combines the source code locations of the two original operations, preserving debuggability.
+
 | Operation | Syntax Example | Operands | Attributes | Core Semantics & Rationale |
 | :---- | :---- | :---- | :---- | :---- |
 | orchestra.schedule | orchestra.schedule {... } | None | None | Contains a region with a DAG of orchestra.task operations, representing the full, physically scheduled execution plan. |

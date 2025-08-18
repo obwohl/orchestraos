@@ -1,6 +1,6 @@
 # Project Status: Active and Stable
 
-**Last Updated:** 2025-08-17
+**Last Updated:** 2025-08-18
 
 ## 1. Current State
 
@@ -15,6 +15,24 @@ Key characteristics of the current project state:
 - **Testing:** A standard, CMake-integrated `lit` test suite is in place and all tests are passing.
 
 ## 2. Recent History
+
+### Implementing Canonicalization for `orchestra.transfer`
+
+A canonicalization pattern has been added for the `orchestra.transfer` operation to simplify the IR by fusing consecutive, compatible transfers into a single operation. This eliminates redundant data movement and enables more effective downstream analysis.
+
+- The pattern is implemented using MLIR's Declarative Rewrite Rule (DRR) framework for conciseness and maintainability.
+- The DRR pattern, defined in `OrchestraOps.td`, matches a `transfer` op whose source is another `transfer` op with exactly one user.
+- A C++ helper function, `fuseTransferOps`, handles the fusion logic, including a policy for merging attributes (e.g., taking the maximum priority) and creating a `FusedLoc` to preserve debug information.
+- The build system has been updated to generate the C++ code for the DRR pattern.
+
+### Fixing the `orchestra.commit` Verifier
+
+A critical bug in the `orchestra.commit` operation's verifier has been resolved, significantly improving the dialect's stability and correctness. The verifier was previously failing to detect several types of invalid IR. The fix was a multi-step process:
+
+- The root cause was identified as a parser error where the sizes of variadic operands were not being correctly determined. This was fixed by replacing the `SameVariadicOperandSize` trait with the more appropriate `AttrSizedOperandSegments` trait on the `Orchestra_CommitOp` definition.
+- The C++ `verify()` method for `CommitOp` was updated to correctly check all invariants.
+- Test files using the generic assembly format for `orchestra.commit` were updated to use the custom assembly format, which is required when using `AttrSizedOperandSegments`.
+- The main verifier test file, `verify-commit.mlir`, was restructured to use the `--split-input-file` option, allowing each invalid case to be tested independently. This fixed a testing issue where the test runner would abort on the first reported error.
 
 ### Laying the Groundwork for Hardware-Aware Optimizations
 

@@ -100,16 +100,20 @@ include "mlir/IR/PatternBase.td"
 def FuseTransferOps : NativeCodeCall<
   "fuseTransferOps($_builder, $0, $1)">;
 
+// Predicate to check if an SSA value has exactly one use.
+def HasOneUse : CPred<"$0.hasOneUse()">;
+
 def TransferFusionPattern : Pat<
-  // Match a transfer from another transfer.
-  (Orchestra_TransferOp (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1, $attrs1),
-                    $from2, $to2, $attrs2),
+  // Match a transfer whose source is another transfer.
+  (Orchestra_TransferOp:$final_op
+    (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1):$intermediate_result,
+    $from2, $to2),
 
   // Rewrite by calling the C++ helper.
-  (FuseTransferOps $intermediate_op, root),
+  (FuseTransferOps $intermediate_op, $final_op),
 
   // Apply C++ constraints.
-  [(hasOneUse:$intermediate_op)]
+  [(HasOneUse $intermediate_result)]
 >;
 
 
