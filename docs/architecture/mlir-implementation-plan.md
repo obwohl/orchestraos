@@ -536,7 +536,7 @@ The correct implementation requires a **stateful pass**. The pass must operate i
    \!nvgpu.device\_async\_token returned by the copy op and stores it in a data structure managed by the pass instance, associating the token with the destination memref buffer. The original transfer op's result (the destination buffer handle) is replaced by the destination memref operand.  
 2. **Synchronization Phase:** After the rewrite patterns have been applied across the entire function, the pass performs a second walk of the IR. When it encounters a use of a buffer that was the destination of an async copy, it inserts the necessary nvgpu.device\_async\_create\_group and nvgpu.device\_async\_wait operations immediately before the consuming operation. This "just-in-time" insertion of the wait barrier ensures it happens as late as possible, maximizing the potential overlap window.1 While MLIR passes are typically stateless for thread-safety, this state is confined to the pass's execution on a single function and is a necessary design pattern for managing this type of hardware asynchrony.21
 
-### **4.5. Decomposing orchestra.transfer into xegpu Load/Store Sequences**
+### **4.5. Decomposing orchestra.transfer into xegpu Load/Store Sequences (✅ Implemented)**
 
 The lowering of orchestra.transfer to the Intel GPU dialect (xegpu) requires a fundamentally different approach. The xegpu dialect is designed around a tile-based programming model and does not have a single operation for a direct memory-to-memory transfer. The copy must be decomposed into a sequence of load and store operations.1
 
@@ -546,6 +546,14 @@ The implementation pattern is a ConversionPattern\<orchestra::TransferOp\> that 
 2. **Load to Registers:** xegpu.load\_nd is used to load a 2D tile from the source memory (specified by its descriptor) into a vector type, which represents the data being held in physical registers.23  
 3. **Store from Registers:** xegpu.store\_nd is used to store the contents of the vector from registers to the destination memory (specified by its descriptor).23  
 4. **Synchronization:** Correctness hinges on the proper use of xegpu.fence. A fence with the appropriate scope (e.g., "workgroup") must be inserted after a sequence of stores to ensure that the written data is visible to all threads in the workgroup before any subsequent operation attempts to read it.23
+
+### **4.6. Refactoring the GPU Lowering into a Vendor-Aware Pipeline (✅ Implemented)**
+
+To accommodate multiple GPU backends (NVIDIA and Intel), the monolithic `LowerOrchestraToGPU` pass has been refactored into a more scalable, vendor-aware pipeline.
+
+-   The pass now accepts a `--gpu-arch` command-line option.
+-   Based on the value of this option, the pass manager dynamically dispatches to the appropriate backend-specific lowering pass (`LowerOrchestraToNVGPUPass` or `LowerOrchestraToXeGPUPass`).
+-   This modular design follows MLIR best practices, isolating vendor-specific code and simplifying the process of adding new hardware targets in the future.
 
 | Feature | NVIDIA Target (nvgpu) | Intel Target (xegpu) |
 | :---- | :---- | :---- |

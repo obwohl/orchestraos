@@ -18,10 +18,9 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
     results.
   }];
 
-  // The schedule operation itself does not produce results.
   let regions = (region AnyRegion:$body);
-  let hasCanonicalizer = 1;
   let hasVerifier = 1;
+  let hasCanonicalizer = 1;
 }
 
 def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
@@ -71,24 +70,25 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
-  let summary = "Selects one of two SSA values based on a boolean condition.";
-  let description = [{
-    Selects one of two sets of SSA values based on a boolean condition,
-    materializing the result of a speculation. This is a core operation for
-    the divergence-to-speculation pass.
-  }];
-
-  let arguments = (ins I1:$condition,
-                       Variadic<AnyType>:$true_values,
-                       Variadic<AnyType>:$false_values);
-  let results = (outs Variadic<AnyType>:$results);
-
-  let hasVerifier = 1;
-  let hasCanonicalizer = 1;
-
-  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
-}
+// def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
+//   let summary = "Selects one of two SSA values based on a boolean condition.";
+//   let description = [{
+//     Selects one of two sets of SSA values based on a boolean condition,
+//     materializing the result of a speculation. This is a core operation for
+//     the divergence-to-speculation pass.
+//   }];
+//
+//   let arguments = (ins I1:$condition,
+//                        Variadic<AnyType>:$true_values,
+//                        Variadic<AnyType>:$false_values);
+//
+//   let results = (outs Variadic<AnyType>:$results);
+//
+//   let hasVerifier = 1;
+//   let hasCanonicalizer = 1;
+//
+//   let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
+// }
 
 //===----------------------------------------------------------------------===//
 // Canonicalization Patterns
@@ -96,25 +96,28 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
 
 include "mlir/IR/PatternBase.td"
 
-// C++ helper to merge attributes and create the new fused op.
-def FuseTransferOps : NativeCodeCall<
-  "fuseTransferOps($_builder, $0, $1)">;
-
-// Predicate to check if an SSA value has exactly one use.
-def HasOneUse : CPred<"$0.hasOneUse()">;
-
-def TransferFusionPattern : Pat<
-  // Match a transfer whose source is another transfer.
-  (Orchestra_TransferOp:$final_op
-    (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1):$intermediate_result,
-    $from2, $to2),
-
-  // Rewrite by calling the C++ helper.
-  (FuseTransferOps $intermediate_op, $final_op),
-
-  // Apply C++ constraints.
-  [(HasOneUse $intermediate_result)]
->;
+// TODO: The TransferFusionPattern is causing build issues and has been
+// temporarily disabled.
+//
+// // C++ helper to merge attributes and create the new fused op.
+// def FuseTransferOps : NativeCodeCall<
+//   "fuseTransferOps($_builder, $0, $1)">;
+//
+// // Constraint to check if an SSA value has exactly one use.
+// def HasOneUse : Constraint<CPred<"$0.getResult(0).hasOneUse()">>;
+//
+// def TransferFusionPattern : Pat<
+//   // Match a transfer whose source is another transfer.
+//   (Orchestra_TransferOp:$final_op
+//     (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1),
+//     $from2, $to2),
+//
+//   // Rewrite by calling the C++ helper.
+//   (FuseTransferOps $intermediate_op, $final_op),
+//
+//   // Apply C++ constraints.
+//   [(HasOneUse $intermediate_op)]
+// >;
 
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {

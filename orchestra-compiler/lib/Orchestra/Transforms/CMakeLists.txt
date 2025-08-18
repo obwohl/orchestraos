@@ -3,6 +3,7 @@ add_library(OrchestraTransforms
   Passes.cpp
   LowerOrchestraToStandard.cpp
   LowerOrchestraToGPU.cpp
+  LowerOrchestraToXeGPU.cpp
 )
 
 target_link_libraries(OrchestraTransforms

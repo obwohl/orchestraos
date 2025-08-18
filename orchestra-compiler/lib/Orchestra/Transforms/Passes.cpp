@@ -39,4 +39,5 @@ void mlir::orchestra::registerOrchestraPasses() {
   mlir::PassRegistration<DivergenceToSpeculationPass>();
   registerLoweringToStandardPasses();
   registerLoweringToGPUPasses();
+  registerLoweringToXeGPUPasses();
 }

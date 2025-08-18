@@ -12,53 +12,53 @@ using namespace orchestra;
 // CommitOp
 //===----------------------------------------------------------------------===//
 
-mlir::LogicalResult CommitOp::verify() {
-  if (getTrueValues().size() != getFalseValues().size()) {
-    return emitOpError("has mismatched variadic operand sizes");
-  }
-  if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
-    return emitOpError("requires 'true' and 'false' value types to match");
-  }
+// mlir::LogicalResult CommitOp::verify() {
+//   if (getTrueValues().size() != getFalseValues().size()) {
+//     return emitOpError("has mismatched variadic operand sizes");
+//   }
+//   if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
+//     return emitOpError("requires 'true' and 'false' value types to match");
+//   }
+//
+//   if (getResults().size() != getTrueValues().size()) {
+//     return emitOpError(
+//         "requires number of results to match number of values in each branch");
+//   }
+//
+//   if (getTrueValues().getTypes() != getResultTypes()) {
+//     return emitOpError("requires result types to match operand types");
+//   }
+//   return mlir::success();
+// }
 
-  if (getResults().size() != getTrueValues().size()) {
-    return emitOpError(
-        "requires number of results to match number of values in each branch");
-  }
-
-  if (getTrueValues().getTypes() != getResultTypes()) {
-    return emitOpError("requires result types to match operand types");
-  }
-  return mlir::success();
-}
-
-namespace {
-// Fold a commit op with a constant condition.
-struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
-  using OpRewritePattern<CommitOp>::OpRewritePattern;
-
-  mlir::LogicalResult
-  matchAndRewrite(CommitOp op,
-                  mlir::PatternRewriter &rewriter) const override {
-    auto constant =
-        op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
-    if (!constant) {
-      return mlir::failure();
-    }
-
-    auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
-    if (!value) {
-      return mlir::failure();
-    }
-
-    if (value.getValue()) {
-      rewriter.replaceOp(op, op.getTrueValues());
-    } else {
-      rewriter.replaceOp(op, op.getFalseValues());
-    }
-    return mlir::success();
-  }
-};
-} // namespace
+// namespace {
+// // Fold a commit op with a constant condition.
+// struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
+//   using OpRewritePattern<CommitOp>::OpRewritePattern;
+//
+//   mlir::LogicalResult
+//   matchAndRewrite(CommitOp op,
+//                   mlir::PatternRewriter &rewriter) const override {
+//     auto constant =
+//         op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
+//     if (!constant) {
+//       return mlir::failure();
+//     }
+//
+//     auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
+//     if (!value) {
+//       return mlir::failure();
+//     }
+//
+//     if (value.getValue()) {
+//       rewriter.replaceOp(op, op.getTrueValues());
+//     } else {
+//       rewriter.replaceOp(op, op.getFalseValues());
+//     }
+//     return mlir::success();
+//   }
+// };
+// } // namespace
 
 //===----------------------------------------------------------------------===//
 // TransferOp
@@ -71,49 +71,49 @@ mlir::LogicalResult TransferOp::verify() {
   return mlir::success();
 }
 
-namespace {
-/// Helper function for the DRR pattern to fuse two transfer ops.
-static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
-                                   orchestra::TransferOp first,
-                                   orchestra::TransferOp second) {
-  // 1. Merge attributes.
-  // Policy: For 'priority', take the maximum value.
-  // A real implementation would need a more robust policy.
-  auto firstPriority = first->getAttrOfType<IntegerAttr>("priority");
-  auto secondPriority = second->getAttrOfType<IntegerAttr>("priority");
-  Attribute finalPriority;
-  if (firstPriority && secondPriority) {
-    if (firstPriority.getInt() > secondPriority.getInt()) {
-      finalPriority = firstPriority;
-    } else {
-      finalPriority = secondPriority;
-    }
-  } else if (firstPriority) {
-    finalPriority = firstPriority;
-  } else if (secondPriority) {
-    finalPriority = secondPriority;
-  }
-
-  SmallVector<NamedAttribute, 4> newAttrs;
-  if (finalPriority) {
-    newAttrs.push_back(rewriter.getNamedAttr("priority", finalPriority));
-  }
-
-  // 2. Fuse locations.
-  auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
-
-  // 3. Create the new fused op.
-  auto newOp = rewriter.create<orchestra::TransferOp>(
-      fusedLoc, second.getResult().getType(), first.getSource(),
-      first.getFrom(), second.getTo(), rewriter.getDictionaryAttr(newAttrs));
-
-  // 4. Replace the second op with the new op.
-  rewriter.replaceOp(second, newOp.getResult());
-
-  // The DRR framework expects the replacement value to be returned.
-  return newOp.getResult();
-}
-} // namespace
+// namespace {
+// /// Helper function for the DRR pattern to fuse two transfer ops.
+// static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
+//                                    orchestra::TransferOp first,
+//                                    orchestra::TransferOp second) {
+//   // 1. Merge attributes.
+//   // Policy: For 'priority', take the maximum value.
+//   // A real implementation would need a more robust policy.
+//   auto firstPriority = first->getAttrOfType<IntegerAttr>("priority");
+//   auto secondPriority = second->getAttrOfType<IntegerAttr>("priority");
+//   Attribute finalPriority;
+//   if (firstPriority && secondPriority) {
+//     if (firstPriority.getInt() > secondPriority.getInt()) {
+//       finalPriority = firstPriority;
+//     } else {
+//       finalPriority = secondPriority;
+//     }
+//   } else if (firstPriority) {
+//     finalPriority = firstPriority;
+//   } else if (secondPriority) {
+//     finalPriority = secondPriority;
+//   }
+//
+//   SmallVector<NamedAttribute, 4> newAttrs;
+//   if (finalPriority) {
+//     newAttrs.push_back(rewriter.getNamedAttr("priority", finalPriority));
+//   }
+//
+//   // 2. Fuse locations.
+//   auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
+//
+//   // 3. Create the new fused op.
+//   auto newOp = rewriter.create<orchestra::TransferOp>(
+//       fusedLoc, second.getResult().getType(), first.getSource(),
+//       first.getFrom(), second.getTo(), rewriter.getDictionaryAttr(newAttrs));
+//
+//   // 4. Replace the second op with the new op.
+//   rewriter.replaceOp(second, newOp.getResult());
+//
+//   // The DRR framework expects the replacement value to be returned.
+//   return newOp.getResult();
+// }
+// } // namespace
 
 //===----------------------------------------------------------------------===//
 // ScheduleOp

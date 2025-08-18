@@ -1,14 +1,15 @@
+#include "Orchestra/Transforms/Passes.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/NVGPU/IR/NVGPUDialect.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
+#include "mlir/Pass/PassManager.h"
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
-#include "Orchestra/Transforms/Passes.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -16,11 +17,12 @@ namespace mlir {
 namespace orchestra {
 
 namespace {
-class LowerOrchestraToGPUPass
-    : public mlir::PassWrapper<LowerOrchestraToGPUPass,
-                               mlir::OperationPass<mlir::ModuleOp>> {
+// This is the original logic for lowering to NVGPU, extracted into its own pass.
+class LowerOrchestraToNVGPUPass
+    : public mlir::PassWrapper<LowerOrchestraToNVGPUPass,
+                               mlir::OperationPass<mlir::gpu::GPUFuncOp>> {
 public:
-  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToGPUPass)
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToNVGPUPass)
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
     registry
@@ -30,21 +32,14 @@ public:
   }
 
   void runOnOperation() override {
-    getOperation().walk([this](mlir::gpu::GPUFuncOp funcOp) {
-      runOnGpuFunc(funcOp);
-    });
-  }
-
-private:
-  void runOnGpuFunc(mlir::gpu::GPUFuncOp funcOp) {
+    mlir::gpu::GPUFuncOp funcOp = getOperation();
     // Map from destination buffer to async token.
     llvm::DenseMap<mlir::Value, mlir::Value> asyncTokens;
 
     // Collect all transfer ops to be rewritten.
     llvm::SmallVector<mlir::orchestra::TransferOp, 4> transferOps;
-    funcOp.walk([&](mlir::orchestra::TransferOp op) {
-      transferOps.push_back(op);
-    });
+    funcOp.walk(
+        [&](mlir::orchestra::TransferOp op) { transferOps.push_back(op); });
 
     mlir::OpBuilder builder(funcOp.getContext());
     for (auto op : transferOps) {
@@ -60,24 +55,26 @@ private:
       }
 
       // Create a new memref on the GPU in shared memory.
-      auto destType =
-          mlir::MemRefType::get(sourceType.getShape(), sourceType.getElementType(),
-                                sourceType.getLayout(), mlir::gpu::AddressSpaceAttr::get(op.getContext(), mlir::gpu::AddressSpace::Workgroup));
+      auto destType = mlir::MemRefType::get(
+          sourceType.getShape(), sourceType.getElementType(),
+          sourceType.getLayout(),
+          mlir::gpu::AddressSpaceAttr::get(op.getContext(),
+                                           mlir::gpu::AddressSpace::Workgroup));
       auto dest = builder.create<mlir::memref::AllocOp>(loc, destType);
 
       // Create zero indices for the copy.
       mlir::SmallVector<mlir::Value, 4> indices;
       for (unsigned i = 0; i < sourceType.getRank(); ++i) {
-        indices.push_back(builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
+        indices.push_back(
+            builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
       }
 
       // Create an async copy.
       auto asyncCopy = builder.create<mlir::nvgpu::DeviceAsyncCopyOp>(
           loc, mlir::nvgpu::DeviceAsyncTokenType::get(op.getContext()),
-          dest.getResult(), indices,
-          source, indices,
-          builder.getIndexAttr(sourceType.getNumElements()),
-          mlir::Value{}, mlir::UnitAttr{});
+          dest.getResult(), indices, source, indices,
+          builder.getIndexAttr(sourceType.getNumElements()), mlir::Value{},
+          mlir::UnitAttr{});
 
       asyncTokens[dest.getResult()] = asyncCopy.getResult();
 
@@ -86,7 +83,8 @@ private:
     }
 
     // Second phase: insert wait ops.
-    llvm::DenseMap<mlir::Operation *, llvm::SmallVector<mlir::Value, 1>> waitsToInsert;
+    llvm::DenseMap<mlir::Operation *, llvm::SmallVector<mlir::Value, 1>>
+        waitsToInsert;
     for (auto &pair : asyncTokens) {
       mlir::Value buffer = pair.first;
       mlir::Value token = pair.second;
@@ -104,17 +102,57 @@ private:
       llvm::SmallVector<mlir::Value, 1> &tokens = pair.second;
       mlir::OpBuilder wait_builder(user);
       for (auto token : tokens) {
-        wait_builder.create<mlir::nvgpu::DeviceAsyncWaitOp>(user->getLoc(), token, nullptr);
+        wait_builder.create<mlir::nvgpu::DeviceAsyncWaitOp>(user->getLoc(),
+                                                            token, nullptr);
       }
     }
   }
+};
 
-  mlir::StringRef getArgument() const final {
-    return "lower-orchestra-to-gpu";
+// This is the refactored pipeline pass.
+class LowerOrchestraToGPUPass
+    : public mlir::PassWrapper<LowerOrchestraToGPUPass,
+                               mlir::OperationPass<mlir::ModuleOp>> {
+public:
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToGPUPass)
+
+  mlir::StringRef getArgument() const final { return "lower-orchestra-to-gpu"; }
+  mlir::StringRef getDescription() const final {
+    return "Lowers the Orchestra dialect to a specific GPU vendor dialect.";
   }
 
-  mlir::StringRef getDescription() const final {
-    return "Lower the Orchestra dialect to the GPU dialect using async copies";
+  LowerOrchestraToGPUPass() = default;
+  LowerOrchestraToGPUPass(const LowerOrchestraToGPUPass& pass) {}
+
+  void getDependentDialects(mlir::DialectRegistry &registry) const override {
+    // This pass is a pipeline, so it should not have dialect dependencies itself.
+    // The nested passes will declare their own dependencies.
+  }
+
+  // Option to select the GPU architecture.
+  Option<std::string> gpuArch{
+      *this, "gpu-arch",
+      llvm::cl::desc("The target GPU architecture (e.g., nvgpu, xegpu)"),
+      llvm::cl::init("nvgpu")};
+
+  void runOnOperation() override {
+    mlir::ModuleOp module = getOperation();
+    mlir::PassManager pm(module.getContext());
+
+    if (gpuArch == "nvgpu") {
+      pm.addNestedPass<mlir::gpu::GPUFuncOp>(
+          std::make_unique<LowerOrchestraToNVGPUPass>());
+    } else if (gpuArch == "xegpu") {
+      pm.addNestedPass<mlir::gpu::GPUFuncOp>(createLowerOrchestraToXeGPUPass());
+    } else {
+      module.emitError() << "unsupported GPU architecture: " << gpuArch;
+      signalPassFailure();
+      return;
+    }
+
+    if (failed(runPipeline(pm, module))) {
+      signalPassFailure();
+    }
   }
 };
 } // namespace
