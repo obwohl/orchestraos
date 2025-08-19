@@ -22,24 +22,24 @@
 
 namespace {
 
-class CommitOpLowering : public mlir::OpConversionPattern<mlir::orchestra::CommitOp> {
-public:
-  using OpConversionPattern<mlir::orchestra::CommitOp>::OpConversionPattern;
-
-  mlir::LogicalResult
-  matchAndRewrite(mlir::orchestra::CommitOp op, OpAdaptor adaptor,
-                  mlir::ConversionPatternRewriter &rewriter) const override {
-    mlir::SmallVector<mlir::Value, 4> new_results;
-    for (size_t i = 0; i < adaptor.getTrueValues().size(); ++i) {
-      auto select = rewriter.create<mlir::arith::SelectOp>(
-          op.getLoc(), adaptor.getCondition(), adaptor.getTrueValues()[i],
-          adaptor.getFalseValues()[i]);
-      new_results.push_back(select.getResult());
-    }
-    rewriter.replaceOp(op, new_results);
-    return mlir::success();
-  }
-};
+// class CommitOpLowering : public mlir::OpConversionPattern<mlir::orchestra::CommitOp> {
+// public:
+//   using OpConversionPattern<mlir::orchestra::CommitOp>::OpConversionPattern;
+//
+//   mlir::LogicalResult
+//   matchAndRewrite(mlir::orchestra::CommitOp op, OpAdaptor adaptor,
+//                   mlir::ConversionPatternRewriter &rewriter) const override {
+//     mlir::SmallVector<mlir::Value, 4> new_results;
+//     for (size_t i = 0; i < adaptor.getTrueValues().size(); ++i) {
+//       auto select = rewriter.create<mlir::arith::SelectOp>(
+//           op.getLoc(), adaptor.getCondition(), adaptor.getTrueValues()[i],
+//           adaptor.getFalseValues()[i]);
+//       new_results.push_back(select.getResult());
+//     }
+//     rewriter.replaceOp(op, new_results);
+//     return mlir::success();
+//   }
+// };
 
 class LowerOrchestraToStandardPass
     : public mlir::PassWrapper<LowerOrchestraToStandardPass,
@@ -57,7 +57,7 @@ public:
     target.addIllegalDialect<mlir::orchestra::OrchestraDialect>();
 
     mlir::RewritePatternSet patterns(&getContext());
-    patterns.add<CommitOpLowering>(&getContext());
+    // patterns.add<CommitOpLowering>(&getContext());
 
     if (failed(applyPartialConversion(getOperation(), target,
                                       std::move(patterns))))

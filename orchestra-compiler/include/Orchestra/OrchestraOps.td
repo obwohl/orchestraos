@@ -70,25 +70,31 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-// def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
-//   let summary = "Selects one of two SSA values based on a boolean condition.";
-//   let description = [{
-//     Selects one of two sets of SSA values based on a boolean condition,
-//     materializing the result of a speculation. This is a core operation for
-//     the divergence-to-speculation pass.
-//   }];
-//
-//   let arguments = (ins I1:$condition,
-//                        Variadic<AnyType>:$true_values,
-//                        Variadic<AnyType>:$false_values);
-//
-//   let results = (outs Variadic<AnyType>:$results);
-//
-//   let hasVerifier = 1;
-//   let hasCanonicalizer = 1;
-//
-//   let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
-// }
+def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
+  let summary = "Commits a set of values, conditioned on an i1 predicate.";
+
+  let description = [{
+    The `commit` operation has three logical operand segments:
+    1. A single `i1` condition.
+    2. A variadic list of values for the 'true' case.
+    3. A variadic list of values for the 'false' case.
+
+    The operation itself has no results. The segment sizes are stored in
+    an attribute named `operand_segment_sizes`, managed by the
+    `AttrSizedOperandSegments` trait.
+  }];
+
+  let arguments = (ins
+    I1:$condition,
+    Variadic<AnyType>:$true_values,
+    Variadic<AnyType>:$false_values
+  );
+
+  // This op produces no new SSA values.
+  let results = (outs);
+
+  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
+}
 
 //===----------------------------------------------------------------------===//
 // Canonicalization Patterns
