@@ -12,53 +12,44 @@ using namespace orchestra;
 // CommitOp
 //===----------------------------------------------------------------------===//
 
-// mlir::LogicalResult CommitOp::verify() {
-//   if (getTrueValues().size() != getFalseValues().size()) {
-//     return emitOpError("has mismatched variadic operand sizes");
-//   }
-//   if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
-//     return emitOpError("requires 'true' and 'false' value types to match");
-//   }
-//
-//   if (getResults().size() != getTrueValues().size()) {
-//     return emitOpError(
-//         "requires number of results to match number of values in each branch");
-//   }
-//
-//   if (getTrueValues().getTypes() != getResultTypes()) {
-//     return emitOpError("requires result types to match operand types");
-//   }
-//   return mlir::success();
-// }
+mlir::LogicalResult CommitOp::verify() {
+  if (getTrueValues().size() != getFalseValues().size()) {
+    return emitOpError("has mismatched variadic operand sizes");
+  }
+  if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
+    return emitOpError("requires 'true' and 'false' value types to match");
+  }
+  return mlir::success();
+}
 
-// namespace {
-// // Fold a commit op with a constant condition.
-// struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
-//   using OpRewritePattern<CommitOp>::OpRewritePattern;
-//
-//   mlir::LogicalResult
-//   matchAndRewrite(CommitOp op,
-//                   mlir::PatternRewriter &rewriter) const override {
-//     auto constant =
-//         op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
-//     if (!constant) {
-//       return mlir::failure();
-//     }
-//
-//     auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
-//     if (!value) {
-//       return mlir::failure();
-//     }
-//
-//     if (value.getValue()) {
-//       rewriter.replaceOp(op, op.getTrueValues());
-//     } else {
-//       rewriter.replaceOp(op, op.getFalseValues());
-//     }
-//     return mlir::success();
-//   }
-// };
-// } // namespace
+namespace {
+// Fold a commit op with a constant condition.
+struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
+  using OpRewritePattern<CommitOp>::OpRewritePattern;
+
+  mlir::LogicalResult
+  matchAndRewrite(CommitOp op,
+                  mlir::PatternRewriter &rewriter) const override {
+    auto constant =
+        op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
+    if (!constant) {
+      return mlir::failure();
+    }
+
+    auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
+    if (!value) {
+      return mlir::failure();
+    }
+
+    if (value.getValue()) {
+      rewriter.replaceOp(op, op.getTrueValues());
+    } else {
+      rewriter.replaceOp(op, op.getFalseValues());
+    }
+    return mlir::success();
+  }
+};
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // TransferOp
