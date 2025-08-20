@@ -1,6 +1,7 @@
 #ifndef ORCHESTRA_INTERFACES_TD
 #define ORCHESTRA_INTERFACES_TD
 
+include "OrchestraDialect.td"
 include "mlir/IR/OpBase.td"
 
 def OrchestraFusionStrategyInterface : OpInterface<"OrchestraFusionStrategyInterface"> {

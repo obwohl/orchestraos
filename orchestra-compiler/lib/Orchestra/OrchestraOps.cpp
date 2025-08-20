@@ -19,6 +19,14 @@ mlir::LogicalResult CommitOp::verify() {
   if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
     return emitOpError("requires 'true' and 'false' value types to match");
   }
+  if (getResults().size() != 0) {
+      if (getResults().size() != getTrueValues().size()) {
+        return emitOpError("requires number of results to match number of values in each branch");
+      }
+      if (getTrueValues().getTypes() != getResultTypes()) {
+        return emitOpError("requires result types to match operand types");
+      }
+  }
   return mlir::success();
 }
 
@@ -36,7 +44,8 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
       return mlir::failure();
     }
 
-    auto value = constant.getValue().dyn_cast<mlir::BoolAttr>();
+    auto valueAttr = constant.getValue();
+    auto value = mlir::dyn_cast<mlir::BoolAttr>(valueAttr);
     if (!value) {
       return mlir::failure();
     }
@@ -51,6 +60,11 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
 };
 } // namespace
 
+void CommitOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                           MLIRContext *context) {
+  results.add<FoldConstantCommit>(context);
+}
+
 //===----------------------------------------------------------------------===//
 // TransferOp
 //===----------------------------------------------------------------------===//
@@ -62,49 +76,19 @@ mlir::LogicalResult TransferOp::verify() {
   return mlir::success();
 }
 
-// namespace {
-// /// Helper function for the DRR pattern to fuse two transfer ops.
-// static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
-//                                    orchestra::TransferOp first,
-//                                    orchestra::TransferOp second) {
-//   // 1. Merge attributes.
-//   // Policy: For 'priority', take the maximum value.
-//   // A real implementation would need a more robust policy.
-//   auto firstPriority = first->getAttrOfType<IntegerAttr>("priority");
-//   auto secondPriority = second->getAttrOfType<IntegerAttr>("priority");
-//   Attribute finalPriority;
-//   if (firstPriority && secondPriority) {
-//     if (firstPriority.getInt() > secondPriority.getInt()) {
-//       finalPriority = firstPriority;
-//     } else {
-//       finalPriority = secondPriority;
-//     }
-//   } else if (firstPriority) {
-//     finalPriority = firstPriority;
-//   } else if (secondPriority) {
-//     finalPriority = secondPriority;
-//   }
-//
-//   SmallVector<NamedAttribute, 4> newAttrs;
-//   if (finalPriority) {
-//     newAttrs.push_back(rewriter.getNamedAttr("priority", finalPriority));
-//   }
-//
-//   // 2. Fuse locations.
-//   auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
-//
-//   // 3. Create the new fused op.
-//   auto newOp = rewriter.create<orchestra::TransferOp>(
-//       fusedLoc, second.getResult().getType(), first.getSource(),
-//       first.getFrom(), second.getTo(), rewriter.getDictionaryAttr(newAttrs));
-//
-//   // 4. Replace the second op with the new op.
-//   rewriter.replaceOp(second, newOp.getResult());
-//
-//   // The DRR framework expects the replacement value to be returned.
-//   return newOp.getResult();
-// }
-// } // namespace
+namespace {
+/// Helper function for the DRR pattern to fuse two transfer ops.
+static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
+                                   orchestra::TransferOp first,
+                                   orchestra::TransferOp second) {
+  auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
+  auto newOp = rewriter.create<orchestra::TransferOp>(
+      fusedLoc, second.getResult().getType(), first.getSource(),
+      first.getFrom(), second.getTo());
+  rewriter.replaceOp(second, newOp.getResult());
+  return newOp.getResult();
+}
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // ScheduleOp
@@ -161,6 +145,11 @@ struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
   }
 };
 } // namespace
+
+void ScheduleOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                             MLIRContext *context) {
+  results.add<EraseEmptySchedule>(context);
+}
 
 //===----------------------------------------------------------------------===//
 // TaskOp

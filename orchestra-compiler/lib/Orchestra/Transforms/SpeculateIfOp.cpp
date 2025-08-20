@@ -3,11 +3,14 @@
 #include "Orchestra/OrchestraOps.h"
 
 #include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/IR/IRMapping.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/IRMapping.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "llvm/ADT/SetVector.h"
+
+using namespace mlir;
+using namespace orchestra;
 
 namespace {
 
@@ -44,14 +47,13 @@ static void cloneAndRemapRegion(mlir::Region &sourceRegion, mlir::Region &destRe
   for (mlir::Value operand : sourceYield.getOperands()) {
     yieldOperands.push_back(mapper.lookupOrDefault(operand));
   }
-  rewriter.create<mlir::orchestra::YieldOp>(sourceYield.getLoc(), yieldOperands);
+  rewriter.create<YieldOp>(sourceYield.getLoc(), yieldOperands);
 }
-
 
 } // anonymous namespace
 
-mlir::LogicalResult mlir::orchestra::SpeculateIfOpPattern::matchAndRewrite(
-    mlir::scf::IfOp ifOp, mlir::PatternRewriter &rewriter) const {
+LogicalResult SpeculateIfOpPattern::matchAndRewrite(
+    scf::IfOp ifOp, PatternRewriter &rewriter) const {
 
   // 1. Check for suitability. The pattern requires an 'else' block and must
   // produce results.
@@ -93,7 +95,7 @@ mlir::LogicalResult mlir::orchestra::SpeculateIfOpPattern::matchAndRewrite(
   auto targetAttr = rewriter.getDictionaryAttr({}); // Placeholder target
 
   // 4. Create the 'then' task and populate its body.
-  auto thenTask = rewriter.create<mlir::orchestra::TaskOp>(
+  auto thenTask = rewriter.create<TaskOp>(
       loc, thenExternalValues.getArrayRef(), resultTypes, targetAttr);
 
   cloneAndRemapRegion(ifOp.getThenRegion(), thenTask.getBody(),
@@ -101,20 +103,19 @@ mlir::LogicalResult mlir::orchestra::SpeculateIfOpPattern::matchAndRewrite(
 
   // 5. Create the 'else' task and populate its body.
   rewriter.setInsertionPoint(ifOp); // Reset insertion point
-  auto elseTask = rewriter.create<mlir::orchestra::TaskOp>(
+  auto elseTask = rewriter.create<TaskOp>(
       loc, elseExternalValues.getArrayRef(), resultTypes, targetAttr);
 
   cloneAndRemapRegion(ifOp.getElseRegion(), elseTask.getBody(),
                       elseExternalValues.getArrayRef(), rewriter);
 
   // 6. Create the commit operation to select the final result.
-  // rewriter.setInsertionPoint(ifOp); // Reset insertion point
-  // auto commitOp = rewriter.create<mlir::orchestra::CommitOp>(
-  //     loc, resultTypes, ifOp.getCondition(), thenTask.getResults(),
-  //     elseTask.getResults());
+  rewriter.setInsertionPoint(ifOp); // Reset insertion point
+  auto commitOp = rewriter.create<CommitOp>(
+      loc, resultTypes, ifOp.getCondition(), thenTask.getResults(),
+      elseTask.getResults());
 
   // 7. Finalizing the Rewrite
-  // rewriter.replaceOp(ifOp, commitOp.getResults());
-  rewriter.eraseOp(ifOp); // Just erase the op for now to allow compilation
+  rewriter.replaceOp(ifOp, commitOp.getResults());
   return mlir::success();
 }

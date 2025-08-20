@@ -1,4 +1,4 @@
-// RUN: orchestra-opt %s --lower-orchestra-to-gpu=gpu-arch=xegpu --split-input-file | FileCheck %s
+// RUN: %orchestra-opt %s --lower-orchestra-to-gpu=gpu-arch=xegpu --split-input-file | FileCheck %s
 
 // -----
 
@@ -6,7 +6,7 @@
 // CHECK-SAME: (%[[SRC:.*]]: memref<256x256xf32>, %[[DST:.*]]: memref<256x256xf32>)
 gpu.module @test_module_f32 {
   gpu.func @test_basic_f32(%src: memref<256x256xf32>, %dst: memref<256x256xf32>) {
-    orchestra.transfer %src to %dst : memref<256x256xf32>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<256x256xf32>
     gpu.return
   }
 }
@@ -22,7 +22,7 @@ gpu.module @test_module_f32 {
 // CHECK-SAME: (%[[SRC:.*]]: memref<128x128xf16>, %[[DST:.*]]: memref<128x128xf16>)
 gpu.module @test_module_f16 {
   gpu.func @test_f16(%src: memref<128x128xf16>, %dst: memref<128x128xf16>) {
-    orchestra.transfer %src to %dst : memref<128x128xf16>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<128x128xf16>
     gpu.return
   }
 }
@@ -38,7 +38,7 @@ gpu.module @test_module_f16 {
 // CHECK-SAME: (%[[SRC:.*]]: memref<128x128xbf16>, %[[DST:.*]]: memref<128x128xbf16>)
 gpu.module @test_module_bf16 {
   gpu.func @test_bf16(%src: memref<128x128xbf16>, %dst: memref<128x128xbf16>) {
-    orchestra.transfer %src to %dst : memref<128x128xbf16>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<128x128xbf16>
     gpu.return
   }
 }
@@ -54,7 +54,7 @@ gpu.module @test_module_bf16 {
 // CHECK-SAME: (%[[SRC:.*]]: memref<256x256xf32, strided<[512, 1]>>, %[[DST:.*]]: memref<256x256xf32>)
 gpu.module @test_module_strided {
   gpu.func @test_strided_source(%src: memref<256x256xf32, strided<[512, 1]>>, %dst: memref<256x256xf32>) {
-    orchestra.transfer %src to %dst : memref<256x256xf32, strided<[512, 1]>>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<256x256xf32, strided<[512, 1]>>
     gpu.return
   }
 }
@@ -69,7 +69,7 @@ gpu.module @test_module_strided {
 // CHECK-SAME: (%[[SRC:.*]]: memref<128x128xf32, #gpu.address_space<global>>, %[[DST:.*]]: memref<128x128xf32, #gpu.address_space<workgroup>>)
 gpu.module @test_module_memspace {
   gpu.func @test_global_to_workgroup(%src: memref<128x128xf32, #gpu.address_space<global>>, %dst: memref<128x128xf32, #gpu.address_space<workgroup>>) {
-    orchestra.transfer %src to %dst : memref<128x128xf32, #gpu.address_space<global>>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<128x128xf32, #gpu.address_space<global>>
     gpu.return
   }
 }
@@ -85,7 +85,7 @@ gpu.module @test_module_memspace {
 // CHECK-SAME: (%[[SRC:.*]]: memref<256x256xf32>, %[[DST:.*]]: memref<256x256xf32, strided<[512, 1]>>)
 gpu.module @test_module_strided_dest {
   gpu.func @test_strided_destination(%src: memref<256x256xf32>, %dst: memref<256x256xf32, strided<[512, 1]>>) {
-    orchestra.transfer %src to %dst : memref<256x256xf32>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<256x256xf32>
     gpu.return
   }
 }
@@ -100,7 +100,7 @@ gpu.module @test_module_strided_dest {
 // CHECK-SAME: (%[[SRC:.*]]: memref<128x256xf32, strided<[256, 1]>>, %[[DST:.*]]: memref<256x128xf32, strided<[128, 1]>>)
 gpu.module @test_module_transpose {
   gpu.func @test_transpose_copy(%src: memref<128x256xf32, strided<[256, 1]>>, %dst: memref<256x128xf32, strided<[128, 1]>>) {
-    orchestra.transfer %src to %dst : memref<128x256xf32, strided<[256, 1]>>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<128x256xf32, strided<[256, 1]>>
     gpu.return
   }
 }
@@ -115,7 +115,7 @@ gpu.module @test_module_transpose {
 // CHECK-SAME: (%[[SRC:.*]]: memref<260x250xf32>, %[[DST:.*]]: memref<260x250xf32>)
 gpu.module @test_asymmetric_tiling {
   gpu.func @test_asymmetric_tiling(%src: memref<260x250xf32>, %dst: memref<260x250xf32>) {
-    orchestra.transfer %src to %dst : memref<260x250xf32>
+    orchestra.transfer %src from @MEM_A to @MEM_B : memref<260x250xf32>
     gpu.return
   }
 }
