@@ -4,50 +4,43 @@ set(ORCHESTRA_INCGEN_HDRS)
 # This variable will hold the list of all generated source files (.cpp.inc).
 set(ORCHESTRA_INCGEN_SRCS)
 
-# --- Generation for OrchestraDialect.td ---
-# The canonical pattern: first, set LLVM_TARGET_DEFINITIONS to the input.td file.
-set(LLVM_TARGET_DEFINITIONS OrchestraDialect.td)
-# Then, invoke mlir_tablegen with the *output* file name and generator flags.
+# Set the LLVM_TARGET_DEFINITIONS variable ONCE to the single, top-level .td file.
+# This file, Orchestra.td, is expected to include all other dialect-related .td files.
+set(LLVM_TARGET_DEFINITIONS Orchestra.td)
+
+# Now, invoke mlir_tablegen for each required generated file.
+# Each of these calls implicitly uses the same LLVM_TARGET_DEFINITIONS context
+# established above, ensuring a consistent view for every generator.
+
+# Generate dialect class declarations (e.g., OrchestraDialect).
 mlir_tablegen(OrchestraDialect.h.inc --gen-dialect-decls)
 list(APPEND ORCHESTRA_INCGEN_HDRS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraDialect.h.inc")
-# Also generate the dialect definitions.
-mlir_tablegen(OrchestraDialect.cpp.inc --gen-dialect-defs)
-list(APPEND ORCHESTRA_INCGEN_SRCS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraDialect.cpp.inc")
 
-# --- Generation for OrchestraOps.td ---
-# Repeat the pattern for the operations file.
-set(LLVM_TARGET_DEFINITIONS OrchestraOps.td)
-# Generate the operation declarations header.
+# Generate operation class declarations (e.g., CommitOp).
 mlir_tablegen(OrchestraOps.h.inc --gen-op-decls)
 list(APPEND ORCHESTRA_INCGEN_HDRS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraOps.h.inc")
 
-# Generate the operation definitions source.
-# The input file is still OrchestraOps.td from the previous 'set' command.
+# Generate operation class definitions (implementations).
 mlir_tablegen(OrchestraOps.cpp.inc --gen-op-defs)
 list(APPEND ORCHESTRA_INCGEN_SRCS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraOps.cpp.inc")
 
-# --- Generation for canonicalization patterns ---
-# The input file is still OrchestraOps.td
-mlir_tablegen(OrchestraCanonicalization.h.inc --gen-rewriters)
-list(APPEND ORCHESTRA_INCGEN_HDRS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraCanonicalization.h.inc")
-
-# --- Generation for OrchestraInterfaces.td ---
-# Repeat the pattern for the interfaces file.
-set(LLVM_TARGET_DEFINITIONS OrchestraInterfaces.td)
-# Generate the interface declarations header.
+# Generate interface class declarations.
 mlir_tablegen(OrchestraInterfaces.h.inc --gen-op-interface-decls)
 list(APPEND ORCHESTRA_INCGEN_HDRS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraInterfaces.h.inc")
 
-# Generate the interface definitions source.
+# Generate interface class definitions (implementations).
 mlir_tablegen(OrchestraInterfaces.cpp.inc --gen-op-interface-defs)
 list(APPEND ORCHESTRA_INCGEN_SRCS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraInterfaces.cpp.inc")
+
+# --- Generation for canonicalization patterns ---
+mlir_tablegen(OrchestraCanonicalization.h.inc --gen-rewriters)
+list(APPEND ORCHESTRA_INCGEN_HDRS
+  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraCanonicalization.h.inc")
 
 # --- Create a single dependency target ---
 # This creates a CMake target that represents all the generated files.

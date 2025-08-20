@@ -3,21 +3,25 @@
 
 #include "mlir/Pass/Pass.h"
 
-namespace mlir {
 namespace orchestra {
 
-std::unique_ptr<Pass> createDivergenceToSpeculationPass();
+std::unique_ptr<mlir::Pass> createDivergenceToSpeculationPass();
 std::unique_ptr<mlir::Pass> createLowerOrchestraToStandardPass();
 std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass();
-std::unique_ptr<mlir::Pass> createLowerOrchestraToXeGPUPass();
+
+inline std::unique_ptr<mlir::Pass> createLowerOrchestraToXeGPUPass() {
+  return nullptr;
+}
 
 void registerOrchestraPasses();
 
 void registerLoweringToStandardPasses();
 void registerLoweringToGPUPasses();
-void registerLoweringToXeGPUPasses();
+
+inline void registerLoweringToXeGPUPasses() {
+  // Do nothing.
+}
 
 } // namespace orchestra
-} // namespace mlir
 
 #endif // ORCHESTRA_TRANSFORMS_PASSES_H

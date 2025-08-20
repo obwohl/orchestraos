@@ -20,26 +20,34 @@
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
 
+using namespace mlir;
+using namespace orchestra;
+
 namespace {
 
-// class CommitOpLowering : public mlir::OpConversionPattern<mlir::orchestra::CommitOp> {
-// public:
-//   using OpConversionPattern<mlir::orchestra::CommitOp>::OpConversionPattern;
-//
-//   mlir::LogicalResult
-//   matchAndRewrite(mlir::orchestra::CommitOp op, OpAdaptor adaptor,
-//                   mlir::ConversionPatternRewriter &rewriter) const override {
-//     mlir::SmallVector<mlir::Value, 4> new_results;
-//     for (size_t i = 0; i < adaptor.getTrueValues().size(); ++i) {
-//       auto select = rewriter.create<mlir::arith::SelectOp>(
-//           op.getLoc(), adaptor.getCondition(), adaptor.getTrueValues()[i],
-//           adaptor.getFalseValues()[i]);
-//       new_results.push_back(select.getResult());
-//     }
-//     rewriter.replaceOp(op, new_results);
-//     return mlir::success();
-//   }
-// };
+class CommitOpLowering : public OpConversionPattern<CommitOp> {
+public:
+  using OpConversionPattern<CommitOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(CommitOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    if (op->getNumResults() == 0) {
+      rewriter.eraseOp(op);
+      return success();
+    }
+
+    SmallVector<Value, 4> newResults;
+    for (size_t i = 0; i < adaptor.getTrueValues().size(); ++i) {
+      auto select = rewriter.create<arith::SelectOp>(
+          op.getLoc(), adaptor.getCondition(), adaptor.getTrueValues()[i],
+          adaptor.getFalseValues()[i]);
+      newResults.push_back(select.getResult());
+    }
+    rewriter.replaceOp(op, newResults);
+    return success();
+  }
+};
 
 class LowerOrchestraToStandardPass
     : public mlir::PassWrapper<LowerOrchestraToStandardPass,
@@ -52,24 +60,28 @@ public:
   }
 
   void runOnOperation() override {
-    mlir::ConversionTarget target(getContext());
-    target.addLegalDialect<mlir::arith::ArithDialect>();
-    target.addIllegalDialect<mlir::orchestra::OrchestraDialect>();
+    ConversionTarget target(getContext());
+    target.addLegalDialect<arith::ArithDialect>();
+    target.addIllegalDialect<OrchestraDialect>();
 
-    mlir::RewritePatternSet patterns(&getContext());
-    // patterns.add<CommitOpLowering>(&getContext());
+    RewritePatternSet patterns(&getContext());
+    patterns.add<CommitOpLowering>(&getContext());
 
     if (failed(applyPartialConversion(getOperation(), target,
                                       std::move(patterns))))
       signalPassFailure();
   }
 
-  mlir::StringRef getArgument() const final { return "lower-orchestra-to-standard"; }
-  mlir::StringRef getDescription() const final { return "Lower Orchestra dialect to standard dialects"; }
+  StringRef getArgument() const final {
+    return "lower-orchestra-to-standard";
+  }
+  StringRef getDescription() const final {
+    return "Lower Orchestra dialect to standard dialects";
+  }
 };
 
 } // namespace
 
-void mlir::orchestra::registerLoweringToStandardPasses() {
-  mlir::PassRegistration<LowerOrchestraToStandardPass>();
+void orchestra::registerLoweringToStandardPasses() {
+  PassRegistration<LowerOrchestraToStandardPass>();
 }

@@ -13,7 +13,9 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 
-namespace mlir {
+using namespace mlir;
+using namespace orchestra;
+
 namespace orchestra {
 
 namespace {
@@ -26,7 +28,7 @@ public:
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
     registry
-        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
+        .insert<OrchestraDialect, mlir::gpu::GPUDialect,
                 mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
                 mlir::arith::ArithDialect>();
   }
@@ -37,9 +39,9 @@ public:
     llvm::DenseMap<mlir::Value, mlir::Value> asyncTokens;
 
     // Collect all transfer ops to be rewritten.
-    llvm::SmallVector<mlir::orchestra::TransferOp, 4> transferOps;
+    llvm::SmallVector<TransferOp, 4> transferOps;
     funcOp.walk(
-        [&](mlir::orchestra::TransferOp op) { transferOps.push_back(op); });
+        [&](TransferOp op) { transferOps.push_back(op); });
 
     mlir::OpBuilder builder(funcOp.getContext());
     for (auto op : transferOps) {
@@ -166,4 +168,3 @@ void registerLoweringToGPUPasses() {
 }
 
 } // namespace orchestra
-} // namespace mlir
