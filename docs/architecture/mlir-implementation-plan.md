@@ -114,21 +114,32 @@ def Orchestra\_TransferOp : Orchestra\_Op\<"transfer", [AllTypesMatch<["source",
   let results \= (outs AnyShaped:$result);
 }
 
-**orchestra.commit:** This operation is essential for the speculative execution pattern but was missing from formal specifications in the source material.1 The following definition synthesizes its intended semantics. It selects one of two sets of SSA values based on a boolean condition, materializing the result of the speculation.
+**orchestra.commit:** This operation is essential for the speculative execution pattern. It selects a set of values based on a boolean condition, materializing the result of the speculation. To avoid parsing ambiguities with multiple variadic operand lists, the operation is defined with a single variadic `values` operand and an integer attribute `num_true` that specifies the number of values belonging to the 'true' branch.
 
 Code-Snippet
 
-// In OrchestraOps.td  
-def Orchestra\_CommitOp : Orchestra\_Op\<"commit"\> {  
-  let summary \= "Selects one of two SSA values based on a boolean condition.";  
-  let description \=;
+// In OrchestraOps.td
+def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
+  let summary = "Selects between two sets of values based on a condition.";
 
-  let arguments \= (ins I1:$condition,  
-                       Variadic\<AnyType\>:$true\_values,  
-                       Variadic\<AnyType\>:$false\_values);  
-  let results \= (outs Variadic\<AnyType\>:$results);
+  let description = [{
+    A conditional selection operation. If the `condition` is true, the
+    first `num_true` values from the `values` operand are returned;
+    otherwise, the remaining values are returned.
+  }];
 
-  let hasVerifier \= 1;  
+  let arguments = (ins
+    I1:$condition,
+    Variadic<AnyType>:$values,
+    I32Attr:$num_true
+  );
+
+  let results = (outs Variadic<AnyType>:$results);
+
+  let hasVerifier = 1;
+  let hasCanonicalizer = 1;
+
+  let assemblyFormat = "$condition `,` $num_true `of` $values attr-dict `:` functional-type(operands, results)";
 }
 
 **orchestra.yield:** This is a standard terminator operation for regions within the OrchestraIR dialect, analogous to func.return or scf.yield.
@@ -151,21 +162,31 @@ def Orchestra\_YieldOp : Orchestra\_Op\<"yield"\> {
 
 While TableGen generates the core C++ class definitions, certain logic must be hand-written in the corresponding .cpp file (e.g., OrchestraDialect.cpp).2 This includes the implementation of verifiers and custom builders.
 
-**Verifiers:** Each operation should have a verifier to enforce semantic invariants that cannot be captured by the type system alone. For example, the orchestra.commit verifier must ensure that the types and number of values from the true\_values and false\_values operands match each other and the operation's result types.
+**Verifiers:** Each operation should have a verifier to enforce semantic invariants that cannot be captured by the type system alone. For example, the `orchestra.commit` verifier must ensure that the number of true and false values are equal and that their types match each other and the operation's result types.
 
 Verifiers for `orchestra.schedule` and `orchestra.task` have also been implemented. The `schedule` verifier enforces that the operation is top-level. The `task` verifier enforces that the operation has a `target` attribute, that its region is terminated by an `orchestra.yield` operation, and that the types of the yielded values match the result types of the task.
 
 C++
 
-// In OrchestraOps.cpp  
-mlir::LogicalResult orchestra::CommitOp::verify() {  
-  if (getTrueValues().getTypes()\!= getFalseValues().getTypes()) {  
-    return emitOpError("requires 'true' and 'false' value types to match");  
-  }  
-  if (getTrueValues().getTypes()\!= getResultTypes()) {  
-    return emitOpError("requires result types to match operand types");  
-  }  
-  return mlir::success();  
+// In OrchestraOps.cpp
+mlir::LogicalResult orchestra::CommitOp::verify() {
+  auto num_true = getNumTrue();
+  auto true_values = getValues().take_front(num_true);
+  auto false_values = getValues().drop_front(num_true);
+
+  if (true_values.size() != false_values.size()) {
+    return emitOpError("has mismatched variadic operand sizes");
+  }
+  if (true_values.getTypes() != false_values.getTypes()) {
+    return emitOpError("requires 'true' and 'false' value types to match");
+  }
+  if (getResults().size() != true_values.size()) {
+    return emitOpError("requires number of results to match number of values in each branch");
+  }
+  if (getResults().getTypes() != true_values.getTypes()) {
+    return emitOpError("requires result types to match operand types");
+  }
+  return mlir::success();
 }
 
 **Custom Builders:** Convenience builders simplify the programmatic creation of operations within compiler passes. The orchestra.task builder, for example, should automatically create the entry block of its region with the correct number and types of block arguments to match its operands.
@@ -219,7 +240,7 @@ This transformation is implemented using a Declarative Rewrite Rule (DRR) in Tab
 | orchestra.schedule | orchestra.schedule {... } | None | None | Contains a region with a DAG of orchestra.task operations, representing the full, physically scheduled execution plan. |
 | orchestra.task | %res \= orchestra.task (%in) target={...} {... } | Variadic inputs | target: DictionaryAttr specifying hardware resource. | Encapsulates a unit of work. The target attribute constrains its placement. The SSA use-def chain defines its dependencies. |
 | orchestra.transfer | %gpu\_data \= orchestra.transfer %host\_data from @host to @gpu0 | The data to be transferred. | from, to: SymbolRefAttr pointing to resource handles. | Explicitly represents the movement of data between two distinct memory locations, making communication a first-class optimizable operation. |
-| orchestra.commit | %res \= orchestra.commit %cond, %true\_val, %false\_val | i1 condition, variadic true values, variadic false values. | None | Selects one of two sets of SSA values based on a boolean condition. Core op for materializing the result of speculative execution. |
+| orchestra.commit | %res \= orchestra.commit %cond, 1 of %true\_val, %false\_val | i1 condition, variadic values. | num\_true: I32Attr | Selects a set of values based on a boolean condition. The `num_true` attribute specifies how many leading values in the `values` operand belong to the true branch. |
 
 ## **Section 2: Implementation of the Divergence-to-Speculation Pass (✅ Implemented)**
 

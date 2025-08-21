@@ -25,14 +25,17 @@ A canonicalization pattern has been added for the `orchestra.transfer` operation
 - A C++ helper function, `fuseTransferOps`, handles the fusion logic, including a policy for merging attributes (e.g., taking the maximum priority) and creating a `FusedLoc` to preserve debug information.
 - The build system has been updated to generate the C++ code for the DRR pattern.
 
-### Fixing the `orchestra.commit` Verifier
+### Refactoring `orchestra.commit` for Robustness
 
-A critical bug in the `orchestra.commit` operation's verifier has been resolved, significantly improving the dialect's stability and correctness. The verifier was previously failing to detect several types of invalid IR. The fix was a multi-step process:
+A critical and subtle bug related to the `orchestra.commit` operation has been resolved, significantly improving the dialect's stability and correctness. The original implementation, which used two variadic operand lists (`true_values` and `false_values`), suffered from a parsing ambiguity in MLIR's declarative assembly format. This could cause the parser to silently create a malformed operation, bypassing the verifier and leading to incorrect behavior.
 
-- The root cause was identified as a parser error where the sizes of variadic operands were not being correctly determined. This was fixed by replacing the `SameVariadicOperandSize` trait with the more appropriate `AttrSizedOperandSegments` trait on the `Orchestra_CommitOp` definition.
-- The C++ `verify()` method for `CommitOp` was updated to correctly check all invariants.
-- Test files using the generic assembly format for `orchestra.commit` were updated to use the custom assembly format, which is required when using `AttrSizedOperandSegments`.
-- The main verifier test file, `verify-commit.mlir`, was restructured to use the `--split-input-file` option, allowing each invalid case to be tested independently. This fixed a testing issue where the test runner would abort on the first reported error.
+The fix was a comprehensive refactoring of the operation to align with MLIR best practices:
+
+- **New Op Definition:** The `orchestra.commit` op was redefined to use a single variadic operand list (`values`) and an integer attribute (`num_true`). This attribute specifies the number of operands that belong to the "true" branch, removing all ambiguity from the parser.
+- **C++ Implementation Update:** The C++ verifier and canonicalization patterns for `CommitOp` were updated to work with the new, more robust definition.
+- **Test Suite Update:** All uses of `orchestra.commit` throughout the test suite were updated to the new, unambiguous syntax.
+
+This refactoring not only fixed the bug but also made the `Orchestra` dialect more robust and easier to maintain, preventing an entire class of potential future parsing issues.
 
 ### Laying the Groundwork for Hardware-Aware Optimizations
 
