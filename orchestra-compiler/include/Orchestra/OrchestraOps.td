@@ -71,20 +71,19 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
+def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let summary = "Selects between two sets of values based on a condition.";
 
   let description = [{
     A conditional selection operation. If the `condition` is true, the
-    `true_values` are returned; otherwise, the `false_values` are returned.
-    The `true_values` and `false_values` must have the same number of operands
-    and corresponding types.
+    first `num_true` values from the `values` operand are returned;
+    otherwise, the remaining values are returned.
   }];
 
   let arguments = (ins
     I1:$condition,
-    Variadic<AnyType>:$true_values,
-    Variadic<AnyType>:$false_values
+    Variadic<AnyType>:$values,
+    I32Attr:$num_true
   );
 
   let results = (outs Variadic<AnyType>:$results);
@@ -92,7 +91,7 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
 
-  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
+  let assemblyFormat = "$condition `,` $num_true `of` $values attr-dict `:` functional-type(operands, results)";
 }
 
 //===----------------------------------------------------------------------===//

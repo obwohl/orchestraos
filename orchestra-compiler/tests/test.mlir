@@ -10,8 +10,8 @@
     %true_val = arith.constant 1.0 : f32
     // CHECK: %[[FALSE:.*]] = arith.constant 0.000000e+00 : f32
     %false_val = arith.constant 0.0 : f32
-    // CHECK: %{{.*}} = orchestra.commit %[[COND]] true(%[[TRUE]]) false(%[[FALSE]])
-    %res = orchestra.commit %cond true(%true_val) false(%false_val) : (i1, f32, f32) -> f32
+    // CHECK: %{{.*}} = orchestra.commit %[[COND]], 1 of %[[TRUE]], %[[FALSE]]
+    %res = orchestra.commit %cond, 1 of %true_val, %false_val : (i1, f32, f32) -> f32
     "orchestra.yield"() : () -> ()
   }) : () -> ()
   // CHECK: "orchestra.yield"()

@@ -111,9 +111,15 @@ LogicalResult SpeculateIfOpPattern::matchAndRewrite(
 
   // 6. Create the commit operation to select the final result.
   rewriter.setInsertionPoint(ifOp); // Reset insertion point
+
+  llvm::SmallVector<mlir::Value> commitValues;
+  commitValues.append(thenTask.getResults().begin(), thenTask.getResults().end());
+  commitValues.append(elseTask.getResults().begin(), elseTask.getResults().end());
+
+  auto num_true = thenTask.getNumResults();
+
   auto commitOp = rewriter.create<CommitOp>(
-      loc, resultTypes, ifOp.getCondition(), thenTask.getResults(),
-      elseTask.getResults());
+      loc, resultTypes, ifOp.getCondition(), commitValues, num_true);
 
   // 7. Finalizing the Rewrite
   rewriter.replaceOp(ifOp, commitOp.getResults());

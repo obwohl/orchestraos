@@ -13,16 +13,20 @@ using namespace orchestra;
 //===----------------------------------------------------------------------===//
 
 mlir::LogicalResult CommitOp::verify() {
-  if (getTrueValues().size() != getFalseValues().size()) {
+  auto num_true = getNumTrue();
+  auto true_values = getValues().take_front(num_true);
+  auto false_values = getValues().drop_front(num_true);
+
+  if (true_values.size() != false_values.size()) {
     return emitOpError("has mismatched variadic operand sizes");
   }
-  if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
+  if (true_values.getTypes() != false_values.getTypes()) {
     return emitOpError("requires 'true' and 'false' value types to match");
   }
-  if (getResults().size() != getTrueValues().size()) {
+  if (getResults().size() != true_values.size()) {
     return emitOpError("requires number of results to match number of values in each branch");
   }
-  if (getResults().getTypes() != getTrueValues().getTypes()) {
+  if (getResults().getTypes() != true_values.getTypes()) {
     return emitOpError("requires result types to match operand types");
   }
   return mlir::success();
@@ -49,9 +53,9 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
     }
 
     if (value.getValue()) {
-      rewriter.replaceOp(op, op.getTrueValues());
+      rewriter.replaceOp(op, op.getValues().take_front(op.getNumTrue()));
     } else {
-      rewriter.replaceOp(op, op.getFalseValues());
+      rewriter.replaceOp(op, op.getValues().drop_front(op.getNumTrue()));
     }
     return mlir::success();
   }

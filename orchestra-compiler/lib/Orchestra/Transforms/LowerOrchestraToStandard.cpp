@@ -38,10 +38,15 @@ public:
     }
 
     SmallVector<Value, 4> newResults;
-    for (size_t i = 0; i < adaptor.getTrueValues().size(); ++i) {
+    auto num_true = op.getNumTrue();
+    auto values = adaptor.getValues();
+    auto true_values = values.take_front(num_true);
+    auto false_values = values.drop_front(num_true);
+
+    for (size_t i = 0; i < true_values.size(); ++i) {
       auto select = rewriter.create<arith::SelectOp>(
-          op.getLoc(), adaptor.getCondition(), adaptor.getTrueValues()[i],
-          adaptor.getFalseValues()[i]);
+          op.getLoc(), adaptor.getCondition(), true_values[i],
+          false_values[i]);
       newResults.push_back(select.getResult());
     }
     rewriter.replaceOp(op, newResults);

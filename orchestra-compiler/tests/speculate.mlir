@@ -8,7 +8,7 @@
 // CHECK:         %[[ELSE_TASK:.*]] = "orchestra.task"(%[[ARG2]])
 // CHECK:           "orchestra.yield"
 // CHECK:         }
-// CHECK:         %[[COMMIT:.*]] = orchestra.commit %[[COND]] true(%[[THEN_TASK]]) false(%[[ELSE_TASK]])
+// CHECK:         %[[COMMIT:.*]] = orchestra.commit %[[COND]], 1 of %[[THEN_TASK]], %[[ELSE_TASK]]
 // CHECK:         return %[[COMMIT]]
 // CHECK:       }
 func.func @test_speculate_candidate(%cond: i1, %arg1: f32, %arg2: f32) -> f32 {
