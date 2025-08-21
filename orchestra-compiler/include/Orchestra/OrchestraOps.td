@@ -70,18 +70,14 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
-  let summary = "Commits a set of values, conditioned on an i1 predicate.";
+def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize<["true_values", "false_values"]>]> {
+  let summary = "Selects between two sets of values based on a condition.";
 
   let description = [{
-    The `commit` operation has three logical operand segments:
-    1. A single `i1` condition.
-    2. A variadic list of values for the 'true' case.
-    3. A variadic list of values for the 'false' case.
-
-    The operation itself has no results. The segment sizes are stored in
-    an attribute named `operand_segment_sizes`, managed by the
-    `AttrSizedOperandSegments` trait.
+    A conditional selection operation. If the `condition` is true, the
+    `true_values` are returned; otherwise, the `false_values` are returned.
+    The `true_values` and `false_values` must have the same number of operands
+    and corresponding types.
   }];
 
   let arguments = (ins
@@ -90,10 +86,12 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
     Variadic<AnyType>:$false_values
   );
 
+  let results = (outs Variadic<AnyTypeOf<"true_values">>:$results);
+
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
 
-  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict";
+  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
 }
 
 //===----------------------------------------------------------------------===//
