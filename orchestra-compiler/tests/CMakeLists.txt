@@ -1,5 +1,5 @@
 # Find the FileCheck executable
-find_program(LLVM_FILECHECK_EXECUTABLE FileCheck
+find_program(LLVM_FILECHECK_EXECUTABLE FileCheck-20
   HINTS ${LLVM_TOOLS_DIR})
 if(NOT LLVM_FILECHECK_EXECUTABLE)
     message(FATAL_ERROR "FileCheck not found")

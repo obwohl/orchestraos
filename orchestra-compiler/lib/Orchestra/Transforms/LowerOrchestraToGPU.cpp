@@ -11,6 +11,7 @@
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
 #include "llvm/ADT/DenseMap.h"
+#include "mlir/Dialect/XeGPU/IR/XeGPU.h"
 #include "llvm/ADT/SmallVector.h"
 
 using namespace mlir;
@@ -127,8 +128,10 @@ public:
   LowerOrchestraToGPUPass(const LowerOrchestraToGPUPass& pass) {}
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
-    // This pass is a pipeline, so it should not have dialect dependencies itself.
-    // The nested passes will declare their own dependencies.
+    registry
+        .insert<OrchestraDialect, mlir::gpu::GPUDialect,
+                mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
+                mlir::arith::ArithDialect, mlir::xegpu::XeGPUDialect>();
   }
 
   // Option to select the GPU architecture.
@@ -139,13 +142,16 @@ public:
 
   void runOnOperation() override {
     mlir::ModuleOp module = getOperation();
-    mlir::PassManager pm(module.getContext());
+    mlir::OpPassManager pm(mlir::ModuleOp::getOperationName());
 
     if (gpuArch == "nvgpu") {
-      pm.addNestedPass<mlir::gpu::GPUFuncOp>(
+      auto &gpuModulePM = pm.nest<mlir::gpu::GPUModuleOp>();
+      gpuModulePM.addNestedPass<mlir::gpu::GPUFuncOp>(
           std::make_unique<LowerOrchestraToNVGPUPass>());
     } else if (gpuArch == "xegpu") {
-      pm.addNestedPass<mlir::gpu::GPUFuncOp>(createLowerOrchestraToXeGPUPass());
+      auto &gpuModulePM = pm.nest<mlir::gpu::GPUModuleOp>();
+      gpuModulePM.addNestedPass<mlir::gpu::GPUFuncOp>(
+          createLowerOrchestraToXeGPUPass());
     } else {
       module.emitError() << "unsupported GPU architecture: " << gpuArch;
       signalPassFailure();

@@ -64,9 +64,13 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
     spaces during a later lowering stage.
   }];
 
-  let arguments = (ins AnyShaped:$source, SymbolRefAttr:$from, SymbolRefAttr:$to);
+  let arguments = (ins AnyShaped:$source,
+                       SymbolRefAttr:$from,
+                       SymbolRefAttr:$to,
+                       OptionalAttr<I32Attr>:$priority);
   let results = (outs AnyShaped:$result);
   let hasVerifier = 1;
+  let hasCanonicalizer = 1;
 
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
@@ -94,32 +98,9 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let assemblyFormat = "$condition `,` $num_true `of` $values attr-dict `:` functional-type(operands, results)";
 }
 
-//===----------------------------------------------------------------------===//
-// Canonicalization Patterns
-//===----------------------------------------------------------------------===//
+
 
 include "mlir/IR/PatternBase.td"
-
-// C++ helper to merge attributes and create the new fused op.
-def FuseTransferOps
-    : NativeCodeCall<"fuseTransferOps($_builder, $0, $1)">;
-
-// Constraint to check if an SSA value has exactly one use.
-def HasOneUse : Constraint<CPred<"$0.getResult(0).hasOneUse()">>;
-
-def TransferFusionPattern : Pat<
-  // Match a transfer whose source is another transfer.
-  (Orchestra_TransferOp:$final_op
-    (Orchestra_TransferOp:$intermediate_op $source, $from1, $to1),
-    $from2, $to2),
-
-  // Rewrite by calling the C++ helper.
-  (FuseTransferOps $intermediate_op, $final_op),
-
-  // Apply C++ constraints.
-  [(HasOneUse $intermediate_op)]
->;
-
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
   let summary = "Terminator for regions in OrchestraIR operations.";

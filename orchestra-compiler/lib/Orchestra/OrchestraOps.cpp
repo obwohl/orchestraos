@@ -79,18 +79,70 @@ mlir::LogicalResult TransferOp::verify() {
 }
 
 namespace {
-/// Helper function for the DRR pattern to fuse two transfer ops.
-static mlir::Value fuseTransferOps(mlir::PatternRewriter &rewriter,
-                                   orchestra::TransferOp first,
-                                   orchestra::TransferOp second) {
-  auto fusedLoc = rewriter.getFusedLoc({first.getLoc(), second.getLoc()});
-  auto newOp = rewriter.create<orchestra::TransferOp>(
-      fusedLoc, second.getResult().getType(), first.getSource(),
-      first.getFrom(), second.getTo());
-  rewriter.replaceOp(second, newOp.getResult());
-  return newOp.getResult();
-}
+// Fuse two consecutive transfer ops into a single transfer.
+// E.g., orchestra.transfer(orchestra.transfer(%0, @A, @B), @B, @C)
+//    -> orchestra.transfer(%0, @A, @C)
+struct FuseConsecutiveTransfers
+    : public mlir::OpRewritePattern<orchestra::TransferOp> {
+  using OpRewritePattern<orchestra::TransferOp>::OpRewritePattern;
+
+  mlir::LogicalResult
+  matchAndRewrite(orchestra::TransferOp op,
+                  mlir::PatternRewriter &rewriter) const override {
+    // The source of the current transfer must be the result of another
+    // transfer.
+    auto sourceOp =
+        op.getSource().getDefiningOp<orchestra::TransferOp>();
+    if (!sourceOp) {
+      return mlir::failure();
+    }
+
+    // The source transfer can only have this one user.
+    if (!sourceOp.getResult().hasOneUse()) {
+      return mlir::failure();
+    }
+
+    // The intermediate memory locations must match.
+    if (sourceOp.getTo() != op.getFrom()) {
+      return mlir::failure();
+    }
+
+    // Handle attributes. The highest priority is kept.
+    auto sourcePriority = sourceOp.getPriorityAttr();
+    auto thisPriority = op.getPriorityAttr();
+    mlir::IntegerAttr newPriority;
+    if (sourcePriority && thisPriority) {
+      if (sourcePriority.getValue().getSExtValue() >=
+          thisPriority.getValue().getSExtValue()) {
+        newPriority = sourcePriority;
+      } else {
+        newPriority = thisPriority;
+      }
+    } else if (sourcePriority) {
+      newPriority = sourcePriority;
+    } else if (thisPriority) {
+      newPriority = thisPriority;
+    }
+
+    // Fuse the two transfers.
+    auto fusedLoc = rewriter.getFusedLoc({sourceOp.getLoc(), op.getLoc()});
+    auto newOp = rewriter.create<orchestra::TransferOp>(
+        fusedLoc, op.getResult().getType(), sourceOp.getSource(),
+        sourceOp.getFrom(), op.getTo(), newPriority);
+
+    rewriter.replaceOp(op, newOp.getResult());
+    // Since the original op was replaced, the source op is now dead. Erase it.
+    rewriter.eraseOp(sourceOp);
+
+    return mlir::success();
+  }
+};
 } // namespace
+
+void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                             MLIRContext *context) {
+  results.add<FuseConsecutiveTransfers>(context);
+}
 
 //===----------------------------------------------------------------------===//
 // ScheduleOp
