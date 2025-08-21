@@ -90,11 +90,10 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [AttrSizedOperandSegments]> {
     Variadic<AnyType>:$false_values
   );
 
-  let results = (outs Variadic<AnyType>:$results);
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
 
-  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict `:` functional-type(operands, results)";
+  let assemblyFormat = "$condition `true` `(` $true_values `)` `false` `(` $false_values `)` attr-dict";
 }
 
 //===----------------------------------------------------------------------===//
