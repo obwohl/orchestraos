@@ -13,8 +13,17 @@ using namespace orchestra;
 //===----------------------------------------------------------------------===//
 
 mlir::LogicalResult CommitOp::verify() {
+  if (getTrueValues().size() != getFalseValues().size()) {
+    return emitOpError("requires the same number of true and false values");
+  }
   if (getTrueValues().getTypes() != getFalseValues().getTypes()) {
     return emitOpError("requires 'true' and 'false' value types to match");
+  }
+  if (getResults().size() != getTrueValues().size()) {
+    return emitOpError("requires number of results to match number of true_values");
+  }
+  if (getResults().getTypes() != getTrueValues().getTypes()) {
+    return emitOpError("requires result types to match true_values types");
   }
   return mlir::success();
 }

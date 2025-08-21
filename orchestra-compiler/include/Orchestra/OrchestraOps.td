@@ -4,6 +4,7 @@
 include "OrchestraInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/OpAsmInterface.td"
+include "mlir/IR/OpBase.td"
 
 // A base class for all operations in this dialect.
 class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
@@ -70,7 +71,7 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize<["true_values", "false_values"]>]> {
+def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize]> {
   let summary = "Selects between two sets of values based on a condition.";
 
   let description = [{
@@ -86,7 +87,7 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", [SameVariadicOperandSize<["true_
     Variadic<AnyType>:$false_values
   );
 
-  let results = (outs Variadic<AnyTypeOf<"true_values">>:$results);
+  let results = (outs Variadic<AnyType>:$results);
 
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
