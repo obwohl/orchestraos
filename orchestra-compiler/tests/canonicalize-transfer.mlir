@@ -1,4 +1,4 @@
-// RUN: %orchestra-opt %s --canonicalize | FileCheck %s
+// RUN: %orchestra-opt %s --canonicalize | %FileCheck %s
 
 // -----
 // Test Case 1: Basic fusion of two consecutive transfer ops.

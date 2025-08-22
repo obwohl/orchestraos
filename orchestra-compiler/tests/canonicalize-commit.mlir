@@ -1,4 +1,4 @@
-// RUN: %orchestra-opt %s -canonicalize | FileCheck %s
+// RUN: %orchestra-opt %s -canonicalize | %FileCheck %s
 
 // CHECK-LABEL: func @test_fold_commit_true
 // CHECK-SAME:    ([[ARG:%.+]]: i32)
