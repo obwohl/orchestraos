@@ -1,29 +1,80 @@
 #include "Orchestra/Transforms/Passes.h"
-#include "Orchestra/Transforms/SpeculateIfOp.h"
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
 
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/PDL/IR/PDL.h"
+#include "mlir/Dialect/PDLInterp/IR/PDLInterp.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/IRMapping.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/TypeSwitch.h"
 
 using namespace mlir;
 using namespace mlir::orchestra;
 
 namespace {
 
+// Helper function to find all SSA Values used in a region but defined outside.
+static llvm::SetVector<mlir::Value> getUsedExternalValues(mlir::Region &region) {
+  llvm::SetVector<mlir::Value> externalValues;
+  region.walk([&](mlir::Operation *op) {
+    for (mlir::Value operand : op->getOperands()) {
+      if (!region.isAncestor(operand.getParentRegion())) {
+        externalValues.insert(operand);
+      }
+    }
+  });
+  return externalValues;
+}
+
+// Helper to clone a region and remap its arguments. This is the original,
+// correct implementation from the C++ pattern.
+static void cloneAndRemap(mlir::Region &sourceRegion, mlir::Region &destRegion,
+                                const llvm::SetVector<mlir::Value> &externalValues,
+                                mlir::PatternRewriter &rewriter) {
+  mlir::IRMapping mapper;
+  auto destArgs = destRegion.getArguments();
+  for (auto pair : llvm::zip(externalValues, destArgs)) {
+      mapper.map(std::get<0>(pair), std::get<1>(pair));
+  }
+
+  rewriter.setInsertionPointToEnd(&destRegion.front());
+  for (auto &op : sourceRegion.front().without_terminator()) {
+    rewriter.clone(op, mapper);
+  }
+
+  auto sourceYield = mlir::cast<mlir::scf::YieldOp>(sourceRegion.front().getTerminator());
+  llvm::SmallVector<mlir::Value> yieldOperands;
+  for (mlir::Value operand : sourceYield.getOperands()) {
+    yieldOperands.push_back(mapper.lookupOrDefault(operand));
+  }
+  // The destination region belongs to an orchestra.task, which needs an
+  // orchestra.yield terminator.
+  rewriter.create<orchestra::YieldOp>(sourceYield.getLoc(), yieldOperands);
+}
+
+#include "SpeculateIfOp.pdll.inc"
+
 struct DivergenceToSpeculationPass
     : public mlir::PassWrapper<DivergenceToSpeculationPass, mlir::OperationPass<mlir::func::FuncOp>> {
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(DivergenceToSpeculationPass)
 
   void getDependentDialects(DialectRegistry &registry) const override {
-    registry.insert<OrchestraDialect, scf::SCFDialect>();
+    registry.insert<OrchestraDialect, scf::SCFDialect, arith::ArithDialect,
+                    pdl::PDLDialect, pdl_interp::PDLInterpDialect>();
   }
 
   void runOnOperation() override {
+    getContext().loadDialect<OrchestraDialect>();
     RewritePatternSet patterns(&getContext());
-    patterns.add<SpeculateIfOpPattern>(&getContext());
+    populateGeneratedPDLLPatterns<>(patterns);
     if (failed(applyPatternsGreedily(getOperation(), std::move(patterns))))
       signalPassFailure();
   }

@@ -1,0 +1,29 @@
+OVERVIEW: PDLL Frontend
+USAGE: mlir-pdll [options] <input file>
+
+OPTIONS:
+
+Color Options:
+
+  --color                        - Use colors in output (default=autodetect)
+
+General options:
+
+  -D <macro name>                - Name of the macro to be defined -- ignored by mlir-pdll
+  -I <directory>                 - Directory of include files
+  -d <filename>                  - Dependency filename
+  --dump-ods                     - Print out the parsed ODS information from the input file
+  -o <filename>                  - Output filename
+  --output-split-marker=<string> - Split marker to use for merging the ouput
+  --split-input-file[=<string>]    - Split the input file into chunks using the given or default marker and process each chunk independently
+  --write-if-changed             - Only write to the output file if it changed
+  -x=<value>                     - The type of output desired
+    =ast                         -   generate the AST for the input file
+    =mlir                        -   generate the PDL MLIR for the input file
+    =cpp                         -   generate a C++ source file containing the patterns for the input file
+
+Generic Options:
+
+  --help                         - Display available options (--help-hidden for more)
+  --help-list                    - Display list of available options (--help-list-hidden for more)
+  --version                      - Display the version of this program

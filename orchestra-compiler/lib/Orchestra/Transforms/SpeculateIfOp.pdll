@@ -1,0 +1,89 @@
+// orchestra-compiler/lib/Orchestra/Transforms/SpeculateIfOp.pdll
+//
+// This file contains the PDL pattern for speculating scf.if operations.
+// It replaces the imperative C++ SpeculateIfOpPattern.
+//
+// See Task 1.2 in `next/upgrade_plan.md`.
+
+#include "Orchestra/Orchestra.td"
+#include "mlir/Dialect/SCF/IR/SCFOps.td"
+
+// Native C++ constraint to check for suitability. The pattern requires an
+// 'else' block and must produce results.
+Constraint HasElseBlockAndResults(op: Op) [{
+  auto ifOp = cast<scf::IfOp>(op);
+  if (!ifOp.getElseRegion().hasOneBlock() || ifOp.getNumResults() == 0) {
+    return mlir::failure();
+  }
+  return mlir::success();
+}];
+
+// Native C++ constraint to check for side effects.
+Constraint RegionsHaveNoSideEffects(op: Op) [{
+  auto ifOp = cast<scf::IfOp>(op);
+  auto hasSideEffects = [&](mlir::Region &region) {
+    auto walkResult = region.walk([&](mlir::Operation *op) {
+      auto memInterface = dyn_cast<mlir::MemoryEffectOpInterface>(op);
+      if (!memInterface)
+        return mlir::WalkResult::advance();
+
+      llvm::SmallVector<mlir::MemoryEffects::EffectInstance> effects;
+      memInterface.getEffects(effects);
+      for (const auto &effect : effects) {
+        if (isa<mlir::MemoryEffects::Write>(effect.getEffect())) {
+          return mlir::WalkResult::interrupt(); // Found a write side effect.
+        }
+      }
+      return mlir::WalkResult::advance();
+    });
+    return walkResult.wasInterrupted();
+  };
+
+  if (hasSideEffects(ifOp.getThenRegion()) ||
+      hasSideEffects(ifOp.getElseRegion())) {
+    return mlir::failure();
+  }
+  return mlir::success();
+}];
+
+// Define the native C++ rewriter for the speculative execution pattern.
+Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
+  auto ifOp = cast<scf::IfOp>(op);
+  mlir::Location loc = ifOp.getLoc();
+  mlir::TypeRange resultTypes = ifOp.getResultTypes();
+  auto targetAttr = rewriter.getDictionaryAttr({});
+
+  rewriter.setInsertionPoint(op);
+  auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());
+  auto thenTask = rewriter.create<orchestra::TaskOp>(
+      loc, thenExternalValues.getArrayRef(), resultTypes, targetAttr);
+  cloneAndRemap(ifOp.getThenRegion(), thenTask.getBody(), thenExternalValues, rewriter);
+
+  rewriter.setInsertionPoint(op);
+  auto elseExternalValues = getUsedExternalValues(ifOp.getElseRegion());
+  auto elseTask = rewriter.create<orchestra::TaskOp>(
+      loc, elseExternalValues.getArrayRef(), resultTypes, targetAttr);
+  cloneAndRemap(ifOp.getElseRegion(), elseTask.getBody(), elseExternalValues, rewriter);
+
+  rewriter.setInsertionPoint(op);
+  llvm::SmallVector<mlir::Value> commitValues;
+  commitValues.append(thenTask.getResults().begin(), thenTask.getResults().end());
+  commitValues.append(elseTask.getResults().begin(), elseTask.getResults().end());
+  auto num_true = thenTask.getNumResults();
+  auto commitOp = rewriter.create<orchestra::CommitOp>(
+      loc, resultTypes, ifOp.getCondition(), commitValues, num_true);
+
+  return commitOp.getResults();
+}];
+
+
+// The main pattern definition.
+Pattern SpeculateIfOpPattern with benefit(1) {
+  // 1. Match the root operation and apply constraints.
+  let ifOp = op<scf.if>;
+  HasElseBlockAndResults(ifOp);
+  RegionsHaveNoSideEffects(ifOp);
+
+  // 2. Call the rewriter to perform the transformation.
+  replace ifOp with RewriteSpeculativeIf(ifOp);
+}
