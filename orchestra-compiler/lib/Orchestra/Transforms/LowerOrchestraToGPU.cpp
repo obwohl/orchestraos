@@ -15,9 +15,7 @@
 #include "llvm/ADT/SmallVector.h"
 
 using namespace mlir;
-using namespace orchestra;
-
-namespace orchestra {
+using namespace mlir::orchestra;
 
 namespace {
 // This is the original logic for lowering to NVGPU, extracted into its own pass.
@@ -29,7 +27,7 @@ public:
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
     registry
-        .insert<OrchestraDialect, mlir::gpu::GPUDialect,
+        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
                 mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
                 mlir::arith::ArithDialect>();
   }
@@ -129,7 +127,7 @@ public:
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
     registry
-        .insert<OrchestraDialect, mlir::gpu::GPUDialect,
+        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
                 mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
                 mlir::arith::ArithDialect, mlir::xegpu::XeGPUDialect>();
   }
@@ -165,6 +163,8 @@ public:
 };
 } // namespace
 
+namespace mlir {
+namespace orchestra {
 std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass() {
   return std::make_unique<LowerOrchestraToGPUPass>();
 }
@@ -172,5 +172,5 @@ std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass() {
 void registerLoweringToGPUPasses() {
   ::mlir::PassRegistration<LowerOrchestraToGPUPass>();
 }
-
 } // namespace orchestra
+} // namespace mlir

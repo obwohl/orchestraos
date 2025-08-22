@@ -13,7 +13,7 @@ A comprehensive architectural plan, the **[Orchestra MLIR 2.0 Blueprint](../arch
 The following features have been verified through code analysis and a successful run of the project's `lit` test suite.
 
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
-*   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional, including `schedule`, `task`, `transfer`, and a variadic `commit` operation. The dialect uses standard MLIR features from the LLVM 15-17 era.
+*   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional. It has been modernized to use the MLIR v20 `Properties` system for its core operation attributes, providing improved type safety and performance.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation uses a standard C++ rewrite pattern.
 *   **GPU Lowering (NVIDIA Hopper):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It correctly generates asynchronous data transfers (`nvgpu.device_async_copy`), making it suitable for NVIDIA Hopper-class GPUs.
 *   **Standard Lowering:** The `--lower-orchestra-to-standard` pass correctly lowers `orchestra.commit` to `arith.select`.
@@ -22,7 +22,6 @@ The following features have been verified through code analysis and a successful
 
 The current implementation does not include the state-of-the-art (SOTA) features outlined in the MLIR 2.0 blueprint. Key deviations include:
 
-*   **No Dialect Modernization:** The `OrchestraIR` dialect does not use the modern `Properties` system for operation attributes, instead relying on older MLIR idioms.
 *   **No Declarative Patterns:** Passes are implemented using imperative C++ patterns, not the declarative, more maintainable PDL (Pattern Description Language) framework.
 *   **No Hardware-Aware Optimization Framework:** The compiler lacks a flexible, scriptable framework for hardware-aware optimizations. The SOTA approach using the `transform` dialect is not implemented.
 *   **No Feedback-Driven Optimization (FDO):** The compiler is purely Ahead-of-Time (AOT). The entire FDO loop (instrumentation, runtime profiling, JIT recompilation) is not implemented.

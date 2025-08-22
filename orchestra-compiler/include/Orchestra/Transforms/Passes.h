@@ -3,6 +3,7 @@
 
 #include "mlir/Pass/Pass.h"
 
+namespace mlir {
 namespace orchestra {
 
 std::unique_ptr<mlir::Pass> createDivergenceToSpeculationPass();
@@ -23,5 +24,6 @@ inline void registerLoweringToXeGPUPasses() {
 }
 
 } // namespace orchestra
+} // namespace mlir
 
 #endif // ORCHESTRA_TRANSFORMS_PASSES_H

@@ -4,6 +4,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 
+namespace mlir {
 namespace orchestra {
 
 struct SpeculateIfOpPattern : public mlir::OpRewritePattern<mlir::scf::IfOp> {
@@ -15,5 +16,6 @@ struct SpeculateIfOpPattern : public mlir::OpRewritePattern<mlir::scf::IfOp> {
 };
 
 } // namespace orchestra
+} // namespace mlir
 
 #endif // ORCHESTRA_TRANSFORMS_SPECULATEIFOP_H

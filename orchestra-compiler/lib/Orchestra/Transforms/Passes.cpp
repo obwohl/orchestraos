@@ -9,7 +9,7 @@
 #include "mlir/Dialect/SCF/IR/SCF.h"
 
 using namespace mlir;
-using namespace orchestra;
+using namespace mlir::orchestra;
 
 namespace {
 

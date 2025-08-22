@@ -44,7 +44,7 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
       [{
         odsState.addOperands(operands);
         odsState.addTypes(resultTypes);
-        odsState.addAttribute("target", target);
+        odsState.getOrAddProperties<Properties>().target = target;
         mlir::Region *bodyRegion = odsState.addRegion();
         mlir::Block *bodyBlock = new mlir::Block();
         bodyRegion->push_back(bodyBlock);

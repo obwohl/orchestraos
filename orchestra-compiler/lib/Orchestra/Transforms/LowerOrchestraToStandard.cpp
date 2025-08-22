@@ -21,7 +21,7 @@
 #include "Orchestra/OrchestraOps.h"
 
 using namespace mlir;
-using namespace orchestra;
+using namespace mlir::orchestra;
 
 namespace {
 

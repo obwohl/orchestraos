@@ -10,7 +10,7 @@
 #include "llvm/ADT/SetVector.h"
 
 using namespace mlir;
-using namespace orchestra;
+using namespace mlir::orchestra;
 
 namespace {
 

@@ -6,17 +6,15 @@
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/Transforms/Passes.h"
 
-using namespace orchestra;
-
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
 
   registerAllDialects(registry);
 
-  registry.insert<OrchestraDialect>();
+  registry.insert<mlir::orchestra::OrchestraDialect>();
 
   mlir::registerAllPasses();
-  registerOrchestraPasses();
+  mlir::orchestra::registerOrchestraPasses();
 
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "Orchestra optimizer driver\n", registry));

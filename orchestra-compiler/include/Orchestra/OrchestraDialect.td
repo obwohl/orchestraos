@@ -5,7 +5,14 @@ include "mlir/IR/OpBase.td"
 
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
-  let cppNamespace = "orchestra";
+  let cppNamespace = "::mlir::orchestra";
+
+  let dependentDialects = [
+    "mlir::arith::ArithDialect"
+  ];
+
+  let usePropertiesForAttributes = 1;
+
   let summary = "A dialect for the Orchestra meta-OS compiler.";
   let description = [{
     The OrchestraIR dialect is the heart of the OrchestraOS compiler's
