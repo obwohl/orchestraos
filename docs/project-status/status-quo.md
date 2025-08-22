@@ -15,18 +15,19 @@ The following features have been verified through code analysis and a successful
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
 *   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional. It has been modernized to use the MLIR v20 `Properties` system for its core operation attributes, providing improved type safety and performance.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation uses a standard C++ rewrite pattern.
-*   **GPU Lowering (NVIDIA Hopper):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It correctly generates asynchronous data transfers (`nvgpu.device_async_copy`), making it suitable for NVIDIA Hopper-class GPUs.
+*   **GPU Lowering (NVIDIA):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It includes an architecture-aware code path:
+    *   For NVIDIA Blackwell GPUs (`sm_100` and newer), it generates SOTA asynchronous data transfers using the Tensor Memory Accelerator (`nvgpu.tma.async.load`) and `mbarrier` synchronization.
+    *   For older NVIDIA GPUs (e.g., Hopper), it generates standard asynchronous copies (`nvgpu.device_async_copy`).
 *   **Standard Lowering:** The `--lower-orchestra-to-standard` pass correctly lowers `orchestra.commit` to `arith.select`.
 
 ## 3. Known Limitations & Deviations from SOTA Blueprint
 
-The current implementation does not include the state-of-the-art (SOTA) features outlined in the MLIR 2.0 blueprint. Key deviations include:
+The current implementation does not include all of the state-of-the-art (SOTA) features outlined in the MLIR 2.0 blueprint. Key deviations include:
 
 *   **No Declarative Patterns:** Passes are implemented using imperative C++ patterns, not the declarative, more maintainable PDL (Pattern Description Language) framework.
 *   **No Hardware-Aware Optimization Framework:** The compiler lacks a flexible, scriptable framework for hardware-aware optimizations. The SOTA approach using the `transform` dialect is not implemented.
 *   **No Feedback-Driven Optimization (FDO):** The compiler is purely Ahead-of-Time (AOT). The entire FDO loop (instrumentation, runtime profiling, JIT recompilation) is not implemented.
 *   **Limited SOTA GPU Support:**
-    *   **NVIDIA:** The backend does not support SOTA features of the Blackwell architecture (Tensor Memory Accelerator, `mbarrier`).
     *   **Intel:** The backend targets an incomplete, experimental `xegpu` lowering, not the SOTA `XeVM` dialect required for maximum performance on modern Intel GPUs. The `xegpu` tests are disabled.
 
 ## 4. Next Steps

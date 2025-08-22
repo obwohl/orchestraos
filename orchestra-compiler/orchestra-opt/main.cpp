@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
 
   registerAllDialects(registry);
+  registry.insert<mlir::scf::SCFDialect>();
 
   registry.insert<mlir::orchestra::OrchestraDialect>();
 
