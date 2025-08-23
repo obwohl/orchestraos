@@ -108,20 +108,19 @@ struct FuseConsecutiveTransfers
     }
 
     // Handle attributes. The highest priority is kept.
-    auto sourcePriority = sourceOp.getPriorityAttr();
-    auto thisPriority = op.getPriorityAttr();
+    auto sourcePriority = sourceOp.getPriority();
+    auto thisPriority = op.getPriority();
     mlir::IntegerAttr newPriority;
     if (sourcePriority && thisPriority) {
-      if (sourcePriority.getValue().getSExtValue() >=
-          thisPriority.getValue().getSExtValue()) {
-        newPriority = sourcePriority;
+      if (*sourcePriority >= *thisPriority) {
+        newPriority = sourceOp.getPriorityAttr();
       } else {
-        newPriority = thisPriority;
+        newPriority = op.getPriorityAttr();
       }
     } else if (sourcePriority) {
-      newPriority = sourcePriority;
+      newPriority = sourceOp.getPriorityAttr();
     } else if (thisPriority) {
-      newPriority = thisPriority;
+      newPriority = op.getPriorityAttr();
     }
 
     // Fuse the two transfers.
