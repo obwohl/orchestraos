@@ -26,7 +26,7 @@ That means, do not ask intermediate confirmation-questions like """Does this see
 * If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
 * Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
 
-If you are still stuck after multiple attempts, and only then, you may ask for help by writing a comprehensive deep-research question for a separate agent. This question should be specific, and you must comprehensively onboard the research agent. Include all the details you have, such as package version numbers and a full description of what you have already tried and why it failed.
+If you are still stuck after at least 10 attempts, and only then, you may ask for help by writing a comprehensive deep-research question for a separate agent. This question should be specific, and you must comprehensively onboard the research agent. Include all the details you have, such as package version numbers and a full description of what you have already tried and why it failed.
 
 ---
 
