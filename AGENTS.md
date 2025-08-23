@@ -10,7 +10,7 @@ That means, do not ask intermediate confirmation-questions like """Does this see
 **2. Execute and Verify**
 
 * Read and understand the architecture/ documents completely. So read every single of them.
-* Then check the repo against the to_do.md and decide on what to work next. Don't solve a very large problem in one chunk. Frame and formulate a tiny, testable, achievable step.
+* Then check the repo (**and especially the status_quo.md**) against the to_do.md and decide on what to work next. Don't solve a very large problem in one chunk. Frame and formulate a tiny, testable, achievable step.
 * Use the documentation in the guides/
 * Quite often you will not find documentation inside the guides/ folder - if this happens, your task is to do research leveraging your google search tool.
 * **Crucially**, use self-verification loops (e.g., running tests, checking logs) to confirm your changes are successful.
