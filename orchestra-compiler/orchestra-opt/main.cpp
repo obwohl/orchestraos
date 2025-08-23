@@ -6,13 +6,29 @@
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/Transforms/Passes.h"
 
+// For the transform dialect
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/Linalg/TransformOps/DialectExtension.h"
+#include "mlir/Dialect/PDL/IR/PDL.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/SCF/TransformOps/SCFTransformOps.h"
+#include "mlir/Dialect/Transform/IR/TransformDialect.h"
+#include "mlir/Dialect/Vector/IR/VectorOps.h"
+#include "mlir/Dialect/Vector/TransformOps/VectorTransformOps.h"
+
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
 
   registerAllDialects(registry);
-  registry.insert<mlir::scf::SCFDialect>();
 
-  registry.insert<mlir::orchestra::OrchestraDialect>();
+  registry.insert<mlir::orchestra::OrchestraDialect,
+                  mlir::transform::TransformDialect>();
+
+  // Register transform dialect extensions.
+  mlir::linalg::registerTransformDialectExtension(registry);
+  mlir::scf::registerTransformDialectExtension(registry);
+  mlir::vector::registerTransformDialectExtension(registry);
 
   mlir::registerAllPasses();
   mlir::orchestra::registerOrchestraPasses();

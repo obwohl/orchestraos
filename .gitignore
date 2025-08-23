@@ -5,3 +5,4 @@ llvm.sh.1
 
 # macOS
 .DS_Store
+mlir-extensions/
