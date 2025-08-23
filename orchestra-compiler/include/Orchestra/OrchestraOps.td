@@ -87,15 +87,14 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let arguments = (ins
     I1:$condition,
     Variadic<AnyType>:$values,
-    I32Attr:$num_true
+    IntProp<"int32_t">:$num_true
   );
 
   let results = (outs Variadic<AnyType>:$results);
 
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
-
-  let assemblyFormat = "$condition `,` $num_true `of` $values attr-dict `:` functional-type(operands, results)";
+  let hasCustomAssemblyFormat = 1;
 }
 
 

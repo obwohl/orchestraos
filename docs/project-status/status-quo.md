@@ -13,7 +13,9 @@ A comprehensive architectural plan, the **[Orchestra MLIR 2.0 Blueprint](../arch
 The following features have been verified through code analysis and a successful run of the project's `lit` test suite.
 
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
-*   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional. It has been modernized to use the MLIR v20 `Properties` system for its core operation attributes, providing improved type safety and performance. The `target` attribute on `orchestra.task` has been enhanced to require a mandatory `arch` key, which is enforced by a custom verifier.
+*   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional.
+    *   **Partial Migration to Properties:** The `orchestra.commit` operation has been successfully migrated to use the `Properties` system, providing improved type safety and performance. The `orchestra.task` operation still needs to be migrated.
+    *   The `target` attribute on `orchestra.task` has been enhanced to require a mandatory `arch` key, which is enforced by a custom verifier.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation has been migrated from C++ to the declarative Pattern Description Language (PDL).
 *   **GPU Lowering (NVIDIA):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It includes an architecture-aware code path:
     *   For NVIDIA Blackwell GPUs (`sm_100` and newer), it generates SOTA asynchronous data transfers using the Tensor Memory Accelerator (`nvgpu.tma.async.load`) and `mbarrier` synchronization.
