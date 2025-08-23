@@ -1,6 +1,6 @@
 # Orchestra Compiler - Project Status
 
-**Last Updated: 2025-08-21**
+**Last Updated: 2025-08-22**
 
 ## 1. Summary
 
@@ -19,7 +19,7 @@ The following features have been verified through code analysis and a successful
     *   For NVIDIA Blackwell GPUs (`sm_100` and newer), it generates SOTA asynchronous data transfers using the Tensor Memory Accelerator (`nvgpu.tma.async.load`) and `mbarrier` synchronization.
     *   For older NVIDIA GPUs (e.g., Hopper), it generates standard asynchronous copies (`nvgpu.device_async_copy`).
 *   **Standard Lowering:** The `--lower-orchestra-to-standard` pass correctly lowers `orchestra.commit` to `arith.select`.
-*   **Declarative Optimization Framework:** The compiler now includes a declarative optimization framework based on the MLIR `transform` dialect. The `-transform-interpreter` pass is integrated and can be used to apply hardware-specific optimization scripts. A library of such scripts can be found in `orchestra-compiler/transforms`.
+*   **Declarative Optimization Framework:** The compiler now includes a declarative optimization framework based on the MLIR `transform` dialect. The `-transform-interpreter` pass is integrated and can be used to apply hardware-specific optimization scripts. A library of such scripts can be found in `orchestra-compiler/transforms`. A working example of producer-consumer fusion using this framework can be found in `orchestra-compiler/tests/fusion-test.mlir`.
 
 ## 3. Known Limitations & Deviations from SOTA Blueprint
 

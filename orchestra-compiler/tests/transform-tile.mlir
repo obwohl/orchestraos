@@ -15,10 +15,10 @@ module attributes {transform.with_named_sequence} {
   }
 }
 
-// CHECK-LABEL: func @tile_generic
+// CHECK-LABEL: func @fuse_two_generics
 // CHECK: scf.for
 // CHECK: linalg.generic
-func.func @tile_generic(%arg0: tensor<10xf32>, %arg1: tensor<10xf32>) -> tensor<10xf32> {
+func.func @fuse_two_generics(%arg0: tensor<10xf32>, %arg1: tensor<10xf32>) -> tensor<10xf32> {
   %0 = linalg.generic {
     indexing_maps = [affine_map<(d0) -> (d0)>, affine_map<(d0) -> (d0)>],
     iterator_types = ["parallel"]
