@@ -214,6 +214,11 @@ mlir::LogicalResult TaskOp::verify() {
     return emitOpError("requires a 'target' attribute");
   }
 
+  auto targetDict = getTarget();
+  if (!targetDict.get("arch")) {
+    return emitOpError("requires 'target' attribute to have an 'arch' key");
+  }
+
   // The region of a task must have a single block.
   if (getBody().getBlocks().size() != 1) {
     return emitOpError("expected region to have a single block");

@@ -51,7 +51,9 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   auto ifOp = cast<scf::IfOp>(op);
   mlir::Location loc = ifOp.getLoc();
   mlir::TypeRange resultTypes = ifOp.getResultTypes();
-  auto targetAttr = rewriter.getDictionaryAttr({});
+  auto targetAttr = rewriter.getDictionaryAttr({
+    rewriter.getNamedAttr("arch", rewriter.getStringAttr("unknown"))
+  });
 
   rewriter.setInsertionPoint(op);
   auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());
