@@ -3,6 +3,8 @@
 Work as autonomously as possible. Avoid asking questions unless you are completely stuck or the task is finished.
 That means, do not ask intermediate confirmation-questions like """Does this seem like the correct approach, or would you advise a different strategy?""" - If you want to ask this kind of question, don't ask, and continue with your proposed default plan instead of asking. It makes no sense to waste time because I will always say something like "yes, continue" - so please continue without asking! You can take my confirmation as granted.
 
+**0. Test the project as it is  - sanity check. If this fails, fix it**
+
 **1. Understand the Project Context**
 
 * Begin by thoroughly reviewing the repository structure and all available documentation.
