@@ -51,20 +51,17 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   auto ifOp = cast<scf::IfOp>(op);
   mlir::Location loc = ifOp.getLoc();
   mlir::TypeRange resultTypes = ifOp.getResultTypes();
-  auto targetAttr = rewriter.getDictionaryAttr({
-    rewriter.getNamedAttr("arch", rewriter.getStringAttr("unknown"))
-  });
 
   rewriter.setInsertionPoint(op);
   auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());
   auto thenTask = rewriter.create<orchestra::TaskOp>(
-      loc, thenExternalValues.getArrayRef(), resultTypes, targetAttr);
+      loc, thenExternalValues.getArrayRef(), resultTypes, "unknown");
   cloneAndRemap(ifOp.getThenRegion(), thenTask.getBody(), thenExternalValues, rewriter);
 
   rewriter.setInsertionPoint(op);
   auto elseExternalValues = getUsedExternalValues(ifOp.getElseRegion());
   auto elseTask = rewriter.create<orchestra::TaskOp>(
-      loc, elseExternalValues.getArrayRef(), resultTypes, targetAttr);
+      loc, elseExternalValues.getArrayRef(), resultTypes, "unknown");
   cloneAndRemap(ifOp.getElseRegion(), elseTask.getBody(), elseExternalValues, rewriter);
 
   rewriter.setInsertionPoint(op);

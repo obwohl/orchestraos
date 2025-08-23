@@ -255,14 +255,93 @@ void ScheduleOp::getCanonicalizationPatterns(RewritePatternSet &results,
 // TaskOp
 //===----------------------------------------------------------------------===//
 
+void TaskOp::print(OpAsmPrinter &p) {
+  p << " ";
+  // Print operands and their types.
+  if (!getOperands().empty()) {
+    p << "(";
+    p.printOperands(getOperands());
+    p << ") ";
+  }
+
+  // Print the target architecture.
+  auto targetDict = getTarget();
+  auto archAttr = targetDict.get("arch");
+  p << "on " << archAttr;
+
+  // Print attributes, eliding the 'target' attribute since we printed it.
+  p.printOptionalAttrDict(getOperation()->getAttrs(), /*elidedAttrs=*/{"target"});
+
+  // Print the function type.
+  p << " : " << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
+
+  // Print the region.
+  p << " ";
+  p.printRegion(getBody(),
+                /*printEntryBlockArgs=*/false,
+                /*printBlockTerminators=*/true);
+}
+
+ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
+  // Parse operands.
+  SmallVector<OpAsmParser::UnresolvedOperand, 4> operands;
+  if (parser.parseOperandList(operands, OpAsmParser::Delimiter::OptionalParen))
+    return failure();
+
+  // Parse the 'on' keyword and the target architecture.
+  if (parser.parseKeyword("on"))
+    return failure();
+
+  StringAttr archAttr;
+  if (parser.parseAttribute(archAttr))
+    return failure();
+  auto &builder = parser.getBuilder();
+  result.addAttribute("target", builder.getDictionaryAttr(
+    {builder.getNamedAttr("arch", archAttr)}));
+
+  // Parse the attribute dictionary.
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  // Parse the function type.
+  FunctionType funcType;
+  if (parser.parseColon() || parser.parseType(funcType))
+    return failure();
+
+  // Resolve operands and add result types.
+  if (parser.resolveOperands(operands, funcType.getInputs(),
+                             parser.getCurrentLocation(), result.operands))
+    return failure();
+  result.addTypes(funcType.getResults());
+
+  // Parse the region.
+  Region *body = result.addRegion();
+  SmallVector<OpAsmParser::Argument> regionArgs;
+  for (Type t : funcType.getInputs()) {
+    OpAsmParser::Argument arg;
+    arg.type = t;
+    regionArgs.push_back(arg);
+  }
+  if (parser.parseRegion(*body, regionArgs))
+    return failure();
+
+  return success();
+}
+
 mlir::LogicalResult TaskOp::verify() {
   if (!getTarget()) {
     return emitOpError("requires a 'target' attribute");
   }
 
   auto targetDict = getTarget();
-  if (!targetDict.get("arch")) {
+  auto archAttr = targetDict.get("arch");
+  if (!archAttr) {
     return emitOpError("requires 'target' attribute to have an 'arch' key");
+  }
+
+  if (!isa<mlir::StringAttr>(archAttr)) {
+    return emitOpError(
+        "requires 'arch' key in 'target' attribute to be a StringAttr");
   }
 
   // The region of a task must have a single block.

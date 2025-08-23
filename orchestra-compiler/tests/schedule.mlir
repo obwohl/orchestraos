@@ -2,12 +2,12 @@
 
 // A valid schedule with two tasks.
 "orchestra.schedule"() ({
-  "orchestra.task"() <{target = {arch = "test"}}> ({
+  orchestra.task on "test" {} : () -> () {
     "orchestra.yield"() : () -> ()
-  }) : () -> ()
-  "orchestra.task"() <{target = {arch = "test"}}> ({
+  }
+  orchestra.task on "test" {} : () -> () {
     "orchestra.yield"() : () -> ()
-  }) : () -> ()
+  }
   "orchestra.yield"() : () -> ()
 }) : () -> ()
 

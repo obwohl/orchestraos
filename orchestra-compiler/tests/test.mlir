@@ -2,8 +2,8 @@
 
 // CHECK-LABEL: "orchestra.schedule"
 "orchestra.schedule"() ({
-  // CHECK: "orchestra.task"
-  "orchestra.task"() <{target = {arch = "test"}}> ({
+  // CHECK: orchestra.task on "test"
+  orchestra.task on "test" {} : () -> () {
     // CHECK: %[[COND:.*]] = arith.constant true
     %cond = arith.constant true
     // CHECK: %[[TRUE:.*]] = arith.constant 1.000000e+00 : f32
@@ -13,7 +13,7 @@
     // CHECK: %{{.*}} = orchestra.commit %[[COND]], 1 of %[[TRUE]], %[[FALSE]]
     %res = orchestra.commit %cond, 1 of %true_val, %false_val : (i1, f32, f32) -> f32
     "orchestra.yield"() : () -> ()
-  }) : () -> ()
+  }
   // CHECK: "orchestra.yield"()
   "orchestra.yield"() : () -> ()
 }) : () -> ()

@@ -37,18 +37,35 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
 
   let regions = (region AnyRegion:$body);
   let hasVerifier = 1;
+  let hasCustomAssemblyFormat = 1;
 
   let builders = [
+    // This is the primary builder. It takes a simple string for the target
+    // architecture and constructs the dictionary attribute internally.
+    OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,
+                   "StringRef":$arch),
+      [{
+        odsState.addOperands(operands);
+        odsState.addTypes(resultTypes);
+        auto targetDict = odsBuilder.getDictionaryAttr(
+            {odsBuilder.getNamedAttr("arch", odsBuilder.getStringAttr(arch))});
+        odsState.addAttribute("target", targetDict);
+        mlir::Region *bodyRegion = odsState.addRegion();
+        bodyRegion->push_back(new mlir::Block());
+        bodyRegion->front().addArguments(
+            operands.getTypes(),
+            llvm::SmallVector<mlir::Location>(operands.size(), odsState.location));
+      }]>,
+    // This builder allows for the full target dictionary to be provided directly.
     OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,
                    "mlir::DictionaryAttr":$target),
       [{
         odsState.addOperands(operands);
         odsState.addTypes(resultTypes);
-        odsState.getOrAddProperties<Properties>().target = target;
+        odsState.addAttribute("target", target);
         mlir::Region *bodyRegion = odsState.addRegion();
-        mlir::Block *bodyBlock = new mlir::Block();
-        bodyRegion->push_back(bodyBlock);
-        bodyBlock->addArguments(
+        bodyRegion->push_back(new mlir::Block());
+        bodyRegion->front().addArguments(
             operands.getTypes(),
             llvm::SmallVector<mlir::Location>(operands.size(), odsState.location));
       }]>
