@@ -62,6 +62,53 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
 };
 } // namespace
 
+void CommitOp::print(OpAsmPrinter &p) {
+  p << " " << getCondition() << ", " << getNumTrue() << " of " << getValues();
+  p.printOptionalAttrDict(getOperation()->getAttrs(), /*elidedAttrs=*/{"num_true"});
+  p << " : " << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
+}
+
+ParseResult CommitOp::parse(OpAsmParser &parser, OperationState &result) {
+  OpAsmParser::UnresolvedOperand condition;
+  if (parser.parseOperand(condition))
+    return failure();
+
+  if (parser.parseComma())
+    return failure();
+
+  int32_t num_true;
+  if (parser.parseInteger(num_true))
+    return failure();
+  result.getOrAddProperties<CommitOp::Properties>().num_true = num_true;
+
+  if (parser.parseKeyword("of"))
+    return failure();
+
+  SmallVector<OpAsmParser::UnresolvedOperand, 4> values;
+  SMLoc values_loc = parser.getCurrentLocation();
+  if (parser.parseOperandList(values))
+    return failure();
+
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  if (parser.parseColon())
+    return failure();
+
+  FunctionType func_type;
+  if (parser.parseType(func_type))
+    return failure();
+
+  if (parser.resolveOperand(condition, func_type.getInput(0), result.operands))
+    return failure();
+
+  if (parser.resolveOperands(values, func_type.getInputs().drop_front(), values_loc, result.operands))
+    return failure();
+
+  result.addTypes(func_type.getResults());
+  return success();
+}
+
 void CommitOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                            MLIRContext *context) {
   results.add<FoldConstantCommit>(context);
