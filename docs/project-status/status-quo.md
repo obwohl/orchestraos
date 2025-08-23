@@ -33,6 +33,7 @@ The current implementation does not include all of the state-of-the-art (SOTA) f
 *   **Limited SOTA GPU Support:**
     *   **Intel:** The backend targets an incomplete, experimental `xegpu` lowering, not the SOTA `XeVM` dialect required for maximum performance on modern Intel GPUs. The `xegpu` tests are disabled.
 *   **Partial Property Refactoring:** An attempt was made to refactor `orchestra.transfer` to use the MLIR `Properties` system as outlined in the modernization plan. However, this effort was blocked by limitations in the project's version of the MLIR TableGen tooling, which did not support the required syntax for defining properties for all attribute types. As a result, the refactoring was only partially completed.
+*   **PDL Lowering for `orchestra.commit`:** An attempt was made to refactor the C++ `CommitOpLowering` pattern to PDL. This was unsuccessful because the lowering occurs in a `DialectConversion` pass, which requires a `ConversionPattern` with access to adapted operands. The PDL tooling generates a `RewritePattern` which does not have this capability, making it unsuitable for this specific conversion. The C++ implementation remains the correct approach.
 
 ## 4. Next Steps
 
