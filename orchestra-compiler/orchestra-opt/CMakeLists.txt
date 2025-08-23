@@ -9,4 +9,9 @@ target_link_libraries(orchestra-opt PRIVATE
   OrchestraTransforms
   MLIRPass
   MLIRMlirOptMain
+  MLIRTransformUtils
+  MLIRTransformDialect
+  MLIRLinalgTransformOps
+  MLIRSCFTransformOps
+  MLIRVectorTransformOps
 )
