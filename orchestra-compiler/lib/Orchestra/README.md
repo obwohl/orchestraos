@@ -14,7 +14,7 @@ The key benefits of this modernization are:
 
 ## Using the Properties API
 
-When working with `orchestra.commit` and `orchestra.task` operations in C++, you should use the generated property accessors to get and set their inherent attributes.
+When working with the `orchestra.commit` operation in C++, you should use the generated property accessors to get and set its inherent attributes.
 
 ### `orchestra.commit`
 
@@ -22,10 +22,26 @@ The `num_true` attribute of the `commit` operation is now a property.
 
 *   **Getter:** `op.getNumTrue()` returns an `int32_t`.
 
-### `orchestra.task`
-
-The `target` attribute of the `task` operation is now a property.
-
-*   **Getter:** `op.getTarget()` returns an `mlir::DictionaryAttr`.
-
 By using these generated accessors, you can write more robust, readable, and performant compiler passes for the Orchestra dialect.
+
+## Custom Assembly Format for `orchestra.task`
+
+The `orchestra.task` operation uses a custom assembly format to improve readability and parsing robustness.
+
+### Syntax
+
+```mlir
+%results = orchestra.task (%operands,...) on "arch_name" {attributes} : (operand_types) -> (result_types) {
+  // ... region with operations ...
+}
+```
+
+### Example
+
+```mlir
+orchestra.task on "test" {} : () -> () {
+  "orchestra.yield"() : () -> ()
+}
+```
+
+This custom format clearly separates the target architecture from other attributes and makes the operation's signature more explicit in the assembly.
