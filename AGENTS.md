@@ -32,7 +32,7 @@ If you are still stuck after multiple attempts, and only then, you may ask for h
 
 ### **Finalizing and Committing**
 
-* **Only after successful execution and verification** should you update the project status and documentation.
+* **Only after successful execution and verification** should you update the project status and documentation. That means ALL tests MUST pass. Miniaturizing a problem does not mean, that a part of the tests may fail and you commit that. This is not allowed. Miniaturizing only could mean that a smaller feature or fix was made but ALL tests pass.
 * **Update `docs/project-status/status-quo.md` to reflect the new state** THIS IS IMPORTANT!
 * Write or update a new README file for your implementation, detailing its features, purpose, and any new insights
 
