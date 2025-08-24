@@ -23,10 +23,6 @@ This phase is the highest priority and a prerequisite for all subsequent work. I
 
 **Pending:**
 
-*   **Task 1.1: Modernize Core Dialect with the `Properties` System.**
-    *   **What:** Refactor the `OrchestraIR` TableGen definitions (`OrchestraOps.td`). Migrate key attributes, such as `target` on `orchestra.task`, to use the `Properties` system instead of generic dictionary attributes.
-    *   **Why:** To improve compile-time performance, add C++ type safety, and align the core dialect with current MLIR best practices, creating a robust foundation for all future development.
-
 *   **Task 1.3: Refactor Existing Patterns with PDL.**
     *   **What:** Rewrite existing imperative C++ patterns, such as the `SpeculateIfOpPattern`, to use the declarative Pattern Description Language (PDL).
     *   **Why:** To improve the readability and maintainability of core transformations by separating the matching logic from the rewrite logic, aligning with modern MLIR development philosophy.

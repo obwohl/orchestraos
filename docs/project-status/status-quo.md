@@ -26,7 +26,7 @@ The following features have been verified through code analysis and a successful
 *   **GPU Lowering (AMD):** Initial support for AMD GPUs has been added via the `--gpu-arch=rocdl` flag. This pass lowers `orchestra.transfer` operations to the `rocdl` dialect, using `rocdl.global.load.lds` for asynchronous data copies.
 *   **Standard Lowering:** The `--lower-orchestra-to-standard` pass correctly lowers `orchestra.commit` to `arith.select`.
 *   **Declarative Optimization Framework:** The compiler now includes a declarative optimization framework based on the MLIR `transform` dialect. The `-transform-interpreter` pass is integrated and can be used to apply hardware-specific optimization scripts. A library of such scripts can be found in `orchestra-compiler/transforms`. A working example of producer-consumer fusion using this framework can be found in `orchestra-compiler/tests/fusion-test.mlir`.
-*   **Build System and Stability:** The project was initially failing to build against the specified LLVM 20 environment. This has been fixed. The canonicalization pattern for `orchestra.transfer` was updated to correctly handle optional attributes, making the codebase stable and the test suite fully passing.
+*   **Build System and Stability:** The project was initially failing to build against the specified LLVM 20 environment. This has been fixed. The canonicalization pattern for `orchestra.transfer` was updated to correctly handle optional attributes. A failing test related to the `orchestra.task` verifier was fixed, making the codebase stable and the test suite fully passing.
 
 ## 3. Known Limitations & Deviations from SOTA Blueprint
 
