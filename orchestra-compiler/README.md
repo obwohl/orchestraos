@@ -11,3 +11,12 @@ For a comprehensive blueprint of the compiler's architectural vision, the Orches
 ## Getting Started
 
 For detailed instructions on how to set up the development environment, build the compiler, and run the test suite, please refer to the main [README.md](../../README.md) at the root of the repository.
+
+### GPU Lowering
+
+The `--lower-orchestra-to-gpu` pass is the main entry point for lowering Orchestra IR to vendor-specific GPU dialects. The target hardware can be selected using the `--gpu-arch` option.
+
+Supported architectures:
+-   `--gpu-arch=nvgpu`: Targets NVIDIA GPUs using the `nvgpu` dialect.
+-   `--gpu-arch=rocdl`: Targets AMD GPUs using the `rocdl` dialect.
+-   `--gpu-arch=xegpu`: (Experimental) Targets Intel GPUs using the `xegpu` dialect.

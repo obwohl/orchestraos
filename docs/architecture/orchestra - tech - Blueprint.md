@@ -388,14 +388,27 @@ The new lowering sequence provides a more direct mapping to hardware capabilitie
 2. Synchronization is now managed using xevm.memfence, the XeVM equivalent of a memory barrier.22  
 3. When lowering fused tensor computations from the linalg dialect, the target primitive must be the powerful xevm.mma (Matrix Multiply-Add) operation. This operation provides a direct mapping to the hardware's XMX (Xe Matrix eXtensions) engines, ensuring maximum performance for matrix arithmetic.1
 
+### **4.4 Lowering to AMD Architectures**
+
+The addition of AMD GPU support is a critical step in broadening the hardware reach of the OrchestraOS compiler. The initial support targets AMD's CDNA-class architectures (e.g., MI200 series) and is enabled via the ROCDL dialect.
+
+#### **4.4.1 CDNA Target (ROCDL)**
+
+The lowering of `orchestra.transfer` for AMD GPUs follows a similar pattern to other vendors but targets the specific operations available in the ROCDL dialect.
+
+1.  **Pointer Preparation:** The pass first retrieves the base addresses of the source (global memory) and destination (workgroup/LDS memory) `memref`s. It uses `memref.extract_aligned_pointer_as_index` followed by `arith.index_cast` to get the addresses as `i64` integers. These are then converted to generic `!llvm.ptr` types using `llvm.inttoptr`.
+2.  **Address Space Casting:** The generic pointers are then cast to their specific address spaces using `llvm.addrspacecast`. Global memory is address space 1, and LDS (Local Data Store) is address space 3.
+3.  **Asynchronous Copy:** The core data movement is performed by the `rocdl.global.load.lds` operation. This operation is designed to efficiently load data from global memory into the fast, on-chip LDS.
+4.  **Synchronization:** Correctness is ensured by inserting a `gpu.barrier` after the transfer operation to ensure that all threads in the workgroup have completed the load before proceeding to use the data in LDS.
+
 To codify these state-of-the-art enhancements and provide a clear, actionable reference for the engineering team, the following table summarizes the target-specific lowering strategies for key OrchestraIR concepts. This matrix documents the core decisions of the code generation backend and serves as a guide for implementation and future maintenance.
 
-| Feature | NVIDIA Hopper (sm\_90) | NVIDIA Blackwell (sm\_100) | Intel Xe-HPG+ (Original) | Intel Xe-HPG+ (SOTA) |
+| Feature | NVIDIA Hopper (sm\_90) | NVIDIA Blackwell (sm\_100) | Intel Xe-HPG+ (SOTA) | AMD CDNA (SOTA) |
 | :---- | :---- | :---- | :---- | :---- |
-| Async Data Transfer | nvgpu.device\_async\_copy 1 | nvgpu.tma.async.load, nvgpu.tma.async.store 1 | Loop of xegpu.load\_nd/store\_nd 1 | xevm.blockload2d, xevm.blockstore2d 1 |
-| Synchronization | nvgpu.device\_async\_wait 1 | nvgpu.mbarrier family 1 | xegpu.fence 1 | xevm.memfence 1 |
-| Matrix Acceleration | nvgpu.mma.sync 1 | nvvm.tcgen05 family (via intrinsics) 1 | xegpu.dpas 1 | xevm.mma 1 |
-| Key Memory Abstraction | memref in shared memory | memref in TMEM (addrspace 6\) 1 | \!xegpu.tensor\_desc 1 | \!llvm.ptr 1 |
+| Async Data Transfer | nvgpu.device\_async\_copy 1 | nvgpu.tma.async.load, nvgpu.tma.async.store 1 | xevm.blockload2d, xevm.blockstore2d 1 | rocdl.global.load.lds |
+| Synchronization | nvgpu.device\_async\_wait 1 | nvgpu.mbarrier family 1 | xevm.memfence 1 | gpu.barrier |
+| Matrix Acceleration | nvgpu.mma.sync 1 | nvvm.tcgen05 family (via intrinsics) 1 | xevm.mma 1 | rocdl.mfma |
+| Key Memory Abstraction | memref in shared memory | memref in TMEM (addrspace 6\) 1 | \!llvm.ptr 1 | memref in workgroup memory |
 
 *Table 3: A comprehensive matrix detailing the state-of-the-art lowering strategies for key GPU architectures, providing a definitive reference for the code generation backend.*
 
