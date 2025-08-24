@@ -9,9 +9,7 @@ That means, do not ask intermediate confirmation-questions like """Does this see
 
 * Begin by thoroughly reviewing the repository structure and all available documentation.
 
-* Info about your environment: Before you started, i set up your environment. This script installed a lot of packages. But also it did this:
-wget https://github.com/obwohl/orchestraos/releases/download/v0.1.0-stablehlo-build/stablehlo-build.tar.gz
-This file was created via docker, shared via git releases, and is a working stablehlo build.
+* Info about your environment: stablehlo is pre-built - should be working!
 
 **2. Execute and Verify**
 
