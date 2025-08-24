@@ -1,10 +1,9 @@
+#include "Orchestra/OrchestraDialect.h"
+#include "Orchestra/Transforms/Passes.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllPasses.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
-
-#include "Orchestra/OrchestraDialect.h"
-#include "Orchestra/Transforms/Passes.h"
 
 // For the transform dialect
 #include "mlir/Dialect/Affine/IR/AffineOps.h"

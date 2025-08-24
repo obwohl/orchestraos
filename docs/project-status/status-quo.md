@@ -27,6 +27,7 @@ The following features have been verified through code analysis and a successful
 *   **Standard Lowering:** The `--lower-orchestra-to-standard` pass correctly lowers `orchestra.commit` to `arith.select`.
 *   **Declarative Optimization Framework:** The compiler now includes a declarative optimization framework based on the MLIR `transform` dialect. The `-transform-interpreter` pass is integrated and can be used to apply hardware-specific optimization scripts. A library of such scripts can be found in `orchestra-compiler/transforms`. A working example of producer-consumer fusion using this framework can be found in `orchestra-compiler/tests/fusion-test.mlir`.
 *   **Build System and Stability:** The project was initially failing to build against the specified LLVM 20 environment. This has been fixed. The canonicalization pattern for `orchestra.transfer` was updated to correctly handle optional attributes. A failing test related to the `orchestra.task` verifier was fixed, making the codebase stable and the test suite fully passing.
+*   **Code Formatting:** A `.clang-format` file based on the LLVM style has been added to the repository root to ensure a consistent code style. A Python script at `scripts/run-clang-format.py` has been added to automatically format all C++ source and header files in the `orchestra-compiler` directory.
 
 ## 3. Known Limitations & Deviations from SOTA Blueprint
 

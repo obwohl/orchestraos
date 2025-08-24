@@ -1,10 +1,14 @@
-/*===- LowerOrchestraToStandard.cpp - Orchestra to Standard lowering passes -----*- C++ -*-===//
+/*===- LowerOrchestraToStandard.cpp - Orchestra to Standard lowering passes
+ *-----*- C++ -*-===//
  *
  * This file implements a pass to lower the Orchestra dialect to the Standard
  * dialect.
  *
  *===----------------------------------------------------------------------===*/
 
+#include "Orchestra/OrchestraDialect.h"
+#include "Orchestra/OrchestraOps.h"
+#include "Orchestra/Transforms/Passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -15,10 +19,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Pass/Pass.h"
-#include "Orchestra/Transforms/Passes.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "Orchestra/OrchestraDialect.h"
-#include "Orchestra/OrchestraOps.h"
 
 using namespace mlir;
 using namespace mlir::orchestra;
@@ -30,7 +31,8 @@ public:
   using OpConversionPattern<CommitOp>::OpConversionPattern;
 
   LogicalResult
-  matchAndRewrite(CommitOp op, OpAdaptor adaptor,
+  matchAndRewrite(CommitOp op,
+                  OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     if (op->getNumResults() == 0) {
       rewriter.eraseOp(op);
@@ -45,8 +47,7 @@ public:
 
     for (size_t i = 0; i < true_values.size(); ++i) {
       auto select = rewriter.create<arith::SelectOp>(
-          op.getLoc(), adaptor.getCondition(), true_values[i],
-          false_values[i]);
+          op.getLoc(), adaptor.getCondition(), true_values[i], false_values[i]);
       newResults.push_back(select.getResult());
     }
     rewriter.replaceOp(op, newResults);
@@ -72,8 +73,8 @@ public:
     RewritePatternSet patterns(&getContext());
     patterns.add<CommitOpLowering>(&getContext());
 
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
+    if (failed(applyPartialConversion(
+            getOperation(), target, std::move(patterns))))
       signalPassFailure();
   }
 
@@ -85,7 +86,7 @@ public:
   }
 };
 
-} // namespace
+}  // namespace
 
 void orchestra::registerLoweringToStandardPasses() {
   PassRegistration<LowerOrchestraToStandardPass>();

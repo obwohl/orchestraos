@@ -1,19 +1,19 @@
+#include "Orchestra/OrchestraDialect.h"
+#include "Orchestra/OrchestraOps.h"
 #include "Orchestra/Transforms/Passes.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/NVGPU/IR/NVGPUDialect.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/XeGPU/IR/XeGPU.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include "Orchestra/OrchestraDialect.h"
-#include "Orchestra/OrchestraOps.h"
-#include "llvm/ADT/DenseMap.h"
-#include "mlir/Dialect/XeGPU/IR/XeGPU.h"
-#include "llvm/ADT/SmallVector.h"
 
 using namespace mlir;
 using namespace mlir::orchestra;
@@ -32,8 +32,12 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   auto mbarrier = builder.create<nvgpu::MBarrierCreateOp>(loc, mbarrierType);
 
   auto c0 = builder.create<arith::ConstantIndexOp>(loc, 0);
-  auto numThreads = builder.create<arith::ConstantIndexOp>(loc, 1); // Placeholder
-  builder.create<nvgpu::MBarrierInitOp>(loc, mbarrier.getResult(), c0, numThreads,
+  auto numThreads =
+      builder.create<arith::ConstantIndexOp>(loc, 1);  // Placeholder
+  builder.create<nvgpu::MBarrierInitOp>(loc,
+                                        mbarrier.getResult(),
+                                        c0,
+                                        numThreads,
                                         /*predicate=*/nullptr);
 
   // Collect all transfer ops to be rewritten.
@@ -56,20 +60,25 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
     // Create TMA descriptor.
     SmallVector<Value, 4> boxDims;
     for (int64_t dim : sourceType.getShape()) {
-      boxDims.push_back(builder.create<arith::ConstantIndexOp>(transferLoc, dim));
+      boxDims.push_back(
+          builder.create<arith::ConstantIndexOp>(transferLoc, dim));
     }
-    auto unrankedSourceType = UnrankedMemRefType::get(sourceType.getElementType(), sourceType.getMemorySpace());
-    auto castedSource = builder.create<memref::CastOp>(transferLoc, unrankedSourceType, source);
+    auto unrankedSourceType = UnrankedMemRefType::get(
+        sourceType.getElementType(), sourceType.getMemorySpace());
+    auto castedSource =
+        builder.create<memref::CastOp>(transferLoc, unrankedSourceType, source);
 
     // Create a new memref on the GPU in shared memory.
     auto destType = mlir::MemRefType::get(
-        sourceType.getShape(), sourceType.getElementType(),
+        sourceType.getShape(),
+        sourceType.getElementType(),
         sourceType.getLayout(),
         mlir::gpu::AddressSpaceAttr::get(op.getContext(),
                                          mlir::gpu::AddressSpace::Workgroup));
 
     auto descriptorType = nvgpu::TensorMapDescriptorType::get(
-        builder.getContext(), destType,
+        builder.getContext(),
+        destType,
         nvgpu::TensorMapSwizzleKind::SWIZZLE_NONE,
         nvgpu::TensorMapL2PromoKind::L2PROMO_NONE,
         nvgpu::TensorMapOOBKind::OOB_ZERO,
@@ -88,15 +97,18 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
 
     // Create an async TMA load.
     builder.create<nvgpu::TmaAsyncLoadOp>(
-        transferLoc, /*dst=*/dest.getResult(),
+        transferLoc,
+        /*dst=*/dest.getResult(),
         /*barriers=*/mbarrier.getResult(),
         /*tensorMapDescriptor=*/descriptor.getResult(),
-        /*coordinates=*/ValueRange(indices), /*mbarId=*/c0,
+        /*coordinates=*/ValueRange(indices),
+        /*mbarId=*/c0,
         /*multicastMask=*/nullptr,
         /*predicate=*/nullptr);
 
     // Arrive at the barrier and get a token.
-    auto arriveToken = builder.create<nvgpu::MBarrierArriveOp>(transferLoc, mbarrier.getResult(), c0);
+    auto arriveToken = builder.create<nvgpu::MBarrierArriveOp>(
+        transferLoc, mbarrier.getResult(), c0);
     destToMBarrierToken[dest.getResult()] = arriveToken.getToken();
 
     op.getResult().replaceAllUsesWith(dest.getResult());
@@ -104,7 +116,7 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   }
 
   // Insert wait operations.
-  for (auto const& [destBuffer, barrierToken] : destToMBarrierToken) {
+  for (auto const &[destBuffer, barrierToken] : destToMBarrierToken) {
     for (mlir::OpOperand &use : destBuffer.getUses()) {
       mlir::Operation *user = use.getOwner();
       if (isa<nvgpu::TmaAsyncLoadOp>(user)) {
@@ -115,14 +127,20 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
       auto c1_i1 = waitBuilder.create<arith::ConstantIntOp>(waitLoc, 1, 1);
 
       auto scfWhile = waitBuilder.create<scf::WhileOp>(
-          waitLoc, TypeRange{}, ValueRange{},
+          waitLoc,
+          TypeRange{},
+          ValueRange{},
           [&](OpBuilder &beforeBuilder, Location beforeLoc, ValueRange) {
             auto isComplete = beforeBuilder.create<nvgpu::MBarrierTestWaitOp>(
-                beforeLoc, builder.getI1Type(), mbarrier.getResult(), barrierToken, c0);
+                beforeLoc,
+                builder.getI1Type(),
+                mbarrier.getResult(),
+                barrierToken,
+                c0);
             auto notComplete = beforeBuilder.create<arith::XOrIOp>(
                 beforeLoc, isComplete.getWaitComplete(), c1_i1);
-            beforeBuilder.create<scf::ConditionOp>(beforeLoc, notComplete,
-                                                   ValueRange{});
+            beforeBuilder.create<scf::ConditionOp>(
+                beforeLoc, notComplete, ValueRange{});
           },
           [&](OpBuilder &afterBuilder, Location afterLoc, ValueRange) {
             afterBuilder.create<scf::YieldOp>(afterLoc);
@@ -131,7 +149,8 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   }
 }
 
-// This is the original logic for lowering to NVGPU, extracted into its own pass.
+// This is the original logic for lowering to NVGPU, extracted into its own
+// pass.
 class LowerOrchestraToNVGPUPass
     : public mlir::PassWrapper<LowerOrchestraToNVGPUPass,
                                mlir::OperationPass<mlir::gpu::GPUFuncOp>> {
@@ -139,10 +158,12 @@ public:
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToNVGPUPass)
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
-    registry
-        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
-                mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
-                mlir::arith::ArithDialect, mlir::scf::SCFDialect>();
+    registry.insert<mlir::orchestra::OrchestraDialect,
+                    mlir::gpu::GPUDialect,
+                    mlir::memref::MemRefDialect,
+                    mlir::nvgpu::NVGPUDialect,
+                    mlir::arith::ArithDialect,
+                    mlir::scf::SCFDialect>();
   }
 
   void runOnOperation() override {
@@ -167,8 +188,7 @@ public:
 
     // Collect all transfer ops to be rewritten.
     llvm::SmallVector<TransferOp, 4> transferOps;
-    funcOp.walk(
-        [&](TransferOp op) { transferOps.push_back(op); });
+    funcOp.walk([&](TransferOp op) { transferOps.push_back(op); });
 
     mlir::OpBuilder builder(funcOp.getContext());
     for (auto op : transferOps) {
@@ -185,7 +205,8 @@ public:
 
       // Create a new memref on the GPU in shared memory.
       auto destType = mlir::MemRefType::get(
-          sourceType.getShape(), sourceType.getElementType(),
+          sourceType.getShape(),
+          sourceType.getElementType(),
           sourceType.getLayout(),
           mlir::gpu::AddressSpaceAttr::get(op.getContext(),
                                            mlir::gpu::AddressSpace::Workgroup));
@@ -194,15 +215,19 @@ public:
       // Create zero indices for the copy.
       mlir::SmallVector<mlir::Value, 4> indices;
       for (unsigned i = 0; i < sourceType.getRank(); ++i) {
-        indices.push_back(
-            builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
+        indices.push_back(builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
       }
 
       // Create an async copy.
       auto asyncCopy = builder.create<mlir::nvgpu::DeviceAsyncCopyOp>(
-          loc, mlir::nvgpu::DeviceAsyncTokenType::get(op.getContext()),
-          dest.getResult(), indices, source, indices,
-          builder.getIndexAttr(sourceType.getNumElements()), mlir::Value{},
+          loc,
+          mlir::nvgpu::DeviceAsyncTokenType::get(op.getContext()),
+          dest.getResult(),
+          indices,
+          source,
+          indices,
+          builder.getIndexAttr(sourceType.getNumElements()),
+          mlir::Value{},
           mlir::UnitAttr{});
 
       asyncTokens[dest.getResult()] = asyncCopy.getResult();
@@ -231,8 +256,8 @@ public:
       llvm::SmallVector<mlir::Value, 1> &tokens = pair.second;
       mlir::OpBuilder wait_builder(user);
       for (auto token : tokens) {
-        wait_builder.create<mlir::nvgpu::DeviceAsyncWaitOp>(user->getLoc(),
-                                                            token, nullptr);
+        wait_builder.create<mlir::nvgpu::DeviceAsyncWaitOp>(
+            user->getLoc(), token, nullptr);
       }
     }
   }
@@ -245,25 +270,31 @@ class LowerOrchestraToGPUPass
 public:
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerOrchestraToGPUPass)
 
-  mlir::StringRef getArgument() const final { return "lower-orchestra-to-gpu"; }
+  mlir::StringRef getArgument() const final {
+    return "lower-orchestra-to-gpu";
+  }
   mlir::StringRef getDescription() const final {
     return "Lowers the Orchestra dialect to a specific GPU vendor dialect.";
   }
 
   LowerOrchestraToGPUPass() = default;
-  LowerOrchestraToGPUPass(const LowerOrchestraToGPUPass& pass) {}
+  LowerOrchestraToGPUPass(const LowerOrchestraToGPUPass &pass) {
+  }
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
-    registry
-        .insert<mlir::orchestra::OrchestraDialect, mlir::gpu::GPUDialect,
-                mlir::memref::MemRefDialect, mlir::nvgpu::NVGPUDialect,
-                mlir::arith::ArithDialect, mlir::xegpu::XeGPUDialect,
-                mlir::scf::SCFDialect>();
+    registry.insert<mlir::orchestra::OrchestraDialect,
+                    mlir::gpu::GPUDialect,
+                    mlir::memref::MemRefDialect,
+                    mlir::nvgpu::NVGPUDialect,
+                    mlir::arith::ArithDialect,
+                    mlir::xegpu::XeGPUDialect,
+                    mlir::scf::SCFDialect>();
   }
 
   // Option to select the GPU architecture.
   Option<std::string> gpuArch{
-      *this, "gpu-arch",
+      *this,
+      "gpu-arch",
       llvm::cl::desc("The target GPU architecture (e.g., nvgpu, xegpu)"),
       llvm::cl::init("nvgpu")};
 
@@ -294,7 +325,7 @@ public:
     }
   }
 };
-} // namespace
+}  // namespace
 
 namespace mlir {
 namespace orchestra {
@@ -305,5 +336,5 @@ std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass() {
 void registerLoweringToGPUPasses() {
   ::mlir::PassRegistration<LowerOrchestraToGPUPass>();
 }
-} // namespace orchestra
-} // namespace mlir
+}  // namespace orchestra
+}  // namespace mlir

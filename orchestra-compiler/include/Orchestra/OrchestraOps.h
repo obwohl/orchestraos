@@ -10,4 +10,4 @@
 #define GET_OP_CLASSES
 #include "Orchestra/OrchestraOps.h.inc"
 
-#endif // ORCHESTRA_OPS_H
+#endif  // ORCHESTRA_OPS_H

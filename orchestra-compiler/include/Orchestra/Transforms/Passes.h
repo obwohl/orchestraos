@@ -25,7 +25,7 @@ inline void registerLoweringToXeGPUPasses() {
   // Do nothing.
 }
 
-} // namespace orchestra
-} // namespace mlir
+}  // namespace orchestra
+}  // namespace mlir
 
-#endif // ORCHESTRA_TRANSFORMS_PASSES_H
+#endif  // ORCHESTRA_TRANSFORMS_PASSES_H

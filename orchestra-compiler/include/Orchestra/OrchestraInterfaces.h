@@ -6,9 +6,9 @@
 namespace mlir {
 namespace orchestra {
 class OrchestraFusionStrategyInterface;
-} // namespace orchestra
-} // namespace mlir
+}  // namespace orchestra
+}  // namespace mlir
 
 #include "Orchestra/OrchestraInterfaces.h.inc"
 
-#endif // ORCHESTRA_INTERFACES_H
+#endif  // ORCHESTRA_INTERFACES_H

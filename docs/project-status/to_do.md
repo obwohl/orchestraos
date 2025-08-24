@@ -8,6 +8,15 @@ Of course. Based on the provided `orchestra - tech - MLIR 20 Blueprint` and the 
 
 This document outlines a high-level, phased to-do list for evolving the Orchestra compiler. It synthesizes the foundational goals of the original MLIR 20 Blueprint with the critical multi-vendor expansion strategy detailed in the addendum. The priority is to modernize the core infrastructure before implementing the new, state-of-the-art backends for strategic hardware targets.
 
+### Phase 0: Infrastructure and Tooling
+
+This phase focuses on improving the developer experience and ensuring code quality.
+
+*   **Task 0.1: Add Code Formatting.**
+    *   **Status: Completed**
+    *   **What:** Added a `.clang-format` file and a script (`scripts/run-clang-format.py`) to automatically format all C++ code.
+    *   **Why:** To enforce a consistent coding style, improving readability and maintainability.
+
 ### Phase 1: Core IR and Framework Modernization
 
 This phase is the highest priority and a prerequisite for all subsequent work. Its goal is to refactor the existing codebase to use modern MLIR infrastructure, which is essential for building a scalable and maintainable multi-target compiler.

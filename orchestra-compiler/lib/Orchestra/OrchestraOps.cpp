@@ -1,9 +1,10 @@
 #include "Orchestra/OrchestraOps.h"
+
+#include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/PatternMatch.h"
-#include "llvm/ADT/SmallVector.h"
 
 using namespace mlir;
 using namespace orchestra;
@@ -24,7 +25,8 @@ mlir::LogicalResult CommitOp::verify() {
     return emitOpError("requires 'true' and 'false' value types to match");
   }
   if (getResults().size() != true_values.size()) {
-    return emitOpError("requires number of results to match number of values in each branch");
+    return emitOpError(
+        "requires number of results to match number of values in each branch");
   }
   if (getResults().getTypes() != true_values.getTypes()) {
     return emitOpError("requires result types to match operand types");
@@ -38,10 +40,8 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
   using OpRewritePattern<CommitOp>::OpRewritePattern;
 
   mlir::LogicalResult
-  matchAndRewrite(CommitOp op,
-                  mlir::PatternRewriter &rewriter) const override {
-    auto constant =
-        op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
+  matchAndRewrite(CommitOp op, mlir::PatternRewriter &rewriter) const override {
+    auto constant = op.getCondition().getDefiningOp<mlir::arith::ConstantOp>();
     if (!constant) {
       return mlir::failure();
     }
@@ -60,12 +60,14 @@ struct FoldConstantCommit : public mlir::OpRewritePattern<CommitOp> {
     return mlir::success();
   }
 };
-} // namespace
+}  // namespace
 
 void CommitOp::print(OpAsmPrinter &p) {
   p << " " << getCondition() << ", " << getNumTrue() << " of " << getValues();
-  p.printOptionalAttrDict(getOperation()->getAttrs(), /*elidedAttrs=*/{"num_true"});
-  p << " : " << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
+  p.printOptionalAttrDict(getOperation()->getAttrs(),
+                          /*elidedAttrs=*/{"num_true"});
+  p << " : "
+    << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
 }
 
 ParseResult CommitOp::parse(OpAsmParser &parser, OperationState &result) {
@@ -102,7 +104,10 @@ ParseResult CommitOp::parse(OpAsmParser &parser, OperationState &result) {
   if (parser.resolveOperand(condition, func_type.getInput(0), result.operands))
     return failure();
 
-  if (parser.resolveOperands(values, func_type.getInputs().drop_front(), values_loc, result.operands))
+  if (parser.resolveOperands(values,
+                             func_type.getInputs().drop_front(),
+                             values_loc,
+                             result.operands))
     return failure();
 
   result.addTypes(func_type.getResults());
@@ -138,8 +143,7 @@ struct FuseConsecutiveTransfers
                   mlir::PatternRewriter &rewriter) const override {
     // The source of the current transfer must be the result of another
     // transfer.
-    auto sourceOp =
-        op.getSource().getDefiningOp<orchestra::TransferOp>();
+    auto sourceOp = op.getSource().getDefiningOp<orchestra::TransferOp>();
     if (!sourceOp) {
       return mlir::failure();
     }
@@ -172,9 +176,13 @@ struct FuseConsecutiveTransfers
 
     // Fuse the two transfers.
     auto fusedLoc = rewriter.getFusedLoc({sourceOp.getLoc(), op.getLoc()});
-    auto newOp = rewriter.create<orchestra::TransferOp>(
-        fusedLoc, op.getResult().getType(), sourceOp.getSource(),
-        sourceOp.getFrom(), op.getTo(), newPriority);
+    auto newOp =
+        rewriter.create<orchestra::TransferOp>(fusedLoc,
+                                               op.getResult().getType(),
+                                               sourceOp.getSource(),
+                                               sourceOp.getFrom(),
+                                               op.getTo(),
+                                               newPriority);
 
     rewriter.replaceOp(op, newOp.getResult());
     // Since the original op was replaced, the source op is now dead. Erase it.
@@ -183,7 +191,7 @@ struct FuseConsecutiveTransfers
     return mlir::success();
   }
 };
-} // namespace
+}  // namespace
 
 void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                              MLIRContext *context) {
@@ -196,8 +204,8 @@ void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
 
 mlir::LogicalResult ScheduleOp::verify() {
   // Check that the schedule is a top-level operation.
-  if (getOperation()->getParentOp() != nullptr &&
-      !isa<mlir::ModuleOp>(getOperation()->getParentOp())) {
+  if (getOperation()->getParentOp() != nullptr
+      && !isa<mlir::ModuleOp>(getOperation()->getParentOp())) {
     return emitOpError("must be a top-level operation");
   }
 
@@ -244,7 +252,7 @@ struct EraseEmptySchedule : public mlir::OpRewritePattern<ScheduleOp> {
     return mlir::failure();
   }
 };
-} // namespace
+}  // namespace
 
 void ScheduleOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                              MLIRContext *context) {
@@ -295,7 +303,8 @@ ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
   StringAttr archAttr;
   if (parser.parseAttribute(archAttr))
     return failure();
-  result.getOrAddProperties<TaskOp::Properties>().setTargetArch(archAttr.getValue());
+  result.getOrAddProperties<TaskOp::Properties>().setTargetArch(
+      archAttr.getValue());
 
   // Parse the attribute dictionary.
   if (parser.parseOptionalAttrDict(result.attributes))
@@ -307,8 +316,10 @@ ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
     return failure();
 
   // Resolve operands and add result types.
-  if (parser.resolveOperands(operands, funcType.getInputs(),
-                             parser.getCurrentLocation(), result.operands))
+  if (parser.resolveOperands(operands,
+                             funcType.getInputs(),
+                             parser.getCurrentLocation(),
+                             result.operands))
     return failure();
   result.addTypes(funcType.getResults());
 
@@ -359,7 +370,8 @@ mlir::LogicalResult TaskOp::verify() {
   for (auto it : llvm::zip(getResultTypes(), yieldOp.getOperandTypes())) {
     if (std::get<0>(it) != std::get<1>(it)) {
       return yieldOp.emitOpError("type of yielded value ")
-             << std::get<0>(it) << " does not match corresponding task result type "
+             << std::get<0>(it)
+             << " does not match corresponding task result type "
              << std::get<1>(it);
     }
   }

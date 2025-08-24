@@ -1,10 +1,11 @@
 #include "Orchestra/OrchestraDialect.h"
+
 #include "Orchestra/OrchestraOps.h"
+#include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/PatternMatch.h"
-#include "llvm/ADT/SmallVector.h"
 
 // Generated headers
 #include "Orchestra/OrchestraDialect.cpp.inc"
