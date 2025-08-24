@@ -7,5 +7,5 @@ llvm.sh.1
 .DS_Store
 mlir-extensions/
 
-/stablehlo/build/
+/stablehlo/
 /vendor/llvm-project/build/
