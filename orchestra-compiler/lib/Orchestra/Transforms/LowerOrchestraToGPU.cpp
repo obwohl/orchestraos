@@ -279,6 +279,10 @@ public:
       auto &gpuModulePM = pm.nest<mlir::gpu::GPUModuleOp>();
       gpuModulePM.addNestedPass<mlir::gpu::GPUFuncOp>(
           createLowerOrchestraToXeGPUPass());
+    } else if (gpuArch == "rocdl") {
+      auto &gpuModulePM = pm.nest<mlir::gpu::GPUModuleOp>();
+      gpuModulePM.addNestedPass<mlir::gpu::GPUFuncOp>(
+          createLowerOrchestraToROCDLPass());
     } else {
       module.emitError() << "unsupported GPU architecture: " << gpuArch;
       signalPassFailure();

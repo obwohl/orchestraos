@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
 
   mlir::registerAllPasses();
   mlir::orchestra::registerOrchestraPasses();
+  mlir::registerPassManagerCLOptions();
 
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "Orchestra optimizer driver\n", registry));

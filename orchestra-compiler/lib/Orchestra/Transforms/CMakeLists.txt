@@ -36,6 +36,7 @@ add_library(OrchestraTransforms
   LowerOrchestraToStandard.cpp
   LowerOrchestraToGPU.cpp
   LowerOrchestraToXeGPU.cpp
+  LowerOrchestraToROCDL.cpp
 )
 
 # 5. Add the binary directory to the include path, so that Passes.cpp can find
@@ -53,6 +54,7 @@ target_link_libraries(OrchestraTransforms
   MLIRAnalysis
   MLIRSCFDialect
   MLIRNVGPUDialect
+  MLIRROCDLDialect
   MLIRSupport
   LLVMSupport
   Orchestra
