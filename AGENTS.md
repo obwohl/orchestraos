@@ -1,41 +1,77 @@
-### **General Workflow Guidelines**
+## 1. Project Overview
 
-Work as autonomously as possible. Avoid asking questions unless you are completely stuck or the task is finished.
-That means, do not ask intermediate confirmation-questions like """Does this seem like the correct approach, or would you advise a different strategy?""" - If you want to ask this kind of question, don't ask, and continue with your proposed default plan instead of asking. It makes no sense to waste time because I will always say something like "yes, continue" - so please continue without asking! You can take my confirmation as granted.
+The OrchestraOS compiler is an ambitious project to build a "meta-OS" that elevates scheduling and data movement to first-class citizens of the compiler's IR. The goal is to enable global, hardware-aware optimization of complex workloads, particularly in the domain of AI and machine learning.
 
-**0. Test the project as it is  - sanity check. If this fails, fix it**
+The core of the project is the `orchestra-compiler`, which implements a custom MLIR dialect (`OrchestraIR`) and a set of tools for processing it.
 
-**1. Understand the Project Context**
 
-* Begin by thoroughly reviewing the repository structure and all available documentation.
+### 2. Build and Test Instructions
 
-* Info about your environment: stablehlo is pre-built - should be working!
+The project uses a standard CMake-based workflow.
 
-**2. Execute and Verify**
+```bash
+# 1. Configure the build using CMake.
+#    This command should be run from the root of the repository.
+#    It tells CMake where the source code is (-S) and where to put the build artifacts (-B).
+cmake -S orchestra-compiler -B orchestra-compiler/build -G Ninja \
+  -DMLIR_DIR=/usr/lib/llvm-20/lib/cmake/mlir \
+  -DLLVM_DIR=/usr/lib/llvm-20/lib/cmake/llvm \
+  -DLLVM_TOOLS_DIR=/usr/lib/llvm-20/bin
 
-* Read and understand the architecture/ documents completely. So read every single of them.
-* Then check the repo (**and especially the status_quo.md**) against the to_do.md and decide on what to work next. Don't solve a very large problem in one chunk. Frame and formulate a tiny, testable, achievable step.
-* Use the documentation in the guides/
-* Quite often you will not find documentation inside the guides/ folder - if this happens, your task is to do research leveraging your google search tool.
-* **Crucially**, use self-verification loops (e.g., running tests, checking logs) to confirm your changes are successful.
+# 2. Build the compiler and its tools.
+cmake --build orchestra-compiler/build
 
----
+# 3. Run the test suite.
+#    This will build and run all tests, including the new ones for any new features.
+cmake --build orchestra-compiler/build --target check-orchestra
+```
 
-### **Handling Challenges**
-
-* **DO NOT GIVE UP.**
-* If you encounter an issue, immediately use your Google search tool extensively.
-* If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
-* Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
-
-If you are still stuck after at least 10 attempts, and only then, you may ask for help by writing a comprehensive deep-research question for a separate agent. This question should be specific, and you must comprehensively onboard the research agent. Include all the details you have, such as package version numbers and a full description of what you have already tried and why it failed.
+This will produce the `orchestra-opt` executable in the `orchestra-compiler/build/orchestra-opt/` directory and run the full test suite to verify correctness.
 
 ---
 
-### **Finalizing and Committing**
+## 3. Agent Workflow Protocol
 
-* **Only after successful execution and verification** should you update the project status and documentation. That means ALL tests MUST pass. Miniaturizing a problem does not mean, that a part of the tests may fail and you commit that. This is not allowed. Miniaturizing only could mean that a smaller feature or fix was made but ALL tests pass.
-* **Update `docs/project-status/status-quo.md` to reflect the new state** THIS IS IMPORTANT!
-* Write or update a new README file for your implementation, detailing its features, purpose, and any new insights
+This section outlines the mandatory protocol for working on this repository.
 
-* Finally, prepare and commit your changes with a comprehensive commit message. ONLY COMMITS WITH THE DOCUMENTATION UPDATES AS OUTLINED!!
+### Core Principles
+
+*   **Work as autonomously as possible.** Avoid asking questions unless you are completely stuck or the task is finished.
+*   Do not ask for intermediate confirmation (e.g., "Does this seem like the correct approach?"). If you feel the need to ask such a question, instead proceed with your proposed plan. My confirmation is granted by default.
+
+### The Development Cycle
+
+1.  **Sanity Check:** Before starting any new work, test the project as it is to ensure the baseline is stable. If this fails, your first task is to fix it.
+
+2.  **Understand Context:** Thoroughly review the repository structure and all available documentation, especially the files linked in the "Documentation" section below.
+
+3.  **Decide and Implement:** Check the repository (especially status-quo.md) against to_do.md and decide on the next task. Frame and formulate a tiny, testable, and achievable step. Do not solve a large problem in one chunk.
+    *   The blueprints in docs/architecture are very important to understand in-depth.
+    *   Use the documentation in the 'docs/guides' directory - these include a lot of 
+    *   If you do not find sufficient documentation, your task is to do research leveraging your Google search tool.
+
+4.  **Verify Continuously:** Use self-verification loops (running tests, checking logs) to confirm your changes are successful and correct.
+
+### Problem-Solving Strategy
+
+*   **DO NOT GIVE UP.**
+*   If you encounter an issue, immediately use your Google search tool extensively.
+*   If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
+*   Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
+*   Only after at least 10 failed attempts may you ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
+
+### Finalizing Work and Committing
+
+1.  **Ensure All Tests Pass:** Only after successful execution and verification should you proceed. Miniaturizing a problem does not mean that a part of the tests may fail. **ALL tests MUST pass** before a commit.
+
+2.  **Update Documentation:** This is a critical step.
+    *   Update status-quo.md to reflect the new state of the project.
+    *   Update to_do
+    *   Create or update a specific, local README file for your implementation if applicable, detailing its features, purpose, and any new insights.
+
+3.  **Commit Changes:** Prepare and commit your changes with a comprehensive commit message. **ONLY COMMIT IF THE DOCUMENTATION UPDATES ARE INCLUDED AS OUTLINED.**
+
+
+
+
+**VERY IMPORTANT: If you find that ANY section of this whole AGENTS.md file is misleading or wrong, or you need to debug before anything real works, please feel free to change this file"**
