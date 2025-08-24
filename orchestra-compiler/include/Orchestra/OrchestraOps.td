@@ -5,6 +5,7 @@ include "OrchestraInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/OpAsmInterface.td"
 include "mlir/IR/OpBase.td"
+include "mlir/IR/Properties.td"
 
 // A base class for all operations in this dialect.
 class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
@@ -28,11 +29,13 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   let summary = "An asynchronous unit of computation assigned to a resource.";
   let description = [{
     Encapsulates an atomic unit of computation assigned to a specific hardware
-    resource. Its `target` attribute provides a flexible mechanism for
-    specifying fine-grained placement constraints.
+    resource. Its `target_arch` property specifies the target architecture.
   }];
 
-  let arguments = (ins Variadic<AnyType>:$operands, DictionaryAttr:$target);
+  let arguments = (ins
+    Variadic<AnyType>:$operands,
+    StringProp:$target_arch
+  );
   let results = (outs Variadic<AnyType>:$results);
 
   let regions = (region AnyRegion:$body);
@@ -40,29 +43,12 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   let hasCustomAssemblyFormat = 1;
 
   let builders = [
-    // This is the primary builder. It takes a simple string for the target
-    // architecture and constructs the dictionary attribute internally.
-    OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,
-                   "StringRef":$arch),
+    OpBuilder<(ins "mlir::TypeRange":$resultTypes, "mlir::ValueRange":$operands,
+                   "StringRef":$target_arch, CArg<"mlir::UnitAttr", "nullptr">:$dummy),
       [{
         odsState.addOperands(operands);
         odsState.addTypes(resultTypes);
-        auto targetDict = odsBuilder.getDictionaryAttr(
-            {odsBuilder.getNamedAttr("arch", odsBuilder.getStringAttr(arch))});
-        odsState.addAttribute("target", targetDict);
-        mlir::Region *bodyRegion = odsState.addRegion();
-        bodyRegion->push_back(new mlir::Block());
-        bodyRegion->front().addArguments(
-            operands.getTypes(),
-            llvm::SmallVector<mlir::Location>(operands.size(), odsState.location));
-      }]>,
-    // This builder allows for the full target dictionary to be provided directly.
-    OpBuilder<(ins "mlir::ValueRange":$operands, "mlir::TypeRange":$resultTypes,
-                   "mlir::DictionaryAttr":$target),
-      [{
-        odsState.addOperands(operands);
-        odsState.addTypes(resultTypes);
-        odsState.addAttribute("target", target);
+        odsState.getOrAddProperties<TaskOp::Properties>().setTargetArch(target_arch);
         mlir::Region *bodyRegion = odsState.addRegion();
         bodyRegion->push_back(new mlir::Block());
         bodyRegion->front().addArguments(

@@ -15,7 +15,8 @@ The following features have been verified through code analysis and a successful
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
 *   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional.
 *   **`orchestra.task` Improvements:** The `orchestra.task` operation has been significantly improved for better usability and robustness:
-    *   **Custom Verifier:** The verifier now ensures that the `target` attribute is a dictionary containing a mandatory `arch` key, and that the value of this key is a `StringAttr`. This is validated with a dedicated test case.
+    *   **Property-based Target:** The `target` attribute has been refactored from a `DictionaryAttr` to a `StringProp` using the MLIR `Properties` system. This improves type safety and aligns the operation with modern MLIR best practices.
+    *   **Custom Verifier:** The verifier now ensures that the `arch` key within the `target` attribute is specifically a `StringAttr`.
     *   **Convenience Builder:** A new C++ builder has been added that accepts the target architecture as a simple `StringRef`, abstracting away the manual creation of the `DictionaryAttr`.
     *   **Custom Assembly Format:** A custom C++ parser and printer have been implemented for `TaskOp`. This provides a more readable and less ambiguous assembly format (`orchestra.task ... on "arch" ...`), resolving the parsing issues that blocked previous development.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation has been migrated from C++ to the declarative Pattern Description Language (PDL).
@@ -36,7 +37,6 @@ The current implementation does not include all of the state-of-the-art (SOTA) f
 *   **Limited SOTA GPU Support:**
     *   **Intel:** The backend targets an incomplete, experimental `xegpu` lowering, not the SOTA `XeVM` dialect required for maximum performance on modern Intel GPUs. The `xegpu` tests are disabled.
     *   **AMD:** The newly added ROCDL backend provides initial data movement capabilities but does not yet implement lowering for matrix acceleration primitives (e.g., to `rocdl.mfma`).
-*   **Partial Property Refactoring:** An attempt was made to refactor `orchestra.transfer` to use the MLIR `Properties` system as outlined in the modernization plan. However, this effort was blocked by limitations in the project's version of the MLIR TableGen tooling, which did not support the required syntax for defining properties for all attribute types. As a result, the refactoring was only partially completed.
 *   **PDL Lowering for `orchestra.commit`:** An attempt was made to refactor the C++ `CommitOpLowering` pattern to PDL. This was unsuccessful because the lowering occurs in a `DialectConversion` pass, which requires a `ConversionPattern` with access to adapted operands. The PDL tooling generates a `RewritePattern` which does not have this capability, making it unsuitable for this specific conversion. The C++ implementation remains the correct approach.
 
 ## 4. Next Steps
