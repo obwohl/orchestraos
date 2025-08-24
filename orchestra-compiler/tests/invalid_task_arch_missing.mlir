@@ -2,8 +2,8 @@
 
 // CHECK: error: 'orchestra.task' op requires a non-empty 'target_arch' property, but got ''
 "orchestra.schedule"() ({
-  "orchestra.task"() <{target = {device = "gpu"}}> ({
+  orchestra.task "my_task" on "" {} : () -> () {
     "orchestra.yield"() : () -> ()
-  }) : () -> ()
+  }
   "orchestra.yield"() : () -> ()
 }) : () -> ()

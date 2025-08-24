@@ -30,6 +30,11 @@ This phase is the highest priority and a prerequisite for all subsequent work. I
     *   **What:** Formalize the `target` attribute schema on `orchestra.task` to include a mandatory `arch` key (e.g., "amd_cdna3", "google_tpu_v5e").
     *   **Why:** This is a critical IR enhancement required to programmatically dispatch to the correct target-specific lowering and optimization pipelines, forming the basis of the multi-vendor strategy.
 
+*   **Task 1.2a: Add `task_id` and Verifier to `orchestra.schedule`.**
+    *   **Status: Completed**
+    *   **What:** Added a `task_id` property to `orchestra.task` and implemented a verifier in `orchestra.schedule` to ensure all `task_id`s are unique.
+    *   **Why:** To enable unique identification of tasks within a schedule, which is a prerequisite for many scheduling and analysis passes.
+
 **Pending:**
 
 *   **Task 1.3: Refactor Existing Patterns with PDL.**

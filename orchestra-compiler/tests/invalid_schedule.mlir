@@ -1,8 +1,12 @@
-// RUN: not %orchestra-opt %s --verify-diagnostics 2>&1 | %FileCheck %s
-// CHECK: error: 'orchestra.schedule' op must be a top-level operation
-func.func @test_invalid_schedule() {
-  "orchestra.schedule"() ({
+// RUN: not %orchestra-opt %s 2>&1 | %FileCheck %s
+
+// CHECK: error: 'orchestra.task' op has a duplicate task_id 'task1'
+"orchestra.schedule"() ({
+  orchestra.task "task1" on "cpu" {} : () -> () {
     "orchestra.yield"() : () -> ()
-  }) : () -> ()
-  return
-}
+  }
+  orchestra.task "task1" on "cpu" {} : () -> () {
+    "orchestra.yield"() : () -> ()
+  }
+  "orchestra.yield"() : () -> ()
+}) : () -> ()

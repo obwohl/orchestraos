@@ -1,6 +1,7 @@
 #include "Orchestra/OrchestraOps.h"
 
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSet.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpImplementation.h"
@@ -224,9 +225,15 @@ mlir::LogicalResult ScheduleOp::verify() {
     return emitOpError("terminator should have no operands");
   }
 
-  // All other operations must be orchestra.task ops.
+  // Check that all tasks have a unique task_id.
+  llvm::StringSet<> task_ids;
   for (auto &op : block->without_terminator()) {
-    if (!isa<TaskOp>(op)) {
+    if (auto task = dyn_cast<TaskOp>(op)) {
+      if (!task_ids.insert(task.getTaskId()).second) {
+        return task.emitOpError("has a duplicate task_id '")
+               << task.getTaskId() << "'";
+      }
+    } else {
       return op.emitError(
           "only 'orchestra.task' operations are allowed inside a "
           "'orchestra.schedule'");
@@ -264,7 +271,7 @@ void ScheduleOp::getCanonicalizationPatterns(RewritePatternSet &results,
 //===----------------------------------------------------------------------===//
 
 void TaskOp::print(OpAsmPrinter &p) {
-  p << " ";
+  p << " \"" << getTaskId() << "\" ";
   // Print operands and their types.
   if (!getOperands().empty()) {
     p << "(";
@@ -275,9 +282,9 @@ void TaskOp::print(OpAsmPrinter &p) {
   // Print the target architecture.
   p << "on \"" << getTargetArch() << "\"";
 
-  // Print attributes, eliding the 'target_arch' property since we printed it.
+  // Print attributes, eliding the 'target_arch' and 'task_id' properties.
   p.printOptionalAttrDict(getOperation()->getAttrs(),
-                          /*elidedAttrs=*/{"target_arch"});
+                          /*elidedAttrs=*/{"task_id", "target_arch"});
 
   // Print the function type.
   p << " : "
@@ -291,6 +298,13 @@ void TaskOp::print(OpAsmPrinter &p) {
 }
 
 ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
+  // Parse task_id.
+  StringAttr taskIdAttr;
+  if (parser.parseAttribute(taskIdAttr))
+    return failure();
+  result.getOrAddProperties<TaskOp::Properties>().setTaskId(
+      taskIdAttr.getValue());
+
   // Parse operands.
   SmallVector<OpAsmParser::UnresolvedOperand, 4> operands;
   if (parser.parseOperandList(operands, OpAsmParser::Delimiter::OptionalParen))
@@ -338,6 +352,9 @@ ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
 }
 
 mlir::LogicalResult TaskOp::verify() {
+  if (getTaskId().empty()) {
+    return emitOpError("requires a non-empty 'task_id' property");
+  }
   if (getTargetArch().empty()) {
     return emitOpError("requires a non-empty 'target_arch' property, but got '")
            << getTargetArch() << "'";

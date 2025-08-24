@@ -2,10 +2,10 @@
 
 // CHECK-LABEL: func @test_speculate_candidate
 // CHECK-SAME:      (%[[COND:.*]]: i1, %[[ARG1:.*]]: f32, %[[ARG2:.*]]: f32) -> f32 {
-// CHECK:         %[[THEN_TASK:.*]] = orchestra.task (%[[ARG1]]) on "unknown" : (f32) -> f32 {
+// CHECK:         %[[THEN_TASK:.*]] = orchestra.task "then_task" (%[[ARG1]]) on "unknown" : (f32) -> f32 {
 // CHECK:           "orchestra.yield"
 // CHECK:         }
-// CHECK:         %[[ELSE_TASK:.*]] = orchestra.task (%[[ARG2]]) on "unknown" : (f32) -> f32 {
+// CHECK:         %[[ELSE_TASK:.*]] = orchestra.task "else_task" (%[[ARG2]]) on "unknown" : (f32) -> f32 {
 // CHECK:           "orchestra.yield"
 // CHECK:         }
 // CHECK:         %[[COMMIT:.*]] = orchestra.commit %[[COND]], 1 of %[[THEN_TASK]], %[[ELSE_TASK]]

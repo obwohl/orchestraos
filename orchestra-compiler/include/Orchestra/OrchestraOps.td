@@ -34,6 +34,7 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
 
   let arguments = (ins
     Variadic<AnyType>:$operands,
+    StringProp:$task_id,
     StringProp:$target_arch
   );
   let results = (outs Variadic<AnyType>:$results);
@@ -42,20 +43,6 @@ def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
   let hasVerifier = 1;
   let hasCustomAssemblyFormat = 1;
 
-  let builders = [
-    OpBuilder<(ins "mlir::TypeRange":$resultTypes, "mlir::ValueRange":$operands,
-                   "StringRef":$target_arch, CArg<"mlir::UnitAttr", "nullptr">:$dummy),
-      [{
-        odsState.addOperands(operands);
-        odsState.addTypes(resultTypes);
-        odsState.getOrAddProperties<TaskOp::Properties>().setTargetArch(target_arch);
-        mlir::Region *bodyRegion = odsState.addRegion();
-        bodyRegion->push_back(new mlir::Block());
-        bodyRegion->front().addArguments(
-            operands.getTypes(),
-            llvm::SmallVector<mlir::Location>(operands.size(), odsState.location));
-      }]>
-  ];
 }
 
 def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "result"]>]> {
