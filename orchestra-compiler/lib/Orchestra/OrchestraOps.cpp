@@ -265,15 +265,15 @@ void TaskOp::print(OpAsmPrinter &p) {
   }
 
   // Print the target architecture.
-  auto targetDict = getTarget();
-  auto archAttr = targetDict.get("arch");
-  p << "on " << archAttr;
+  p << "on \"" << getTargetArch() << "\"";
 
-  // Print attributes, eliding the 'target' attribute since we printed it.
-  p.printOptionalAttrDict(getOperation()->getAttrs(), /*elidedAttrs=*/{"target"});
+  // Print attributes, eliding the 'target_arch' property since we printed it.
+  p.printOptionalAttrDict(getOperation()->getAttrs(),
+                          /*elidedAttrs=*/{"target_arch"});
 
   // Print the function type.
-  p << " : " << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
+  p << " : "
+    << FunctionType::get(getContext(), getOperandTypes(), getResultTypes());
 
   // Print the region.
   p << " ";
@@ -295,9 +295,7 @@ ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
   StringAttr archAttr;
   if (parser.parseAttribute(archAttr))
     return failure();
-  auto &builder = parser.getBuilder();
-  result.addAttribute("target", builder.getDictionaryAttr(
-    {builder.getNamedAttr("arch", archAttr)}));
+  result.getOrAddProperties<TaskOp::Properties>().setTargetArch(archAttr.getValue());
 
   // Parse the attribute dictionary.
   if (parser.parseOptionalAttrDict(result.attributes))
@@ -329,19 +327,9 @@ ParseResult TaskOp::parse(OpAsmParser &parser, OperationState &result) {
 }
 
 mlir::LogicalResult TaskOp::verify() {
-  if (!getTarget()) {
-    return emitOpError("requires a 'target' attribute");
-  }
-
-  auto targetDict = getTarget();
-  auto archAttr = targetDict.get("arch");
-  if (!archAttr) {
-    return emitOpError("requires 'target' attribute to have an 'arch' key");
-  }
-
-  if (!isa<mlir::StringAttr>(archAttr)) {
-    return emitOpError(
-        "requires 'arch' key in 'target' attribute to be a StringAttr");
+  if (getTargetArch().empty()) {
+    return emitOpError("requires a non-empty 'target_arch' property, but got '")
+           << getTargetArch() << "'";
   }
 
   // The region of a task must have a single block.

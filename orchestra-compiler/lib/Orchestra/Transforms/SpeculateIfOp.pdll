@@ -55,13 +55,13 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   rewriter.setInsertionPoint(op);
   auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());
   auto thenTask = rewriter.create<orchestra::TaskOp>(
-      loc, thenExternalValues.getArrayRef(), resultTypes, "unknown");
+      loc, resultTypes, thenExternalValues.getArrayRef(), "unknown", nullptr);
   cloneAndRemap(ifOp.getThenRegion(), thenTask.getBody(), thenExternalValues, rewriter);
 
   rewriter.setInsertionPoint(op);
   auto elseExternalValues = getUsedExternalValues(ifOp.getElseRegion());
   auto elseTask = rewriter.create<orchestra::TaskOp>(
-      loc, elseExternalValues.getArrayRef(), resultTypes, "unknown");
+      loc, resultTypes, elseExternalValues.getArrayRef(), "unknown", nullptr);
   cloneAndRemap(ifOp.getElseRegion(), elseTask.getBody(), elseExternalValues, rewriter);
 
   rewriter.setInsertionPoint(op);
