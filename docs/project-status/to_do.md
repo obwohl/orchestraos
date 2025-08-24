@@ -12,13 +12,17 @@ This document outlines a high-level, phased to-do list for evolving the Orchestr
 
 This phase is the highest priority and a prerequisite for all subsequent work. Its goal is to refactor the existing codebase to use modern MLIR infrastructure, which is essential for building a scalable and maintainable multi-target compiler.
 
-*   **Task 1.1: Modernize Core Dialect with the `Properties` System.**
-    *   **What:** Refactor the `OrchestraIR` TableGen definitions (`OrchestraOps.td`). Migrate key attributes, such as `target` on `orchestra.task`, to use the `Properties` system instead of generic dictionary attributes.
-    *   **Why:** To improve compile-time performance, add C++ type safety, and align the core dialect with current MLIR best practices, creating a robust foundation for all future development.
+**Completed:**
 
 *   **Task 1.2: Enhance `orchestra.task` Target Schema.**
     *   **What:** Formalize the `target` attribute schema on `orchestra.task` to include a mandatory `arch` key (e.g., "amd_cdna3", "google_tpu_v5e").
     *   **Why:** This is a critical IR enhancement required to programmatically dispatch to the correct target-specific lowering and optimization pipelines, forming the basis of the multi-vendor strategy.
+
+**Pending:**
+
+*   **Task 1.1: Modernize Core Dialect with the `Properties` System.**
+    *   **What:** Refactor the `OrchestraIR` TableGen definitions (`OrchestraOps.td`). Migrate key attributes, such as `target` on `orchestra.task`, to use the `Properties` system instead of generic dictionary attributes.
+    *   **Why:** To improve compile-time performance, add C++ type safety, and align the core dialect with current MLIR best practices, creating a robust foundation for all future development.
 
 *   **Task 1.3: Refactor Existing Patterns with PDL.**
     *   **What:** Rewrite existing imperative C++ patterns, such as the `SpeculateIfOpPattern`, to use the declarative Pattern Description Language (PDL).

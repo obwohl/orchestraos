@@ -15,7 +15,7 @@ The following features have been verified through code analysis and a successful
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
 *   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional.
 *   **`orchestra.task` Improvements:** The `orchestra.task` operation has been significantly improved for better usability and robustness:
-    *   **Custom Verifier:** The verifier now ensures that the `arch` key within the `target` attribute is specifically a `StringAttr`.
+    *   **Custom Verifier:** The verifier now ensures that the `target` attribute is a dictionary containing a mandatory `arch` key, and that the value of this key is a `StringAttr`. This is validated with a dedicated test case.
     *   **Convenience Builder:** A new C++ builder has been added that accepts the target architecture as a simple `StringRef`, abstracting away the manual creation of the `DictionaryAttr`.
     *   **Custom Assembly Format:** A custom C++ parser and printer have been implemented for `TaskOp`. This provides a more readable and less ambiguous assembly format (`orchestra.task ... on "arch" ...`), resolving the parsing issues that blocked previous development.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation has been migrated from C++ to the declarative Pattern Description Language (PDL).
