@@ -36,11 +36,12 @@ This phase is the highest priority and a prerequisite for all subsequent work. I
     *   **What:** Added a `task_id` property to `orchestra.task` and implemented a verifier in `orchestra.schedule` to ensure all `task_id`s are unique.
     *   **Why:** To enable unique identification of tasks within a schedule, which is a prerequisite for many scheduling and analysis passes.
 
-**Pending:**
-
-*   **Task 1.3: Refactor Existing Patterns with PDL.**
-    *   **What:** Rewrite existing imperative C++ patterns, such as the `SpeculateIfOpPattern`, to use the declarative Pattern Description Language (PDL).
+*   **Task 1.3: Refactor `SpeculateIfOp` PDL Pattern.**
+    *   **Status: Completed**
+    *   **What:** Refactored the `SpeculateIfOpPattern` to improve its clarity and maintainability. The single, monolithic C++ constraint was split into two more granular and descriptive C++ constraints, making the pattern's logic easier to understand and maintain.
     *   **Why:** To improve the readability and maintainability of core transformations by separating the matching logic from the rewrite logic, aligning with modern MLIR development philosophy.
+
+**Pending:**
 
 ### Phase 2: Declarative Optimization and Multi-Vendor Backend Implementation
 

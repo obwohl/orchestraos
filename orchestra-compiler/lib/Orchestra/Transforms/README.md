@@ -38,3 +38,13 @@ For older architectures, the pass lowers `orchestra.transfer` to the standard as
 *   **Synchronization**: `nvgpu.device_async_wait`
 
 This ensures backward compatibility while still providing high performance on a wide range of NVIDIA GPUs.
+
+## Divergence to Speculation (`--divergence-to-speculation`)
+
+The `DivergenceToSpeculationPass` converts control flow divergence (`scf.if`) into speculative dataflow-style execution using `orchestra` dialect operations.
+
+### `SpeculateIfOpPattern`
+
+This pass uses a PDL-based pattern, `SpeculateIfOpPattern`, to match `scf.if` operations. The pattern is defined in `SpeculateIfOp.pdll`.
+
+The pattern's matching logic is implemented as a combination of declarative PDL constraints and more complex C++ constraints for checks that are not easily expressible in PDL. The C++ rewriter is used for the complex transformation logic. This hybrid approach allows for a clean separation of concerns while still handling the complexity of the transformation.
