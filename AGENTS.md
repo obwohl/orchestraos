@@ -1,6 +1,6 @@
 ## 1. Project Overview
 
-The OrchestraOS compiler is an ambitious project to build a "meta-OS" that elevates scheduling and data movement to first-class citizens of the compiler's IR. The goal is to enable global, hardware-aware optimization of complex workloads, particularly in the domain of AI and machine learning.
+The OrchestraOS compiler is an ambitious project to build a "meta-OS" that elevates scheduling and data movement to first-class citizens of the compiler's IR. The goal is to enable global, hardware-aware optimization of complex workloads, particularly in the domain of AI and machine learning. The blueprint.md in docs/architecture is the ground-truth for our whole project. *Read and understand it carefully.*
 
 The core of the project is the `orchestra-compiler`, which implements a custom MLIR dialect (`OrchestraIR`) and a set of tools for processing it.
 
@@ -46,7 +46,7 @@ This section outlines the mandatory protocol for working on this repository.
 2.  **Understand Context:** Thoroughly review the repository structure and all available documentation, especially the files linked in the "Documentation" section below.
 
 3.  **Decide and Implement:** Check the repository (especially status-quo.md) against to_do.md and decide on the next task. Frame and formulate a small, testable, and achievable step. Do not solve a large problem in one chunk.
-    *   The blueprints in docs/architecture are very important to understand in-depth.
+    *   The blueprint.md in docs/architecture is the ground-truth for our whole project. *Read and understand it carefully.*
     *   Use the documentation in the 'docs/guides' directory
     *   research leveraging your Google search tool.
 
