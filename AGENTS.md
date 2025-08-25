@@ -66,7 +66,6 @@ This section outlines the mandatory protocol for working on this repository.
 
 2.  **Prepare the Commit (Documentation First):** This step is a single, atomic action. You are not authorized to create a commit unless it includes the following documentation updates.
     *   **Update `docs/status-quo.md`:** Reflect the new state of the project.
-    *   **Update `docs/to_do.md`:** Define the next task.
     *   **Update local READMEs:** If you changed a specific component, update its README with details.
     *   **Commit:** Once, and only once, the documentation is updated and staged alongside the code changes, create a single, comprehensive commit. A commit that does not include documentation updates is a violation of this protocol.
 
