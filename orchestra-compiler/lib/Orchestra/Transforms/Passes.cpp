@@ -42,6 +42,12 @@ static void cloneAndRemap(mlir::Region &sourceRegion,
                           const llvm::SetVector<mlir::Value> &externalValues,
                           mlir::PatternRewriter &rewriter) {
   mlir::IRMapping mapper;
+  llvm::SmallVector<Type, 4> argTypes;
+  for (auto val : externalValues) {
+    argTypes.push_back(val.getType());
+  }
+  llvm::SmallVector<Location, 4> argLocs(argTypes.size(), sourceRegion.getLoc());
+  destRegion.front().addArguments(argTypes, argLocs);
   auto destArgs = destRegion.getArguments();
   for (auto pair : llvm::zip(externalValues, destArgs)) {
     mapper.map(std::get<0>(pair), std::get<1>(pair));
@@ -59,8 +65,8 @@ static void cloneAndRemap(mlir::Region &sourceRegion,
     yieldOperands.push_back(mapper.lookupOrDefault(operand));
   }
   // The destination region belongs to an orchestra.task, which needs an
-  // orchestra.yield terminator.
-  rewriter.create<orchestra::YieldOp>(sourceYield.getLoc(), yieldOperands);
+  // orchestra.return terminator.
+  rewriter.create<orchestra::ReturnOp>(sourceYield.getLoc(), yieldOperands);
 }
 
 #include "SpeculateIfOp.pdll.inc"

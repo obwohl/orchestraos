@@ -2,10 +2,10 @@
 
 // A valid schedule with two tasks.
 "orchestra.schedule"() ({
-  orchestra.task "task1" on "cpu" {} : () -> () {
+  orchestra.task on {arch = "cpu"} : () -> () {
     "orchestra.yield"() : () -> ()
   }
-  orchestra.task "task2" on "gpu" {} : () -> () {
+  orchestra.task on {arch = "gpu"} : () -> () {
     "orchestra.yield"() : () -> ()
   }
   "orchestra.yield"() : () -> ()

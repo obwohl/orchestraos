@@ -11,7 +11,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 
 using namespace mlir;
-using namespace orchestra;
+using namespace mlir::orchestra;
 
 namespace {
 

@@ -11,7 +11,7 @@
 #include "Orchestra/OrchestraDialect.cpp.inc"
 
 using namespace mlir;
-using namespace orchestra;
+using namespace mlir::orchestra;
 
 void OrchestraDialect::initialize() {
   addOperations<
