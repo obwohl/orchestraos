@@ -8,14 +8,15 @@
 #include "Orchestra/Orchestra.td"
 #include "mlir/Dialect/SCF/IR/SCFOps.td"
 
-// Native C++ constraint to check for suitability. The pattern requires an
-// 'else' block and must produce results.
-Constraint HasElseBlockAndResults(op: Op) [{
+// Native C++ constraint to check that the operation has results.
+Constraint HasResults(op: Op) [{
+  return op->getNumResults() > 0 ? mlir::success() : mlir::failure();
+}];
+
+// Native C++ constraint to check that the 'else' region is not empty.
+Constraint HasElseBlock(op: Op) [{
   auto ifOp = cast<scf::IfOp>(op);
-  if (!ifOp.getElseRegion().hasOneBlock() || ifOp.getNumResults() == 0) {
-    return mlir::failure();
-  }
-  return mlir::success();
+  return ifOp.getElseRegion().hasOneBlock() ? mlir::success() : mlir::failure();
 }];
 
 // Native C++ constraint to check for side effects.
@@ -87,7 +88,8 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
 Pattern SpeculateIfOpPattern with benefit(1) {
   // 1. Match the root operation and apply constraints.
   let ifOp = op<scf.if>;
-  HasElseBlockAndResults(ifOp);
+  HasResults(ifOp);
+  HasElseBlock(ifOp);
   RegionsHaveNoSideEffects(ifOp);
 
   // 2. Call the rewriter to perform the transformation.

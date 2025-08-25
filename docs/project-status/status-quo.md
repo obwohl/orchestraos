@@ -17,7 +17,7 @@ The following features have been verified through code analysis and a successful
 *   **`orchestra.task` Improvements:** The `orchestra.task` operation has been significantly improved for better usability and robustness:
     *   **Dictionary-based Target:** The `target_arch` attribute is now a `DictionaryAttr`. This provides a structured way to specify target architecture properties.
     *   **Custom Verifier:** A C++ verifier ensures that the `target_arch` dictionary contains a non-empty string attribute named `arch`.
-*   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation has been migrated from C++ to the declarative Pattern Description Language (PDL).
+*   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation uses a PDL pattern that calls a C++ rewriter. The pattern's C++ constraints have been refactored for improved clarity and modularity.
 *   **GPU Lowering (NVIDIA):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It includes an architecture-aware code path:
     *   For NVIDIA Blackwell GPUs (`sm_100` and newer), it generates SOTA asynchronous data transfers using the Tensor Memory Accelerator (`nvgpu.tma.async.load`) and `mbarrier` synchronization.
     *   For older NVIDIA GPUs (e.g., Hopper), it generates standard asynchronous copies (`nvgpu.device_async_copy`).
@@ -32,7 +32,7 @@ The following features have been verified through code analysis and a successful
 
 The current implementation does not include all of the state-of-the-art (SOTA) features outlined in the MLIR 2.0 blueprint. Key deviations include:
 
-*   **No Declarative Patterns:** Most passes are implemented using imperative C++ patterns, not the declarative, more maintainable PDL (Pattern Description Language) framework. The exception is the `SpeculateIfOpPattern`, which has been migrated to PDL.
+*   **No Declarative Patterns:** Most passes are implemented using imperative C++ patterns. The `SpeculateIfOpPattern` has been migrated to PDL for its matching logic, but still uses a C++ rewriter for the complex rewrite logic. This is a common and acceptable practice in MLIR for complex patterns.
 *   **No Feedback-Driven Optimization (FDO):** The compiler is purely Ahead-of-Time (AOT). The entire FDO loop (instrumentation, runtime profiling, JIT recompilation) is not implemented.
 *   **Limited SOTA GPU Support:**
     *   **Intel:** The backend targets an incomplete, experimental `xegpu` lowering, not the SOTA `XeVM` dialect required for maximum performance on modern Intel GPUs. The `xegpu` tests are disabled.
