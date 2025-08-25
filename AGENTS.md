@@ -45,10 +45,10 @@ This section outlines the mandatory protocol for working on this repository.
 
 2.  **Understand Context:** Thoroughly review the repository structure and all available documentation, especially the files linked in the "Documentation" section below.
 
-3.  **Decide and Implement:** Check the repository (especially status-quo.md) against to_do.md and decide on the next task. Frame and formulate a tiny, testable, and achievable step. Do not solve a large problem in one chunk.
+3.  **Decide and Implement:** Check the repository (especially status-quo.md) against to_do.md and decide on the next task. Frame and formulate a small, testable, and achievable step. Do not solve a large problem in one chunk.
     *   The blueprints in docs/architecture are very important to understand in-depth.
-    *   Use the documentation in the 'docs/guides' directory - these include a lot of 
-    *   If you do not find sufficient documentation, your task is to do research leveraging your Google search tool.
+    *   Use the documentation in the 'docs/guides' directory
+    *   research leveraging your Google search tool.
 
 4.  **Verify Continuously:** Use self-verification loops (running tests, checking logs) to confirm your changes are successful and correct.
 
@@ -58,7 +58,7 @@ This section outlines the mandatory protocol for working on this repository.
 *   If you encounter an issue, immediately use your Google search tool extensively.
 *   If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
 *   Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
-*   Only after at least 10 failed attempts may you ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
+*   Only after at least 20 failed attempts may you ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
 
 ### Finalizing Work and Committing
 
