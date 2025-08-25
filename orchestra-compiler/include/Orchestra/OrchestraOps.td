@@ -53,13 +53,19 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let arguments = (ins
     I1:$condition,
     Variadic<AnyType>:$values,
-    IntProp<"int32_t">:$num_true
+    I32Attr:$num_true
   );
 
   let results = (outs Variadic<AnyType>:$results);
 
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
+  let hasCustomAssemblyFormat = 1;
+
+  let extraClassDeclaration = [{
+    OperandRange getTrueValues() { return getValues().take_front(getNumTrueAttr().getValue().getSExtValue()); }
+    OperandRange getFalseValues() { return getValues().drop_front(getNumTrueAttr().getValue().getSExtValue()); }
+  }];
 }
 
 def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "result"]>]> {

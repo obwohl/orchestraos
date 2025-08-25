@@ -5,5 +5,5 @@
   "orchestra.task"() ({
     "orchestra.yield"() : () -> ()
   }) : () -> ()
-  "orchestra.yield"() : () -> ()
+  "orchestra.return"() : () -> ()
 }) : () -> ()

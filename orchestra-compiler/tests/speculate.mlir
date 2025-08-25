@@ -12,7 +12,7 @@
 // CHECK-NEXT:      %[[MUL:.*]] = arith.mulf %[[ARG2_IN_REGION]], %[[ARG2_IN_REGION]]
 // CHECK-NEXT:      orchestra.return
 // CHECK-NEXT:    }) : () -> f32
-// CHECK: %[[COMMIT:.*]] = "orchestra.commit"(%[[COND]], %[[THEN_TASK]], %[[ELSE_TASK]]) <{num_true = 1 : i32}> : (i1, f32, f32) -> f32
+// CHECK: %[[COMMIT:.*]] = orchestra.commit %[[COND]] true(%[[THEN_TASK]]) false(%[[ELSE_TASK]]) : (i1, f32, f32) -> f32
 // CHECK: return %[[COMMIT]]
 // CHECK: }
 func.func @test_speculate_candidate(%cond: i1, %arg1: f32, %arg2: f32) -> f32 {

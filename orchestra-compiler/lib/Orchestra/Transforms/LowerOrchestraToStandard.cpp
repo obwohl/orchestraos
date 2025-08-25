@@ -40,7 +40,7 @@ public:
     }
 
     SmallVector<Value, 4> newResults;
-    auto num_true = op.getNumTrue();
+    auto num_true = op.getNumTrueAttr().getValue().getSExtValue();
     auto values = adaptor.getValues();
     auto true_values = values.take_front(num_true);
     auto false_values = values.drop_front(num_true);

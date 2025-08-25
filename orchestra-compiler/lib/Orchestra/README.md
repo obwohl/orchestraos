@@ -12,17 +12,15 @@ The key benefits of this modernization are:
 *   **Improved Performance:** Accessing properties is faster than looking up attributes by string in a dictionary.
 *   **Enhanced Readability:** The generated accessors have clear, intention-revealing names (e.g., `op.getNumTrue()` instead of `op->getAttr("num_true")`).
 
-## Using the Properties API
+## Using the C++ API
 
-When working with the `orchestra.commit` operation in C++, you should use the generated property accessors to get and set its inherent attributes.
+When working with the `orchestra.commit` operation in C++, you should use the generated attribute accessors.
 
 ### `orchestra.commit`
 
-The `num_true` attribute of the `commit` operation is now a property.
+The `num_true` attribute of the `commit` operation is an `I32Attr`.
 
-*   **Getter:** `op.getNumTrue()` returns an `int32_t`.
-
-By using these generated accessors, you can write more robust, readable, and performant compiler passes for the Orchestra dialect.
+*   **Getter:** `op.getNumTrue()` returns an `I32Attr`. To get the integer value, you can use `op.getNumTrue().getValue().getSExtValue()`.
 
 ## Custom Assembly Format for `orchestra.task`
 
