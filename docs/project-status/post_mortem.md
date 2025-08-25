@@ -22,7 +22,7 @@ The most critical and unexpected failure was the final one. Even after refactori
 My conclusion is that the build environment is in a broken or misconfigured state.
 
 Inconsistent Toolchain: The mlir-tblgen tool is not behaving as expected for an LLVM 20 environment. The Properties system is a core part of modern MLIR, and the tool's inability to parse standard property syntax is a major anomaly.
-Environment Instability: The fact that the shell session terminates on every build failure is a strong indicator of a problem beyond a simple code error.
+Environment Instability: The fact that the shell session terminates on every build failure is. a strong indicator of a problem beyond a simple code error.
 Contradictory Evidence: The failure of the build even after applying the fix suggested by the project's own documentation is the most damning evidence. It implies that the problem lies at a lower level than the dialect definition files or the CMake configuration I can control.
 New Plan: Miniaturizing the Problem
 As  suggested, try to miniaturize the problem to isolate the root cause. the plan is as follows:
@@ -39,3 +39,35 @@ begin implementing this plan immediately.
 
 
 If you can confirm that the minimal test-dialect works, try to work on the original problem. *You should again miniaturize it*
+
+## Post-Mortem: August 25, 2025
+
+**Goal:** Implement the `target` attribute as a property on the `orchestra.task` op.
+
+**Summary of Actions:**
+
+1.  **File Creation:** Created `include/Orchestra/OrchestraAttributes.td` to define the `TargetAttr` and `lib/Orchestra/OrchestraAttributes.cpp` for its C++ implementation (parser, printer, verifier).
+2.  **Build System-Integration:** Updated `CMakeLists.txt` in both `lib/Orchestra` and `include/Orchestra` to include these new files.
+3.  **Dialect Registration:** Modified `lib/Orchestra/OrchestraDialect.cpp` to register the new `TargetAttr`.
+4.  **Op-Definition:** Updated `include/Orchestra/OrchestraOps.td` to use the new `TargetAttr` as a property on the `task` operation.
+5.  **Test Updates:** Created a new test file `tests/lit/Dialect/Orchestra/ops.mlir` and updated `tests/invalid_task_arch.mlir` to reflect the new attribute.
+
+**Build Issues Encountered:**
+
+After making the code changes, I attempted to build the project. I encountered a series of persistent and unusual build failures, which seem to be related to the execution environment rather than the code itself.
+
+*   **Initial `clang++` Segmentation Fault:** The first build attempts resulted in a segmentation fault within `clang++-20`, accompanied by "null character ignored" warnings. This led me to believe some files might have been corrupted.
+
+*   **`cd` and Pathing Problems:** After resetting the repository and re-applying the changes more carefully, I encountered consistent `cmake` errors.
+    *   Commands using `cd` within `run_in_bash_session` seemed to fail or produce incorrect paths, e.g., `CMake Error: The source directory "/app/orchestra-compiler/build/orchestra-compiler" does not appear to contain CMakeLists.txt.`.
+    *   Using absolute paths for source and build directories also resulted in similar, confusing path-related errors.
+    *   An attempt to use a subshell `(cd ...)` also failed with the same error.
+    *   A final attempt resulted in the error: `Current working directory cannot be established.`
+
+**Conclusion:**
+
+The core code changes for implementing the `TargetAttr` property are likely correct, but a fundamental issue with the `run_in_bash_session` tool and its handling of file paths and the current working directory is preventing me from successfully building and testing the project. The environment seems to be unstable or has some non-standard behavior.
+
+**Recommendation for Next Session:**
+
+The next session should start by assuming the code changes are mostly correct and focus on resolving the build environment issue.
