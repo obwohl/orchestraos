@@ -27,6 +27,7 @@ The following features have been verified through code analysis and a successful
 *   **Build System and Stability:** The project was initially failing to build against the specified LLVM 20 environment. This has been fixed. The canonicalization pattern for `orchestra.transfer` was updated to correctly handle optional attributes. A failing test related to the `orchestra.task` verifier was fixed, making the codebase stable and the test suite fully passing.
 *   **Code Formatting:** A `.clang-format` file based on the LLVM style has been added to the repository root to ensure a consistent code style. A Python script at `scripts/run-clang-format.py` has been added to automatically format all C++ source and header files in the `orchestra-compiler` directory.
 *   **`orchestra.schedule` Verifier:** A verifier has been added to the `orchestra.schedule` operation to ensure that all child `orchestra.task` operations have a unique `task_id`. This is a critical feature for enabling reliable scheduling and analysis passes. The `task_id` property was also added to the `orchestra.task` operation as part of this work.
+*   **`orchestra-opt` Documentation:** The main `README.md` for the `orchestra-compiler` has been updated with a new section documenting the purpose and common command-line options for the `orchestra-opt` tool. This improves the usability of the core optimizer for new users.
 
 ## 3. Known Limitations & Deviations from SOTA Blueprint
 
