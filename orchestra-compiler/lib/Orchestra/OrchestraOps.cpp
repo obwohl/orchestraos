@@ -9,11 +9,28 @@
 using namespace mlir;
 using namespace orchestra;
 
-// Verifies that the 'arch' property is not empty.
+// Verifies the schema of the 'target' attribute.
 mlir::LogicalResult TaskOp::verify() {
-  if (getArch().empty()) {
-    return emitOpError("requires a non-empty 'arch' property");
+  auto targetAttr = getTarget();
+  if (!targetAttr) {
+    return emitOpError("requires a 'target' attribute");
   }
+
+  auto dictAttr = targetAttr.dyn_cast<DictionaryAttr>();
+  if (!dictAttr) {
+    return emitOpError("requires 'target' attribute to be a dictionary");
+  }
+
+  auto archAttr = dictAttr.get("arch").dyn_cast_or_null<StringAttr>();
+  if (!archAttr) {
+    return emitOpError(
+        "requires a string 'arch' key in the 'target' dictionary");
+  }
+
+  if (archAttr.getValue().empty()) {
+    return emitOpError("'arch' key in 'target' dictionary cannot be empty");
+  }
+
   return mlir::success();
 }
 

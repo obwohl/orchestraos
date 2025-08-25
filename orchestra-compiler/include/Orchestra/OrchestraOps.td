@@ -17,7 +17,7 @@ def Orchestra_TaskOp : Orchestra_Op<"task", []> {
   let summary = "Represents a schedulable task with a target architecture specifier.";
 
   let arguments = (ins
-    StrAttr:$arch
+    AnyAttr:$target
   );
 
   let results = (outs Variadic<AnyType>:$results);
