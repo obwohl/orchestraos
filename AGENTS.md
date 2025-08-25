@@ -62,16 +62,13 @@ This section outlines the mandatory protocol for working on this repository.
 
 ### Finalizing Work and Committing
 
-1.  **Ensure All Tests Pass:** Only after successful execution and verification should you proceed. Miniaturizing a problem does not mean that a part of the tests may fail. **ALL tests MUST pass** before a commit.
+1.  **Ensure All Tests Pass:** First, ensure that **ALL** tests pass successfully. Do not proceed otherwise.
 
-2.  **Update Documentation:** This is a critical step.
-    *   Update `docs/status-quo.md` to reflect the new state of the project.
-    *   Update `docs/to_do.md` with the next task.
-    *   Create or update a specific, local README file for your implementation if applicable, detailing its features, purpose, and any new insights.
-
-3.  **Commit Changes:** Prepare and commit your changes with a comprehensive commit message. **ONLY COMMIT IF THE DOCUMENTATION UPDATES ARE INCLUDED AS OUTLINED.**
-
+2.  **Prepare the Commit (Documentation First):** This step is a single, atomic action. You are not authorized to create a commit unless it includes the following documentation updates.
+    *   **Update `docs/status-quo.md`:** Reflect the new state of the project.
+    *   **Update `docs/to_do.md`:** Define the next task.
+    *   **Update local READMEs:** If you changed a specific component, update its README with details.
+    *   **Commit:** Once, and only once, the documentation is updated and staged alongside the code changes, create a single, comprehensive commit. A commit that does not include documentation updates is a violation of this protocol.
 
 
-
-**VERY IMPORTANT: If you find that ANY section of this whole AGENTS.md file is misleading or wrong, or you need to debug before anything real works, please feel free to change this file"**
+**VERY IMPORTANT: If you find that ANY section of this whole AGENTS.md file is misleading or wrong, or you need to debug before anything real works, please feel free to change this file**
