@@ -26,21 +26,6 @@ mlir::LogicalResult ScheduleOp::verify() {
 }
 
 // Stubs for other ops to link.
-void CommitOp::getCanonicalizationPatterns(RewritePatternSet &results,
-                                           MLIRContext *context) {
-  results.add(+[](CommitOp op, PatternRewriter &rewriter) -> LogicalResult {
-    auto condition = op.getCondition();
-    if (auto cst = condition.getDefiningOp<arith::ConstantOp>()) {
-      if (cst.getValue().cast<BoolAttr>().getValue()) {
-        rewriter.replaceOp(op, op.getValues().take_front(op.getNumTrue()));
-      } else {
-        rewriter.replaceOp(op, op.getValues().drop_front(op.getNumTrue()));
-      }
-      return success();
-    }
-    return failure();
-  });
-}
 void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                              MLIRContext *context) {
   results.add(+[](TransferOp op, PatternRewriter &rewriter) -> LogicalResult {
@@ -70,8 +55,17 @@ void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
     return success();
   });
 }
-mlir::LogicalResult CommitOp::verify() {
-  auto num_true = getNumTrue();
+mlir::LogicalResult SelectOp::verify() {
+  int32_t num_true = getNumTrue();
+  // HACK: The generic op parser does not seem to initialize the property.
+  // We manually read the attribute from the dictionary if the property has
+  // its default value.
+  if (num_true == 0) {
+    if (auto attr = (*this)->getAttrOfType<IntegerAttr>("num_true")) {
+      num_true = attr.getInt();
+    }
+  }
+
   if (getValues().size() != 2 * num_true) {
     return emitOpError("has mismatched variadic operand sizes");
   }
@@ -89,6 +83,15 @@ mlir::LogicalResult CommitOp::verify() {
     }
   }
 
+  return mlir::success();
+}
+mlir::LogicalResult CommitOp::verify() {
+  if (!getOperand().getType().isa<MemRefType>()) {
+    return emitOpError("operand must be a MemRefType");
+  }
+  if (!getResult().getType().isa<MemRefType>()) {
+    return emitOpError("result must be a MemRefType");
+  }
   return mlir::success();
 }
 mlir::LogicalResult TransferOp::verify() { return mlir::success(); }

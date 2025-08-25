@@ -8,6 +8,8 @@ The Orchestra compiler leverages MLIR's extensible, multi-level dialect system t
 
 For a comprehensive blueprint of the compiler's architectural vision, the OrchestraIR dialect, and the planned optimization passes, please refer to: [MLIR Implementation Plan Modernization](../../docs/architecture/mlir-implementation-plan.md)
 
+For a detailed rationale on the semantics of the core Orchestra dialect operations, please see: [Orchestra Dialect Semantics](../../docs/architecture/dialect_semantics.md)
+
 ## Getting Started
 
 For detailed instructions on how to set up the development environment, build the compiler, and run the test suite, please refer to the main [README.md](../../README.md) at the root of the repository.
@@ -28,7 +30,6 @@ For detailed instructions on how to set up the development environment, build th
 *   `--pass-pipeline=<string>`: A textual description of the pass pipeline to run. This is the primary way to apply optimizations.
 *   `--lower-orchestra-to-gpu --gpu-arch=<string>`: A dedicated pass to lower the Orchestra dialect to a specific GPU vendor dialect. See the "GPU Lowering" section for more details on the available architectures.
 *   `--lower-orchestra-to-standard`: Lowers the Orchestra dialect to a combination of standard MLIR dialects.
-*   `--divergence-to-speculation`: Converts conditional control flow (`scf.if`) into speculative execution using Orchestra's mechanisms.
 *   `--show-dialects`: Print the list of all registered dialects.
 *   `--help`: Display the full list of available options and passes. This is a very long list, containing all standard MLIR passes as well as custom Orchestra passes.
 
