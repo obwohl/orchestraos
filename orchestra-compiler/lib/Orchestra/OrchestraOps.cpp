@@ -9,10 +9,12 @@
 using namespace mlir;
 using namespace orchestra;
 
-// Verifies that the 'arch' property is not empty.
+// Verifies that the 'target' property is present.
+// The verification of the contents of the TargetAttr is handled by its own
+// verify method.
 mlir::LogicalResult TaskOp::verify() {
-  if (getArch().empty()) {
-    return emitOpError("requires a non-empty 'arch' property");
+  if (!getTarget()) {
+    return emitOpError("requires a 'target' property");
   }
   return mlir::success();
 }

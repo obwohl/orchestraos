@@ -1,15 +1,15 @@
 // RUN: %orchestra-opt %s -verify-diagnostics
 
 // A valid schedule with two tasks.
-"orchestra.schedule"() ({
-  "orchestra.task"() <{arch = "cpu"}> ({
-    "orchestra.return"() : () -> ()
-  }) : () -> ()
-  "orchestra.task"() <{arch = "gpu"}> ({
-    "orchestra.return"() : () -> ()
-  }) : () -> ()
-  "orchestra.return"() : () -> ()
-}) : () -> ()
+orchestra.schedule {
+  orchestra.task target = #orchestra.target<arch = "cpu", device_id = 0> {
+    orchestra.return
+  }
+  orchestra.task target = #orchestra.target<arch = "gpu", device_id = 1> {
+    orchestra.return
+  }
+  orchestra.return
+}
 
 // -----
 

@@ -6,6 +6,7 @@
 include "mlir/IR/OpBase.td"
 include "mlir/IR/RegionKindInterface.td"
 include "Orchestra/OrchestraDialect.td"
+include "Orchestra/OrchestraAttributes.td"
 
 //... other op definitions...
 
@@ -13,12 +14,12 @@ include "Orchestra/OrchestraDialect.td"
 class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
     Op<Orchestra_Dialect, mnemonic, traits>;
 
-def Orchestra_TaskOp : Orchestra_Op<"task", []> {
+def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlockImplicitTerminator<"ReturnOp">]> {
   let summary = "Represents a schedulable task with a target architecture specifier.";
 
-  let arguments = (ins
-    StrAttr:$arch
-  );
+  let properties = [
+    Property<"target", TargetAttr, "The target specification for the task.">
+  ];
 
   let results = (outs Variadic<AnyType>:$results);
 
@@ -26,6 +27,8 @@ def Orchestra_TaskOp : Orchestra_Op<"task", []> {
 
   // Enable the custom C++ verifier.
   let hasVerifier = 1;
+
+  let assemblyFormat = "attr-dict `->` type($results) ` ` region($body)";
 }
 
 def Orchestra_ScheduleOp : Orchestra_Op<"schedule", []> {

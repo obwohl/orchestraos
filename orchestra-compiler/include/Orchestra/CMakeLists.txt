@@ -50,6 +50,16 @@ mlir_tablegen(OrchestraCanonicalization.h.inc -gen-rewriters -I ${MLIR_INCLUDE_D
 list(APPEND ORCHESTRA_INCGEN_HDRS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraCanonicalization.h.inc")
 
+# --- Generation for OrchestraAttributes.td ---
+set(LLVM_TARGET_DEFINITIONS OrchestraAttributes.td)
+mlir_tablegen(OrchestraAttributes.h.inc -gen-attrdef-decls -I ${MLIR_INCLUDE_DIRS})
+list(APPEND ORCHESTRA_INCGEN_HDRS
+  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraAttributes.h.inc")
+
+mlir_tablegen(OrchestraAttributes.cpp.inc -gen-attrdef-defs -I ${MLIR_INCLUDE_DIRS})
+list(APPEND ORCHESTRA_INCGEN_SRCS
+  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraAttributes.cpp.inc")
+
 # --- Create a single dependency target ---
 # This creates a CMake target that represents all the generated files.
 # The C++ library in the../lib/Orchestra directory can then simply

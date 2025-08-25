@@ -14,6 +14,7 @@ using namespace mlir;
 using namespace mlir::orchestra;
 
 void OrchestraDialect::initialize() {
+  registerAttributes();
   addOperations<
 #define GET_OP_LIST
 #include "Orchestra/OrchestraOps.cpp.inc"

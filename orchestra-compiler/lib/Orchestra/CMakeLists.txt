@@ -4,6 +4,7 @@ add_mlir_dialect_library(Orchestra
   OrchestraDialect.cpp
   OrchestraOps.cpp
   OrchestraInterfaces.cpp
+  OrchestraAttributes.cpp
 
   # CRITICAL: This establishes the build-time dependency.
   # It ensures that the.inc files are generated before the C++ sources are compiled.
