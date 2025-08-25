@@ -4,16 +4,17 @@ This document outlines the engineering tasks required to evolve the OrchestraOS 
 
 ## Milestone 1: Foundational Architectural Enhancements
 
-These tasks modernize the compiler's core infrastructure to support multi-vendor targets.
+These tasks modernize the compiler's core infrastructure to support multi-vendor targets and align with current MLIR best practices.
 
--   [ ] **Task 1.1: Enhance `orchestra.task` Schema.**
-    -   Modify the `orchestra.task` operation to use a `DictionaryAttr` for its `target` attribute.
-    -   Enforce a schema with a mandatory `arch` key (e.g., "nvidia\_blackwell", "amd\_cdna3") to enable target-specific dispatch.
-    -   Allow for optional, architecture-specific keys to provide fine-grained control (e.g., `mfma=true`).
+-   [ ] **Task 1.1: Finalize `orchestra.task` Target Schema.**
+    -   Define and enforce a formal schema for the `target` property on `orchestra.task`.
+    -   The schema (within the `DictionaryAttr` property) must include a mandatory `arch` key (e.g., "nvidia_blackwell", "amd_cdna3") and allow optional, target-specific keys.
 
--   [ ] **Task 1.2: Refactor Core Operations to Use MLIR Properties.**
-    -   [x] 1.2.1: Migrate the `target` attribute of `orchestra.task` and the `num_true` attribute of `orchestra.commit` from generic attributes to the MLIR `Properties` system for improved performance and type safety.
-    -   [x] 1.2.2: Enable `usePropertiesForAttributes = 1;` for the `Orchestra` dialect in `OrchestraOps.td`.
+-   [ ] **Task 1.2: Complete Migration to MLIR Properties System.**
+    -   The `Orchestra` dialect should use the MLIR `Properties` system for improved performance and type safety, which is a state-of-the-art best practice.
+    -   [x] **1.2.1:** Enable `usePropertiesForAttributes = 1;` for the `Orchestra` dialect in `OrchestraOps.td`.
+    -   [x] **1.2.2:** Migrate the `target` attribute of `orchestra.task` and the `num_true` attribute of `orchestra.commit` from generic attributes to `Properties`.
+    -   [ ] **1.2.3:** Investigate migrating attributes of other core operations (e.g., `orchestra.transfer`, `orchestra.schedule`) to the `Properties` system where appropriate.
 
 ## Milestone 2: AMD GPU Support (rocMLIR Integration)
 
