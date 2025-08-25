@@ -1,15 +1,33 @@
 #ifndef ORCHESTRA_OPS_TD
 #define ORCHESTRA_OPS_TD
 
-include "OrchestraInterfaces.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
-include "mlir/IR/OpAsmInterface.td"
-include "mlir/IR/OpBase.td"
-include "mlir/IR/Properties.td"
-
-// A base class for all operations in this dialect.
-class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
+// Base class for all operations in this dialect.
+class Orchestra_Op<string mnemonic, list<OpTrait> traits = []> :
     Op<Orchestra_Dialect, mnemonic, traits>;
+
+// The orchestra.task operation definition.
+def Orchestra_TaskOp : Orchestra_Op<"task", []> {
+  let summary = "An orchestra task operation";
+
+  // Define the property for this operation.
+  let properties = (ins
+    TargetArchProp:$target_arch
+  );
+
+  let arguments = (ins
+    Variadic<AnyType>:$operands,
+    StringProp:$task_id
+  );
+  let results = (outs Variadic<AnyType>:$results);
+
+  // Use a custom assembly format for improved readability.
+  let assemblyFormat = "`ID` `(` $task_id `)` `arch` `(` $target_arch `)` `operands` `(` $operands `)` `:` functional-type($operands, $results) attr-dict";
+
+  // Enable the C++ verifier hook to enforce invariants.
+  let hasVerifier = 1;
+
+  let regions = (region AnyRegion:$body);
+}
 
 def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
   let summary = "Container for a physically scheduled DAG of tasks.";
@@ -23,26 +41,6 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", [SingleBlock]> {
   let regions = (region AnyRegion:$body);
   let hasVerifier = 1;
   let hasCanonicalizer = 1;
-}
-
-def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlock]> {
-  let summary = "An asynchronous unit of computation assigned to a resource.";
-  let description = [{
-    Encapsulates an atomic unit of computation assigned to a specific hardware
-    resource. Its `target_arch` property specifies the target architecture.
-  }];
-
-  let arguments = (ins
-    Variadic<AnyType>:$operands,
-    StringProp:$task_id,
-    StringProp:$target_arch
-  );
-  let results = (outs Variadic<AnyType>:$results);
-
-  let regions = (region AnyRegion:$body);
-  let hasVerifier = 1;
-  let hasCustomAssemblyFormat = 1;
-
 }
 
 def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "result"]>]> {
@@ -86,10 +84,6 @@ def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let hasCanonicalizer = 1;
   let hasCustomAssemblyFormat = 1;
 }
-
-
-
-include "mlir/IR/PatternBase.td"
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
   let summary = "Terminator for regions in OrchestraIR operations.";

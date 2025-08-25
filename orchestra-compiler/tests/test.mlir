@@ -2,8 +2,8 @@
 
 // CHECK-LABEL: "orchestra.schedule"
 "orchestra.schedule"() ({
-  // CHECK: orchestra.task "test_task" on "test"
-  orchestra.task "test_task" on "test" {} : () -> () {
+  // CHECK: orchestra.task ID("test") target_arch<{arch = "test"}>
+  orchestra.task ID("test") target_arch<{arch = "test"}> region {
     // CHECK: %[[COND:.*]] = arith.constant true
     %cond = arith.constant true
     // CHECK: %[[TRUE:.*]] = arith.constant 1.000000e+00 : f32

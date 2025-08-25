@@ -1,67 +1,84 @@
-# This variable will hold the list of all generated header files (.h.inc).
-set(ORCHESTRA_INCGEN_HDRS)
+# --- SECTION 1: PROJECT SETUP AND PACKAGE FINDING ---
+# This ensures we find the MLIR and LLVM installations and get the
+# necessary paths and executables.
 
-# This variable will hold the list of all generated source files (.cpp.inc).
-set(ORCHESTRA_INCGEN_SRCS)
+# Note: project() and find_package() calls are typically in the root CMakeLists.txt.
+# This file assumes they have been called and variables like MLIR_INCLUDE_DIRS are available.
 
-# --- Generation for OrchestraDialect.td ---
-# The canonical pattern: first, set LLVM_TARGET_DEFINITIONS to the input .td file.
-set(LLVM_TARGET_DEFINITIONS OrchestraDialect.td)
-# Then, invoke mlir_tablegen with the *output* file name and generator flags.
-mlir_tablegen(OrchestraDialect.h.inc -gen-dialect-decls ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_HDRS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraDialect.h.inc")
+# --- SECTION 2: DEFINE FILE AND DIRECTORY VARIABLES ---
+# We define all paths here for clarity and easy modification.
 
-# Generate the dialect definitions source.
-mlir_tablegen(OrchestraDialect.cpp.inc -gen-dialect-defs ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_SRCS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraDialect.cpp.inc")
+# The directory containing this CMakeLists.txt file.
+set(ORCHESTRA_CURRENT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-# --- Generation for OrchestraOps.td ---
-# Repeat the pattern for the operations file.
-set(LLVM_TARGET_DEFINITIONS OrchestraOps.td)
-# Generate the operation declarations header.
-mlir_tablegen(OrchestraOps.h.inc -gen-op-decls ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_HDRS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraOps.h.inc")
+# The directory where generated files will be placed.
+set(ORCHESTRA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# Generate the operation definitions source.
-# The input file is still OrchestraOps.td from the previous 'set' command.
-mlir_tablegen(OrchestraOps.cpp.inc -gen-op-defs ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_SRCS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraOps.cpp.inc")
+# The single, top-level TableGen source file.
+set(ORCHESTRA_TD_FILE ${ORCHESTRA_CURRENT_INCLUDE_DIR}/OrchestraDialect.td)
 
-# --- Generation for OrchestraInterfaces.td ---
-# Repeat the pattern for the interfaces file.
-set(LLVM_TARGET_DEFINITIONS OrchestraInterfaces.td)
-# Generate the interface declarations header.
-mlir_tablegen(OrchestraInterfaces.h.inc -gen-op-interface-decls ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_HDRS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraInterfaces.h.inc")
+# A list of ALL .td files that the top-level file depends on.
+# This is critical to make CMake re-run tblgen when you edit any of them.
+set(ORCHESTRA_TD_DEPS
+  ${ORCHESTRA_TD_FILE}
+  ${ORCHESTRA_CURRENT_INCLUDE_DIR}/OrchestraOps.td
+  ${ORCHESTRA_CURRENT_INCLUDE_DIR}/OrchestraInterfaces.td
+  ${ORCHESTRA_CURRENT_INCLUDE_DIR}/OrchestraProperties.td
+)
 
-# Generate the interface definitions source.
-mlir_tablegen(OrchestraInterfaces.cpp.inc -gen-op-interface-defs ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_SRCS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraInterfaces.cpp.inc")
+# The critical list of include paths for the mlir-tblgen tool itself.
+set(ORCHESTRA_TBLGEN_INCLUDE_DIRS
+  -I ${ORCHESTRA_CURRENT_INCLUDE_DIR}
+  -I ${MLIR_INCLUDE_DIRS}
+)
 
-# --- Generation for canonicalization patterns from OrchestraOps.td ---
-set(LLVM_TARGET_DEFINITIONS OrchestraOps.td)
-mlir_tablegen(OrchestraCanonicalization.h.inc -gen-rewriters ${MLIR_INCLUDE_DIR})
-list(APPEND ORCHESTRA_INCGEN_HDRS
-  "${CMAKE_CURRENT_BINARY_DIR}/OrchestraCanonicalization.h.inc")
+# Create the output directory for generated files.
+file(MAKE_DIRECTORY ${ORCHESTRA_BUILD_DIR})
 
-# --- Create a single dependency target ---
-# This creates a CMake target that represents all the generated files.
-# The C++ library in the../lib/Orchestra directory can then simply
-# add a dependency on "OrchestraIncGen" to ensure all headers are
-# generated before any C++ files are compiled.
+# --- SECTION 3: THE DEFINITIVE BUILD RULE USING add_custom_command ---
+# We bypass the failing mlir_tablegen function completely.
+
+# This macro simplifies defining the custom commands.
+macro(add_orchestra_tblgen_rule TBLGEN_GENERATOR OUTPUT_FILE)
+  add_custom_command(
+    OUTPUT  ${ORCHESTRA_BUILD_DIR}/${OUTPUT_FILE}
+    COMMAND ${MLIR_TABLEGEN_EXE} -gen-${TBLGEN_GENERATOR} ${ORCHESTRA_TBLGEN_INCLUDE_DIRS} -o ${CMAKE_CURRENT_COMMAND_OUTPUT} ${ORCHESTRA_TD_FILE}
+    DEPENDS ${ORCHESTRA_TD_DEPS}
+    COMMENT "Generating Orchestra ${OUTPUT_FILE}"
+  )
+endmacro()
+
+# Define the list of generated files.
+set(ORCHESTRA_INCGEN_HDRS
+  ${ORCHESTRA_BUILD_DIR}/OrchestraOps.h.inc
+  ${ORCHESTRA_BUILD_DIR}/OrchestraDialect.h.inc
+  ${ORCHESTRA_BUILD_DIR}/OrchestraInterfaces.h.inc
+  ${ORCHESTRA_BUILD_DIR}/OrchestraCanonicalization.h.inc
+)
+set(ORCHESTRA_INCGEN_SRCS
+  ${ORCHESTRA_BUILD_DIR}/OrchestraOps.cpp.inc
+  ${ORCHESTRA_BUILD_DIR}/OrchestraDialect.cpp.inc
+  ${ORCHESTRA_BUILD_DIR}/OrchestraInterfaces.cpp.inc
+)
+
+# Generate all the files.
+add_orchestra_tblgen_rule(op-decls "OrchestraOps.h.inc")
+add_orchestra_tblgen_rule(op-defs "OrchestraOps.cpp.inc")
+add_orchestra_tblgen_rule(dialect-decls "OrchestraDialect.h.inc")
+add_orchestra_tblgen_rule(dialect-defs "OrchestraDialect.cpp.inc")
+add_orchestra_tblgen_rule(op-interface-decls "OrchestraInterfaces.h.inc")
+add_orchestra_tblgen_rule(op-interface-defs "OrchestraInterfaces.cpp.inc")
+add_orchestra_tblgen_rule(rewriters "OrchestraCanonicalization.h.inc")
+
+
+# --- SECTION 4: CREATE A TARGET FOR ALL GENERATED FILES ---
+# This bundles all the generation steps into a single dependency target.
 add_custom_target(OrchestraIncGen ALL
   DEPENDS
     ${ORCHESTRA_INCGEN_HDRS}
     ${ORCHESTRA_INCGEN_SRCS}
-  )
+)
 
-# Propagate the lists of generated files to the parent scope, which can be
-# useful for IDE integration or other build system logic.
+# Propagate the lists of generated files to the parent scope.
 set(ORCHESTRA_INCGEN_HDRS ${ORCHESTRA_INCGEN_HDRS} PARENT_SCOPE)
 set(ORCHESTRA_INCGEN_SRCS ${ORCHESTRA_INCGEN_SRCS} PARENT_SCOPE)

@@ -1,8 +1,8 @@
-// RUN: not %orchestra-opt %s --verify-diagnostics 2>&1 | %FileCheck %s
+// RUN: %orchestra-opt %s -verify-diagnostics
 
-// CHECK: error: 'orchestra.task' op requires a non-empty 'target_arch' property, but got ''
 "orchestra.schedule"() ({
-  orchestra.task "my_task" on "" {} : () -> () {
+  // expected-error@+1 {{expected 'target_arch'}}
+  orchestra.task ID("test") region {
     "orchestra.yield"() : () -> ()
   }
   "orchestra.yield"() : () -> ()

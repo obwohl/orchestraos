@@ -3,23 +3,23 @@
 
 include "mlir/IR/OpBase.td"
 
+// Include all dialect components in the correct dependency order.
+include "OrchestraProperties.td"
+include "OrchestraOps.td"
+
+// Finally, define the dialect itself.
 def Orchestra_Dialect : Dialect {
   let name = "orchestra";
-  let cppNamespace = "::mlir::orchestra";
+  let cppNamespace = "::orchestra";
+  let summary = "The Orchestra dialect for task-based compilation.";
 
-  let dependentDialects = [
-    "mlir::arith::ArithDialect"
-  ];
-
+  // Enable the property-based storage model for all ops in this dialect.
   let usePropertiesForAttributes = 1;
 
-  let summary = "A dialect for the Orchestra meta-OS compiler.";
   let description = [{
-    The OrchestraIR dialect is the heart of the OrchestraOS compiler's
-    proprietary technology. It is a mid-level dialect designed to serve as the
-    crucial bridge between a purely logical, framework-agnostic representation
-    of a computation and the concrete, hardware-specific representations
-    required for final code generation.
+    The Orchestra dialect provides a high-level IR for describing asynchronous
+    tasks and their data dependencies, suitable for targeting heterogeneous
+    hardware.
   }];
 }
 
