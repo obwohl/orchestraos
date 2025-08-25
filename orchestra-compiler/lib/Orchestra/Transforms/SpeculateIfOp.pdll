@@ -53,22 +53,21 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   mlir::Location loc = ifOp.getLoc();
   mlir::TypeRange resultTypes = ifOp.getResultTypes();
 
-  // Create the target_arch attribute.
+  // Create the arch attribute.
   mlir::Builder builder(ifOp.getContext());
   auto archAttr = builder.getStringAttr("unknown");
-  auto dictAttr = builder.getDictionaryAttr({builder.getNamedAttr("arch", archAttr)});
 
   rewriter.setInsertionPoint(op);
   auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());
   auto thenTask = rewriter.create<orchestra::TaskOp>(
-      loc, resultTypes, dictAttr);
+      loc, resultTypes, archAttr);
   thenTask.getBody().push_back(new mlir::Block());
   cloneAndRemap(ifOp.getThenRegion(), thenTask.getBody(), thenExternalValues, rewriter);
 
   rewriter.setInsertionPoint(op);
   auto elseExternalValues = getUsedExternalValues(ifOp.getElseRegion());
   auto elseTask = rewriter.create<orchestra::TaskOp>(
-      loc, resultTypes, dictAttr);
+      loc, resultTypes, archAttr);
   elseTask.getBody().push_back(new mlir::Block());
   cloneAndRemap(ifOp.getElseRegion(), elseTask.getBody(), elseExternalValues, rewriter);
 
