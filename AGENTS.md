@@ -51,7 +51,7 @@ This section outlines the mandatory protocol for working on this repository.
 
 ## 3. Build and Test Instructions
 
-The project uses a standard CMake-based workflow. *The project uses clang.*
+The project uses a standard CMake-based workflow.
 
 ```bash
 # 1. Configure the build using CMake.
