@@ -3,7 +3,7 @@
 "orchestra.schedule"() ({
   // CHECK: error: 'orchestra.task' op requires attribute 'target_arch'
   "orchestra.task"() ({
-    "orchestra.yield"() : () -> ()
+    "orchestra.return"() : () -> ()
   }) : () -> ()
-  "orchestra.yield"() : () -> ()
+  "orchestra.return"() : () -> ()
 }) : () -> ()

@@ -27,6 +27,7 @@ This phase is the highest priority and a prerequisite for all subsequent work. I
     *   **Why:** To improve compile-time performance, add C++ type safety, and align the core dialect with current MLIR best practices, creating a robust foundation for all future development.
 
 *   **Task 1.2: Enhance `orchestra.task` Target Schema.**
+    *   **Status: Completed**
     *   **What:** Formalize the `target` attribute schema on `orchestra.task` to include a mandatory `arch` key (e.g., "amd_cdna3", "google_tpu_v5e").
     *   **Why:** This is a critical IR enhancement required to programmatically dispatch to the correct target-specific lowering and optimization pipelines, forming the basis of the multi-vendor strategy.
 

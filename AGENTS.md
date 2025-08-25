@@ -65,8 +65,8 @@ This section outlines the mandatory protocol for working on this repository.
 1.  **Ensure All Tests Pass:** Only after successful execution and verification should you proceed. Miniaturizing a problem does not mean that a part of the tests may fail. **ALL tests MUST pass** before a commit.
 
 2.  **Update Documentation:** This is a critical step.
-    *   Update status-quo.md to reflect the new state of the project.
-    *   Update to_do
+    *   Update `docs/status-quo.md` to reflect the new state of the project.
+    *   Update `docs/to_do.md` with the next task.
     *   Create or update a specific, local README file for your implementation if applicable, detailing its features, purpose, and any new insights.
 
 3.  **Commit Changes:** Prepare and commit your changes with a comprehensive commit message. **ONLY COMMIT IF THE DOCUMENTATION UPDATES ARE INCLUDED AS OUTLINED.**

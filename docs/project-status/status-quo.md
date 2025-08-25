@@ -15,10 +15,8 @@ The following features have been verified through code analysis and a successful
 *   **Build System:** The project is built with CMake and Ninja. The test suite is correctly integrated using a `check-orchestra` target. The build environment requires `FileCheck` and `llvm-lit` paths to be configured correctly.
 *   **Core Dialect (`OrchestraIR`):** The core dialect is implemented and functional.
 *   **`orchestra.task` Improvements:** The `orchestra.task` operation has been significantly improved for better usability and robustness:
-    *   **Property-based Target:** The `target` attribute has been refactored from a `DictionaryAttr` to a `StringProp` using the MLIR `Properties` system. This improves type safety and aligns the operation with modern MLIR best practices.
-    *   **Custom Verifier:** The verifier now ensures that the `arch` key within the `target` attribute is specifically a `StringAttr`.
-    *   **Convenience Builder:** A new C++ builder has been added that accepts the target architecture as a simple `StringRef`, abstracting away the manual creation of the `DictionaryAttr`.
-    *   **Custom Assembly Format:** A custom C++ parser and printer have been implemented for `TaskOp`. This provides a more readable and less ambiguous assembly format (`orchestra.task ... on "arch" ...`), resolving the parsing issues that blocked previous development.
+    *   **Dictionary-based Target:** The `target_arch` attribute is now a `DictionaryAttr`. This provides a structured way to specify target architecture properties.
+    *   **Custom Verifier:** A C++ verifier ensures that the `target_arch` dictionary contains a non-empty string attribute named `arch`.
 *   **Speculative Execution:** The `--divergence-to-speculation` pass successfully converts `scf.if` operations into speculative `orchestra.task` operations. This feature is tested and functional. The implementation has been migrated from C++ to the declarative Pattern Description Language (PDL).
 *   **GPU Lowering (NVIDIA):** The `--lower-orchestra-to-gpu` pass provides a lowering path to the `nvgpu` dialect. It includes an architecture-aware code path:
     *   For NVIDIA Blackwell GPUs (`sm_100` and newer), it generates SOTA asynchronous data transfers using the Tensor Memory Accelerator (`nvgpu.tma.async.load`) and `mbarrier` synchronization.
