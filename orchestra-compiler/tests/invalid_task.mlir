@@ -2,8 +2,8 @@
 
 "orchestra.schedule"() ({
   // CHECK: error: 'orchestra.task' op requires a non-empty 'arch' in 'target_arch'
-  orchestra.task on {} : () -> () {
-    "orchestra.yield"() : () -> ()
-  }
-  "orchestra.yield"() : () -> ()
+  "orchestra.task"() <{target_arch = {}}> ({
+    "orchestra.return"() : () -> ()
+  }) : () -> ()
+  "orchestra.return"() : () -> ()
 }) : () -> ()

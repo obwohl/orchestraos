@@ -10,13 +10,22 @@ using namespace orchestra;
 mlir::LogicalResult TaskOp::verify() {
   auto arch = getTargetArch().get("arch");
   if (!arch) {
-    return emitOpError("op requires a non-empty 'arch' in 'target_arch'");
+    return emitOpError("requires a non-empty 'arch' in 'target_arch'");
   }
   if (!arch.isa<StringAttr>()) {
-    return emitOpError("op requires a string 'arch' in 'target_arch'");
+    return emitOpError("requires a string 'arch' in 'target_arch'");
   }
   if (arch.cast<StringAttr>().getValue().empty()) {
-    return emitOpError("op requires a non-empty 'arch' in 'target_arch'");
+    return emitOpError("requires a non-empty 'arch' in 'target_arch'");
+  }
+  return mlir::success();
+}
+
+mlir::LogicalResult ScheduleOp::verify() {
+  for (auto &op : getBody().front()) {
+    if (!isa<TaskOp, ReturnOp>(op)) {
+      return op.emitOpError("only 'orchestra.task' operations are allowed inside a 'orchestra.schedule'");
+    }
   }
   return mlir::success();
 }

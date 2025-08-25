@@ -28,6 +28,12 @@ def Orchestra_TaskOp : Orchestra_Op<"task", []> {
   let hasVerifier = 1;
 }
 
+def Orchestra_ScheduleOp : Orchestra_Op<"schedule", []> {
+  let summary = "A container for a schedule of tasks.";
+  let regions = (region SizedRegion<1>:$body);
+  let hasVerifier = 1;
+}
+
 //
 // --- orchestra.return op ---
 //
@@ -80,7 +86,6 @@ def Orchestra_ReturnOp : Orchestra_Op<"return", [Terminator]> {
   let summary = "A return operation for the orchestra dialect.";
   let arguments = (ins Variadic<AnyType>:$operands);
   let results = (outs);
-  let assemblyFormat = "$operands attr-dict type($operands)";
 }
 
 include "mlir/IR/PatternBase.td"
