@@ -10,15 +10,8 @@ using namespace mlir;
 using namespace orchestra;
 
 mlir::LogicalResult TaskOp::verify() {
-  auto arch = getTargetArch().get("arch");
-  if (!arch) {
-    return emitOpError("requires a non-empty 'arch' in 'target_arch'");
-  }
-  if (!arch.isa<StringAttr>()) {
-    return emitOpError("requires a string 'arch' in 'target_arch'");
-  }
-  if (arch.cast<StringAttr>().getValue().empty()) {
-    return emitOpError("requires a non-empty 'arch' in 'target_arch'");
+  if (getArch().empty()) {
+    return emitOpError("requires a non-empty 'arch' property");
   }
   return mlir::success();
 }

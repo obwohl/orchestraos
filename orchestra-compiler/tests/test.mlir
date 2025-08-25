@@ -3,7 +3,7 @@
 // CHECK-LABEL: "orchestra.schedule"
 "orchestra.schedule"() ({
 // CHECK: "orchestra.task"
-  "orchestra.task"() <{target_arch = {arch = "test"}}> ({
+  "orchestra.task"() <{arch = "test"}> ({
     // CHECK: %[[COND:.*]] = arith.constant true
     %cond = arith.constant true
     // CHECK: %[[TRUE:.*]] = arith.constant 1.000000e+00 : f32

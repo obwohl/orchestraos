@@ -2,12 +2,12 @@
 
 // CHECK-LABEL: func @test_speculate_candidate
 // CHECK-SAME:      (%[[COND:.*]]: i1, %[[ARG1:.*]]: f32, %[[ARG2:.*]]: f32) -> f32 {
-// CHECK: %[[THEN_TASK:.*]] = "orchestra.task"() <{target_arch = {arch = "unknown"}}> ({
+// CHECK: %[[THEN_TASK:.*]] = "orchestra.task"() <{arch = "unknown"}> ({
 // CHECK-NEXT:    ^bb0(%[[ARG1_IN_REGION:.*]]: f32):
 // CHECK-NEXT:      %[[ADD:.*]] = arith.addf %[[ARG1_IN_REGION]], %[[ARG1_IN_REGION]]
 // CHECK-NEXT:      orchestra.return
 // CHECK-NEXT:    }) : () -> f32
-// CHECK: %[[ELSE_TASK:.*]] = "orchestra.task"() <{target_arch = {arch = "unknown"}}> ({
+// CHECK: %[[ELSE_TASK:.*]] = "orchestra.task"() <{arch = "unknown"}> ({
 // CHECK-NEXT:    ^bb0(%[[ARG2_IN_REGION:.*]]: f32):
 // CHECK-NEXT:      %[[MUL:.*]] = arith.mulf %[[ARG2_IN_REGION]], %[[ARG2_IN_REGION]]
 // CHECK-NEXT:      orchestra.return
