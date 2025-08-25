@@ -19,11 +19,16 @@ using namespace mlir;
 using namespace mlir::orchestra;
 
 namespace {
+// Lowers orchestra.transfer operations to the NVIDIA Tensor Memory Accelerator
+// (TMA) primitives. This path is used for Blackwell (sm_100) and newer
+// architectures. TMA provides a more flexible and powerful way to manage
+// asynchronous data transfers.
 void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   mlir::OpBuilder builder(funcOp.getContext());
   auto loc = funcOp.getLoc();
 
-  // Create and initialize the mbarrier at the start of the function.
+  // Create and initialize a multi-barrier (mbarrier) at the start of the
+  // function. MBarrier is a new synchronization primitive required for TMA.
   builder.setInsertionPointToStart(&funcOp.getBody().front());
   auto mbarrierType = nvgpu::MBarrierGroupType::get(
       builder.getContext(),
@@ -32,8 +37,9 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   auto mbarrier = builder.create<nvgpu::MBarrierCreateOp>(loc, mbarrierType);
 
   auto c0 = builder.create<arith::ConstantIndexOp>(loc, 0);
-  auto numThreads =
-      builder.create<arith::ConstantIndexOp>(loc, 1);  // Placeholder
+  // Placeholder for the number of threads in the workgroup. This should be
+  // replaced with the actual workgroup size.
+  auto numThreads = builder.create<arith::ConstantIndexOp>(loc, 1);
   builder.create<nvgpu::MBarrierInitOp>(loc,
                                         mbarrier.getResult(),
                                         c0,
@@ -44,6 +50,8 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   llvm::SmallVector<TransferOp, 4> transferOps;
   funcOp.walk([&](TransferOp op) { transferOps.push_back(op); });
 
+  // Map from the destination buffer of a transfer to the mbarrier token used
+  // for synchronization.
   llvm::DenseMap<mlir::Value, mlir::Value> destToMBarrierToken;
 
   for (auto op : transferOps) {
@@ -57,7 +65,8 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
       return;
     }
 
-    // Create TMA descriptor.
+    // Create a TMA descriptor, which describes the shape and layout of the
+    // data being transferred.
     SmallVector<Value, 4> boxDims;
     for (int64_t dim : sourceType.getShape()) {
       boxDims.push_back(
@@ -68,7 +77,8 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
     auto castedSource =
         builder.create<memref::CastOp>(transferLoc, unrankedSourceType, source);
 
-    // Create a new memref on the GPU in shared memory.
+    // Create a new memref on the GPU in shared memory (workgroup address
+    // space) to serve as the destination for the TMA load.
     auto destType = mlir::MemRefType::get(
         sourceType.getShape(),
         sourceType.getElementType(),
@@ -95,7 +105,7 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
           builder.create<mlir::arith::ConstantIndexOp>(transferLoc, 0));
     }
 
-    // Create an async TMA load.
+    // Create an asynchronous TMA load operation.
     builder.create<nvgpu::TmaAsyncLoadOp>(
         transferLoc,
         /*dst=*/dest.getResult(),
@@ -106,7 +116,9 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
         /*multicastMask=*/nullptr,
         /*predicate=*/nullptr);
 
-    // Arrive at the barrier and get a token.
+    // "Arrive" at the barrier to signal that this thread has initiated its
+    // transfer. This returns a token that can be used to wait for the transfer
+    // to complete.
     auto arriveToken = builder.create<nvgpu::MBarrierArriveOp>(
         transferLoc, mbarrier.getResult(), c0);
     destToMBarrierToken[dest.getResult()] = arriveToken.getToken();
@@ -115,10 +127,11 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
     op.erase();
   }
 
-  // Insert wait operations.
+  // Insert wait operations before any use of the destination buffers.
   for (auto const &[destBuffer, barrierToken] : destToMBarrierToken) {
     for (mlir::OpOperand &use : destBuffer.getUses()) {
       mlir::Operation *user = use.getOwner();
+      // Don't insert a wait before the op that created the buffer.
       if (isa<nvgpu::TmaAsyncLoadOp>(user)) {
         continue;
       }
@@ -126,6 +139,10 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
       auto waitLoc = user->getLoc();
       auto c1_i1 = waitBuilder.create<arith::ConstantIntOp>(waitLoc, 1, 1);
 
+      // This is the recommended way to wait for an mbarrier to complete.
+      // We generate a polling loop that repeatedly calls `mbarrier.test_wait`
+      // until it returns true. This is more efficient than a simple blocking
+      // wait in many cases.
       auto scfWhile = waitBuilder.create<scf::WhileOp>(
           waitLoc,
           TypeRange{},
@@ -149,8 +166,15 @@ void lowerToTMA(mlir::gpu::GPUFuncOp funcOp) {
   }
 }
 
-// This is the original logic for lowering to NVGPU, extracted into its own
-// pass.
+// This pass lowers orchestra.transfer operations to the nvgpu dialect.
+// It implements a two-phase approach to maximize the overlap between data
+// transfers and computation.
+//
+// Phase 1: Replace all `orchestra.transfer` ops with `nvgpu.device_async_copy`
+// and a new `memref.alloc` in shared memory.
+//
+// Phase 2: Insert `nvgpu.device_async_wait` ops immediately before the first
+// use of each destination buffer.
 class LowerOrchestraToNVGPUPass
     : public mlir::PassWrapper<LowerOrchestraToNVGPUPass,
                                mlir::OperationPass<mlir::gpu::GPUFuncOp>> {
@@ -175,6 +199,7 @@ public:
       return;
     }
 
+    // Dispatch to the appropriate lowering strategy based on the SM architecture.
     auto smArchAttr = gpuModule->getAttrOfType<mlir::IntegerAttr>("sm_arch");
     int smArch = smArchAttr ? smArchAttr.getInt() : 0;
 
@@ -183,10 +208,12 @@ public:
       return;
     }
 
-    // Map from destination buffer to async token.
+    // --- Legacy lowering path for Hopper and older architectures ---
+
+    // Map from destination buffer to the async token for that transfer.
     llvm::DenseMap<mlir::Value, mlir::Value> asyncTokens;
 
-    // Collect all transfer ops to be rewritten.
+    // Phase 1: Collect all transfer ops and replace them with async copies.
     llvm::SmallVector<TransferOp, 4> transferOps;
     funcOp.walk([&](TransferOp op) { transferOps.push_back(op); });
 
@@ -218,7 +245,8 @@ public:
         indices.push_back(builder.create<mlir::arith::ConstantIndexOp>(loc, 0));
       }
 
-      // Create an async copy.
+      // Create an async copy from global to shared memory. This returns a
+      // token that we can use to wait for the copy to complete.
       auto asyncCopy = builder.create<mlir::nvgpu::DeviceAsyncCopyOp>(
           loc,
           mlir::nvgpu::DeviceAsyncTokenType::get(op.getContext()),
@@ -236,7 +264,9 @@ public:
       op.erase();
     }
 
-    // Second phase: insert wait ops.
+    // Phase 2: Insert wait operations.
+    // We do this in a second phase to ensure that waits are inserted only when
+    // necessary and as late as possible, maximizing the potential for overlap.
     llvm::DenseMap<mlir::Operation *, llvm::SmallVector<mlir::Value, 1>>
         waitsToInsert;
     for (auto &pair : asyncTokens) {
@@ -244,9 +274,11 @@ public:
       mlir::Value token = pair.second;
       for (mlir::OpOperand &use : buffer.getUses()) {
         mlir::Operation *user = use.getOwner();
+        // Don't insert a wait before the copy itself.
         if (isa<mlir::nvgpu::DeviceAsyncCopyOp>(user)) {
           continue;
         }
+        // Group waits by the user operation.
         waitsToInsert[user].push_back(token);
       }
     }
@@ -263,7 +295,8 @@ public:
   }
 };
 
-// This is the refactored pipeline pass.
+// This is the main pipeline pass that dispatches to the correct GPU-specific
+// lowering pass based on the `gpu-arch` option.
 class LowerOrchestraToGPUPass
     : public mlir::PassWrapper<LowerOrchestraToGPUPass,
                                mlir::OperationPass<mlir::ModuleOp>> {

@@ -1,41 +1,33 @@
-# Orchestra Dialect C++ API
+# Orchestra Dialect C++ Implementation
 
-This document provides a brief overview of the C++ API for the Orchestra dialect, with a focus on the modern, properties-based approach to accessing operation attributes.
+This directory contains the C++ implementation files for the Orchestra dialect. While the `include/` directory defines the public interface, this directory provides the concrete logic for the dialect's operations, verification, and canonicalization patterns.
 
-## Modernized `Properties` System
+## Key Files
 
-As of MLIR v20, the Orchestra dialect has been modernized to use the `Properties` system for its core operation attributes. This is a significant improvement over the older, string-based `DictionaryAttr` approach.
+*   **`OrchestraDialect.cpp`**: Implements the initialization and registration of the Orchestra dialect. It's also where operation attributes and other dialect-level properties are defined.
+*   **`OrchestraOps.cpp`**: Provides the C++ implementation for the custom operations defined in `OrchestraOps.td`. This includes:
+    *   **Verification Logic (`verify`)**: Methods that check for semantic errors and ensure the IR is well-formed.
+    *   **Canonicalization Patterns (`getCanonicalizationPatterns`)**: Patterns that simplify the IR into a more standard form (e.g., folding two consecutive `transfer` ops into one).
+    *   **Builders**: Helper methods for creating instances of the operations programmatically.
+*   **`OrchestraInterfaces.cpp`**: Implements any custom dialect interfaces.
 
-The key benefits of this modernization are:
+## Common Pitfalls & Hot Tips
 
-*   **Compile-Time Type Safety:** Operation attributes are now accessed through generated C++ methods with proper C++ types (e.g., `int32_t`, `mlir::StringAttr`), eliminating the risk of type errors at runtime.
-*   **Improved Performance:** Accessing properties is faster than looking up attributes by string in a dictionary.
-*   **Enhanced Readability:** The generated accessors have clear, intention-revealing names (e.g., `op.getNumTrue()` instead of `op->getAttr("num_true")`).
+### Modernized `Properties` System
 
-## Using the Properties API
+As of MLIR v20, the Orchestra dialect has been modernized to use the `Properties` system for its core operation attributes. This is a significant improvement over the older, string-based `DictionaryAttr` approach. When working with Orchestra operations in C++, you should **always** use the generated property accessors to get and set their inherent attributes.
 
-When working with Orchestra operations in C++, you should use the generated property accessors to get and set their inherent attributes.
+**Benefits:**
 
-### `orchestra.task`
+*   **Compile-Time Type Safety:** Access attributes via generated C++ methods with proper types (e.g., `int32_t`, `mlir::StringAttr`).
+*   **Improved Performance:** Faster than dictionary lookups.
+*   **Enhanced Readability:** Clear, intention-revealing names (e.g., `op.getNumTrue()` instead of `op->getAttr("num_true")`).
 
-The `arch` attribute of the `task` operation is now a property.
+### Using the Properties API
 
-*   **Getter:** `op.getArch()` returns a `StringRef`.
+*   **`orchestra.task`**: Use `op.getArch()` to get the `arch` as a `StringRef`.
+*   **`orchestra.commit`**: Use `op.getNumTrue()` to get the `num_true` value as an `int32_t`.
 
-### `orchestra.select`
+### The `verify` Method HACK in `orchestra.commit`
 
-The `num_true` attribute of the `select` operation is now a property.
-
-*   **Getter:** `op.getNumTrue()` returns an `int32_t`.
-
-By using these generated accessors, you can write more robust, readable, and performant compiler passes for the Orchestra dialect.
-
-## Core Operations
-
-### `orchestra.commit`
-
-The `orchestra.commit` operation represents the explicit commitment of a value to a specific memory space. This operation is a hint to the scheduler that the value is ready and can be moved to the target memory. It takes a single `MemRef` operand and produces a single `MemRef` result of the same type.
-
-### `orchestra.select`
-
-The `orchestra.select` operation is a conditional selection mechanism that is polymorphic and variadic. It takes a condition, two sets of SSA values, and a `num_true` attribute, and returns one of the sets of values based on the condition.
+Due to a limitation in the generic MLIR op parser, the `num_true` property of the `orchestra.commit` operation is not always initialized correctly when parsing textual IR. The `verify` method for this op contains a necessary workaround that manually reads the `num_true` value from the raw attribute dictionary if the property has its default (zero) value. This is a crucial piece of logic that prevents incorrect verification failures.

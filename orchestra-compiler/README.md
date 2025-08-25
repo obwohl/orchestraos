@@ -10,6 +10,18 @@ For a comprehensive blueprint of the compiler's architectural vision, the Orches
 
 For a detailed rationale on the semantics of the core Orchestra dialect operations, please see: [Orchestra Dialect Semantics](../../docs/architecture/dialect_semantics.md)
 
+## Directory Structure
+
+*   `include/`: Contains the C++ header files that define the Orchestra dialect, its operations, and its interfaces. This is the public API of the compiler's core IR.
+*   `lib/`: Contains the C++ source files that implement the Orchestra dialect, its operations, passes, and other core logic.
+*   `orchestra-opt/`: Contains the source code for the `orchestra-opt` command-line tool, the main driver for applying Orchestra compiler passes.
+*   `tests/`: Contains the MLIR-based test suite for the Orchestra compiler, using LLVM's `lit` testing framework.
+*   `transforms/`: Contains declarative, `transform` dialect-based optimization scripts that guide the hardware-aware optimization process.
+
+## Common Pitfalls & Hot Tips
+
+*   **The Blueprint is Ground Truth:** The single most important document for understanding the compiler's architecture is the `blueprint.md`. Before making any significant changes, always refer to `docs/architecture/blueprint.md` to ensure your work aligns with the project's foundational design principles.
+
 ## Getting Started
 
 For detailed instructions on how to set up the development environment, build the compiler, and run the test suite, please refer to the main [README.md](../../README.md) at the root of the repository.
