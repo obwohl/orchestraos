@@ -24,24 +24,8 @@ The `num_true` attribute of the `commit` operation is now a property.
 
 By using these generated accessors, you can write more robust, readable, and performant compiler passes for the Orchestra dialect.
 
-## Custom Assembly Format for `orchestra.task`
+## `orchestra.task`
 
-The `orchestra.task` operation uses a custom assembly format to improve readability and parsing robustness.
+The `arch` attribute of the `task` operation is now a property.
 
-### Syntax
-
-```mlir
-%results = orchestra.task (%operands,...) on "arch_name" {attributes} : (operand_types) -> (result_types) {
-  // ... region with operations ...
-}
-```
-
-### Example
-
-```mlir
-orchestra.task on "test" {} : () -> () {
-  "orchestra.yield"() : () -> ()
-}
-```
-
-This custom format clearly separates the target architecture from other attributes and makes the operation's signature more explicit in the assembly.
+*   **Getter:** `op.getArch()` returns a `StringRef`.
