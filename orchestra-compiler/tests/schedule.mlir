@@ -2,10 +2,10 @@
 
 // A valid schedule with two tasks.
 "orchestra.schedule"() ({
-  "orchestra.task"() <{arch = "cpu"}> ({
+  "orchestra.task"() <{target = {arch = "cpu"}}> ({
     "orchestra.return"() : () -> ()
   }) : () -> ()
-  "orchestra.task"() <{arch = "gpu"}> ({
+  "orchestra.task"() <{target = {arch = "gpu", device_id = 1}}> ({
     "orchestra.return"() : () -> ()
   }) : () -> ()
   "orchestra.return"() : () -> ()
