@@ -11,9 +11,9 @@ These tasks modernize the compiler's core infrastructure to support multi-vendor
     -   Enforce a schema with a mandatory `arch` key (e.g., "nvidia\_blackwell", "amd\_cdna3") to enable target-specific dispatch.
     -   Allow for optional, architecture-specific keys to provide fine-grained control (e.g., `mfma=true`).
 
--   [x] **Task 1.2: Refactor Core Operations to Use MLIR Properties.**
-    -   Migrate the `target` attribute of `orchestra.task` and the `num_true` attribute of `orchestra.commit` from generic attributes to the MLIR `Properties` system for improved performance and type safety.
-    -   Enable `usePropertiesForAttributes = 1;` for the `Orchestra` dialect in `OrchestraOps.td`.
+-   [ ] **Task 1.2: Refactor Core Operations to Use MLIR Properties.**
+    -   [x] 1.2.1: Migrate the `target` attribute of `orchestra.task` and the `num_true` attribute of `orchestra.commit` from generic attributes to the MLIR `Properties` system for improved performance and type safety.
+    -   [x] 1.2.2: Enable `usePropertiesForAttributes = 1;` for the `Orchestra` dialect in `OrchestraOps.td`.
 
 ## Milestone 2: AMD GPU Support (rocMLIR Integration)
 
