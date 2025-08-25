@@ -34,7 +34,9 @@ This section outlines the mandatory protocol for working on this repository.
 *   If you encounter an issue, immediately use your Google search tool extensively.
 *   If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
 *   Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
-*   Only after at least 20 failed attempts may you ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
+*   Only after at least 10 consecutive failed attempts may you ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
+*   When facing apparent difficulties with the file-system, first try to find out, where you are (pwd), make some basic sanity checks (like navigating), make yourself an overview about the whole environment via ls -R and then try to run the commands in smaller chunks, not all in one large chunk. That prevents time-outs.
+
 
 ### Finalizing Work and Committing
 
