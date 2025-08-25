@@ -17,10 +17,10 @@ This section provides a verified, at-a-glance view of implemented features, alig
 *   **✅ Core Dialect: `OrchestraIR`**
     *   ✅ **`orchestra.schedule`**: Implemented with a verifier for unique task IDs.
     *   ✅ **`orchestra.task`**: The `target` attribute schema is now finalized and enforced by a verifier.
-    *   ✅ **`orchestra.transfer`**: Implemented with canonicalization patterns.
+    *   ✅ **`orchestra.transfer`**: Implemented with canonicalization patterns and a verifier for its attributes.
     *   ✅ **`orchestra.commit`**: Implemented as a `MemRef`-to-`MemRef` op representing data commitment, not as a simple token.
     *   ✅ **`orchestra.select`**: Implemented for conditional selection, replacing the old functionality of `orchestra.commit`.
-    *   ❌ **MLIR Properties Migration**: The dialect-wide migration to the Properties system is incomplete. Only `orchestra.select` currently uses a property. The `orchestra.task` op does **not** yet use properties.
+    *   ✅ **MLIR Properties Migration**: The `usePropertiesForAttributes` dialect flag has been enabled, automatically migrating all inherent attributes (like those on `orchestra.task` and `orchestra.transfer`) to use the more efficient property-based storage.
 
 *   **✅ Transformation & Optimization Framework**
     *   ✅ **Speculative Execution**: The `--divergence-to-speculation` pass is enabled and correctly lowers `scf.if` to `orchestra.task` and `orchestra.select`. It is **not** disabled.
@@ -39,7 +39,7 @@ This section serves as the new, verified to-do list for the project.
 
 *   **Milestone 1: Foundational Architectural Enhancements**
     *   ✅ **Task 1.1: Finalize `orchestra.task` Target Schema.** Define and enforce a formal schema for the `target` property on `orchestra.task`, including a mandatory `arch` key and optional, target-specific keys.
-    *   [ ] **Task 1.2: Complete Migration to MLIR Properties System.** Fully migrate the `Orchestra` dialect to use the MLIR `Properties` system for all appropriate operations, including `orchestra.task` and `orchestra.transfer`. *Note: The `orchestra.task` `target` attribute was implemented with a C++ verifier instead of the Properties system due to technical challenges with `DictionaryAttr` properties. This should be revisited.*
+    *   ✅ **Task 1.2: Complete Migration to MLIR Properties System.** The dialect-wide `usePropertiesForAttributes` flag has been enabled, which automatically migrates all inherent attributes to property-based storage. Verifiers have been added to `orchestra.task` and `orchestra.transfer` to ensure attribute correctness.
 
 *   **Milestone 2: AMD GPU Support (rocMLIR Integration)**
     *   [ ] **Task 2.1: Implement `linalg-to-rock` Lowering.** Create a new pass to lower `linalg.generic` operations to the `rock` dialect, guided by the `rocMLIR` kernel generator "contract".
