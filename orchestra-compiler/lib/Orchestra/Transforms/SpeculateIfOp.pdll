@@ -76,10 +76,10 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   commitValues.append(thenTask.getOperation()->getResults().begin(), thenTask.getOperation()->getResults().end());
   commitValues.append(elseTask.getOperation()->getResults().begin(), elseTask.getOperation()->getResults().end());
   auto num_true = thenTask.getOperation()->getNumResults();
-  auto commitOp = rewriter.create<orchestra::CommitOp>(
+  auto selectOp = rewriter.create<orchestra::SelectOp>(
       loc, resultTypes, ifOp.getCondition(), commitValues, num_true);
 
-  return commitOp.getResults();
+  return selectOp.getResults();
 }];
 
 

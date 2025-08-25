@@ -26,35 +26,6 @@ using namespace mlir::orchestra;
 
 namespace {
 
-class CommitOpLowering : public OpConversionPattern<CommitOp> {
-public:
-  using OpConversionPattern<CommitOp>::OpConversionPattern;
-
-  LogicalResult
-  matchAndRewrite(CommitOp op,
-                  OpAdaptor adaptor,
-                  ConversionPatternRewriter &rewriter) const override {
-    if (op->getNumResults() == 0) {
-      rewriter.eraseOp(op);
-      return success();
-    }
-
-    SmallVector<Value, 4> newResults;
-    auto num_true = op.getNumTrue();
-    auto values = adaptor.getValues();
-    auto true_values = values.take_front(num_true);
-    auto false_values = values.drop_front(num_true);
-
-    for (size_t i = 0; i < true_values.size(); ++i) {
-      auto select = rewriter.create<arith::SelectOp>(
-          op.getLoc(), adaptor.getCondition(), true_values[i], false_values[i]);
-      newResults.push_back(select.getResult());
-    }
-    rewriter.replaceOp(op, newResults);
-    return success();
-  }
-};
-
 class LowerOrchestraToStandardPass
     : public mlir::PassWrapper<LowerOrchestraToStandardPass,
                                mlir::OperationPass<mlir::ModuleOp>> {
@@ -71,7 +42,6 @@ public:
     target.addIllegalDialect<OrchestraDialect>();
 
     RewritePatternSet patterns(&getContext());
-    patterns.add<CommitOpLowering>(&getContext());
 
     if (failed(applyPartialConversion(
             getOperation(), target, std::move(patterns))))
