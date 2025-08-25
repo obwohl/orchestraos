@@ -1,82 +1,60 @@
-Of course. Based on the provided `orchestra - tech - MLIR 20 Blueprint` and the `Blueprint addendum`, here is a revised and updated upgrade plan, structured as a concise to-do list that reflects the new multi-vendor strategy and removes the now-obsolete Intel backend work.
+# OrchestraOS Compiler Task List
 
-***
+This document outlines the engineering tasks required to evolve the OrchestraOS compiler into a multi-vendor, heterogeneous orchestration platform. The tasks are derived from the strategic blueprints in `docs/architecture`.
 
-## Orchestra Compiler: A Prioritized Modernization and Expansion Plan
+## Milestone 1: Foundational Architectural Enhancements
 
-### Overview
+These tasks modernize the compiler's core infrastructure to support multi-vendor targets.
 
-This document outlines a high-level, phased to-do list for evolving the Orchestra compiler. It synthesizes the foundational goals of the original MLIR 20 Blueprint with the critical multi-vendor expansion strategy detailed in the addendum. The priority is to modernize the core infrastructure before implementing the new, state-of-the-art backends for strategic hardware targets.
+-   [ ] **Task 1.1: Enhance `orchestra.task` Schema.**
+    -   Modify the `orchestra.task` operation to use a `DictionaryAttr` for its `target` attribute.
+    -   Enforce a schema with a mandatory `arch` key (e.g., "nvidia\_blackwell", "amd\_cdna3") to enable target-specific dispatch.
+    -   Allow for optional, architecture-specific keys to provide fine-grained control (e.g., `mfma=true`).
 
-### Phase 0: Infrastructure and Tooling
+-   [ ] **Task 1.2: Refactor Core Operations to Use MLIR Properties.**
+    -   Migrate the `target` attribute of `orchestra.task` and the `num_true` attribute of `orchestra.commit` from generic attributes to the MLIR `Properties` system for improved performance and type safety.
+    -   Enable `usePropertiesForAttributes = 1;` for the `Orchestra` dialect in `OrchestraOps.td`.
 
-This phase focuses on improving the developer experience and ensuring code quality.
+## Milestone 2: AMD GPU Support (rocMLIR Integration)
 
-*   **Task 0.1: Add Code Formatting.**
-    *   **Status: Completed**
-    *   **What:** Added a `.clang-format` file and a script (`scripts/run-clang-format.py`) to automatically format all C++ code.
-    *   **Why:** To enforce a consistent coding style, improving readability and maintainability.
+This milestone focuses on adding end-to-end support for AMD Instinct-series GPUs.
 
-### Phase 1: Core IR and Framework Modernization
+-   [ ] **Task 2.1: Implement `linalg-to-rock` Lowering.**
+    -   Create a new pass to lower `linalg.generic` operations to the `rock` dialect, which is the entry point for the `rocMLIR` kernel generator.
+    -   This pass must be guided by the "contract" of the `rocMLIR` tool to produce optimal `linalg` patterns.
 
-This phase is the highest priority and a prerequisite for all subsequent work. Its goal is to refactor the existing codebase to use modern MLIR infrastructure, which is essential for building a scalable and maintainable multi-target compiler.
+-   [ ] **Task 2.2: Implement `rock-to-amdgpu` and `rocdl` Lowering.**
+    -   Develop the pipeline to lower the `rock` dialect to the `amdgpu` and `rocdl` dialects.
+    -   Ensure correct mapping to hardware primitives like `amdgpu.mfma` for matrix operations.
+    -   Handle synchronization with `gpu.barrier`.
 
-*   **Task 1.1: Modernize Core Dialect with the `Properties` System.**
-    *   **Status: Completed**
-    *   **What:** Refactor the `OrchestraIR` TableGen definitions (`OrchestraOps.td`). Migrate key attributes, such as `target` on `orchestra.task`, to use the `Properties` system instead of generic dictionary attributes.
-    *   **Why:** To improve compile-time performance, add C++ type safety, and align the core dialect with current MLIR best practices, creating a robust foundation for all future development.
+-   [ ] **Task 2.3: Create AMD-specific Transform Script.**
+    -   Author `amd_instinct_cdna3_strategy.mlir` for the `transform` dialect interpreter.
+    -   This script will apply tiling, packing, and fusion patterns at the `linalg` level, co-designed with the `rocMLIR` lowering contract to generate high-performance kernels.
 
-*   **Task 1.2: Enhance `orchestra.task` Target Schema.**
-    *   **Status: Completed**
-    *   **What:** Formalize the `target` attribute schema on `orchestra.task` to include a mandatory `arch` key (e.g., "amd_cdna3", "google_tpu_v5e").
-    *   **Why:** This is a critical IR enhancement required to programmatically dispatch to the correct target-specific lowering and optimization pipelines, forming the basis of the multi-vendor strategy.
+## Milestone 3: Google TPU & AWS Trainium Support (StableHLO Bridge)
 
-*   **Task 1.2a: Add `task_id` and Verifier to `orchestra.schedule`.**
-    *   **Status: Completed**
-    *   **What:** Added a `task_id` property to `orchestra.task` and implemented a verifier in `orchestra.schedule` to ensure all `task_id`s are unique.
-    *   **Why:** To enable unique identification of tasks within a schedule, which is a prerequisite for many scheduling and analysis passes.
+This milestone focuses on integrating with Google and AWS compilers via the StableHLO standard.
 
-*   **Task 1.3: Refactor `SpeculateIfOp` PDL Pattern.**
-    *   **Status: Completed**
-    *   **What:** Refactored the `SpeculateIfOpPattern` to improve its clarity and maintainability. The single, monolithic C++ constraint was split into two more granular and descriptive C++ constraints, making the pattern's logic easier to understand and maintain.
-    *   **Why:** To improve the readability and maintainability of core transformations by separating the matching logic from the rewrite logic, aligning with modern MLIR development philosophy.
+-   [ ] **Task 3.1: Implement `linalg-to-stablehlo` Lowering Pass.**
+    -   Create a robust pass to convert `linalg` dialect operations into their `stablehlo` equivalents.
+    -   This pass will be the common backend for both Google and AWS targets.
 
-### Phase 2: Declarative Optimization and Multi-Vendor Backend Implementation
+-   [ ] **Task 3.2: Implement the "StableHLO Bridge" Mechanism.**
+    -   Integrate the external `stablehlo-translate` tool into the build and execution pipeline.
+    -   The compiler driver will invoke this tool as a subprocess to serialize the textual `stablehlo` IR into a versioned, portable bytecode artifact.
+    -   This artifact is the handoff point to the vendor compilers (`xla_compile`, `neuronx-cc`).
 
-With a modernized core, this phase focuses on implementing the primary strategic goal: performant, multi-vendor support for all Tier-1 and Tier-2 hardware targets.
+-   [ ] **Task 3.3: Create Google/AWS-specific Transform Scripts.**
+    -   Author `google_tpu_strategy.mlir` and `aws_trainium_strategy.mlir`.
+    -   These scripts will perform high-level `linalg` optimizations and canonicalizations to simplify the graph before lowering to `stablehlo`.
 
-*   **Task 2.1: Implement the Declarative Optimization Framework.**
-    *   **Status: Completed**
-    *   **What:** Replaced the hardcoded C++ optimization passes with the `transform` dialect-based framework. Integrated the standard `-transform-interpreter` pass into the main compiler pipeline.
-    *   **Why:** To empower performance engineers to rapidly iterate on complex, hardware-specific optimization strategies (e.g., tiling, fusion) by editing simple MLIR scripts, which is the key to unlocking performance across multiple, diverse hardware backends.
+## Milestone 4: Advanced AWS Integration (Neuron Kernel Interface)
 
-**Pending:**
+This milestone adds expert-level performance tuning capabilities for AWS Trainium.
 
-*   **Task 2.2: Implement "Gray-Box" Lowering for Google TPU.**
-    *   **What:** Build a new compiler pass pipeline (`orchestra-lower-to-stablehlo`) that lowers `linalg` dialect operations to the `StableHLO` dialect.
-    *   **Why:** To support Google TPUs by handing off a standardized IR to Google's highly optimized, proprietary XLA compiler, leveraging their toolchain investment as a backend.
+-   [ ] **Task 4.1: Extend `orchestra.task` for NKI.**
+    -   Add an optional `nki_source` string attribute to the `orchestra.task` operation to hold custom Neuron Kernel Interface source code.
 
-*   **Task 2.3: Implement "Black-Box" Lowering for AWS Trainium.**
-    *   **What:** Utilize the `orchestra-lower-to-stablehlo` pipeline to target the AWS Neuron SDK, treating the Neuron Compiler as a black-box backend.
-    *   **Why:** To support AWS Trainium accelerators by integrating with the official, MLIR-based Neuron toolchain via the common `StableHLO` entry point.
-    *   **Sub-task:** Enhance `OrchestraIR` to support the Neuron Kernel Interface (NKI) "escape hatch" for expert-tuned, performance-critical kernels.
-
-*   **Task 2.4: Implement "White-Box" Lowering for AMD Instinct.**
-    *   **What:** Build a complete, end-to-end lowering path that converts `linalg` to the `rock` dialect and subsequently to the `amdgpu` and `rocdl` dialects.
-    *   **Why:** To achieve deep integration and co-designed optimization for AMD GPUs by leveraging the open-source `rocMLIR` kernel generator and its transparent, multi-level dialect stack.
-
-*   **Task 2.5: Enhance NVIDIA Backend for Blackwell Architecture.**
-    *   **What:** Add an architecture-aware code path to the existing NVIDIA lowering pass. When targeting Blackwell (sm_100+), generate `nvgpu.tma.*` operations for data transfer and use the `nvgpu.mbarrier` family for synchronization.
-    *   **Why:** To ensure state-of-the-art performance on the latest incumbent hardware by leveraging its most powerful and efficient primitives for data movement and synchronization.
-
-### Phase 3: Advanced Features and Finalization
-
-This final phase focuses on implementing advanced, system-level capabilities and ensuring the long-term health of the project.
-
-*   **Task 3.1: Implement the Feedback-Driven Optimization (FDO) Loop.**
-    *   **What:** Build the end-to-end FDO system, including the branch profiling pass, the `DivergenceProfile` data contract, and the JIT recompilation service integrated via a custom MLIR `Action`.
-    *   **Why:** To create a dynamic, "learning" compiler that can adapt to data-dependent workloads at runtime, unlocking performance in scenarios where static analysis is insufficient.
-
-*   **Task 3.2: Update All Documentation.**
-    *   **What:** Thoroughly review and update all project documentation, including the architectural blueprints, to reflect the new, multi-vendor architecture and modernized infrastructure.
-    *   **Why:** To ensure the project remains accessible, maintainable, and aligned with its state-of-the-art vision for all current and future developers.
+-   [ ] **Task 4.2: Implement `orchestra-lower-nki-tasks` Pass.**
+    -   This pass will identify tasks with `nki_source`, invoke the NKI compiler offline, and link the resulting custom kernel into the final executable.

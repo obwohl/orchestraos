@@ -6,7 +6,7 @@
 
 The Orchestra compiler is a functional, first-generation compiler for heterogeneous systems. The project is in a **stable, buildable, and verifiable state**, with a full test suite that passes against LLVM 20. The compiler provides a solid foundation for research and development in compiler-driven hardware orchestration.
 
-A comprehensive architectural plan, the **[Orchestra MLIR 2.0 Blueprint](../architecture/orchestra%20-%20tech%20-%20MLIR%2020%20Blueprint.md)**, exists and details the roadmap for evolving the compiler into a state-of-the-art system. However, the implementation of this blueprint has not yet begun. The project's current state is therefore that of the initial, foundational implementation.
+The project is now entering a new phase of development focused on **multi-vendor hardware support**. This evolution is guided by a series of new architectural blueprints and a detailed task list, which supersede previous plans. The goal is to evolve OrchestraOS into a true "meta-OS" for orchestrating workloads across NVIDIA, AMD, Google, and AWS accelerators.
 
 ## 2. Verified Current State
 
@@ -41,4 +41,8 @@ The current implementation does not include all of the state-of-the-art (SOTA) f
 
 ## 4. Next Steps
 
-The immediate next step for the project is to begin the implementation of the **[Orchestra MLIR 2.0 Blueprint](../architecture/orchestra%20-%20tech%20-%20MLIR%2020%20Blueprint.md)**. A detailed, prioritized roadmap for this modernization effort has been created and can be found at **[next/upgrade_plan.md](../../next/upgrade_plan.md)**.
+The project's immediate focus is the implementation of the multi-vendor support strategy. The detailed, prioritized roadmap for this work can be found in the main project task list:
+
+*   **[OrchestraOS Compiler Task List](./to_do.md)**
+
+This task list, derived from the latest architectural blueprints, outlines the concrete engineering steps for modernizing the compiler core and implementing the new backends for AMD, Google, and AWS hardware.
