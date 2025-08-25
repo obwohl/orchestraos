@@ -41,15 +41,16 @@ This phase is the highest priority and a prerequisite for all subsequent work. I
     *   **What:** Refactored the `SpeculateIfOpPattern` to improve its clarity and maintainability. The single, monolithic C++ constraint was split into two more granular and descriptive C++ constraints, making the pattern's logic easier to understand and maintain.
     *   **Why:** To improve the readability and maintainability of core transformations by separating the matching logic from the rewrite logic, aligning with modern MLIR development philosophy.
 
-**Pending:**
-
 ### Phase 2: Declarative Optimization and Multi-Vendor Backend Implementation
 
 With a modernized core, this phase focuses on implementing the primary strategic goal: performant, multi-vendor support for all Tier-1 and Tier-2 hardware targets.
 
 *   **Task 2.1: Implement the Declarative Optimization Framework.**
-    *   **What:** Replace the hardcoded C++ optimization passes with the `transform` dialect-based framework. Integrate the standard `-transform-interpreter` pass into the main compiler pipeline.
+    *   **Status: Completed**
+    *   **What:** Replaced the hardcoded C++ optimization passes with the `transform` dialect-based framework. Integrated the standard `-transform-interpreter` pass into the main compiler pipeline.
     *   **Why:** To empower performance engineers to rapidly iterate on complex, hardware-specific optimization strategies (e.g., tiling, fusion) by editing simple MLIR scripts, which is the key to unlocking performance across multiple, diverse hardware backends.
+
+**Pending:**
 
 *   **Task 2.2: Implement "Gray-Box" Lowering for Google TPU.**
     *   **What:** Build a new compiler pass pipeline (`orchestra-lower-to-stablehlo`) that lowers `linalg` dialect operations to the `StableHLO` dialect.
