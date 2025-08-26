@@ -1,3 +1,5 @@
+add_subdirectory(Rock)
+
 # This file's responsibility is to compile the C++ sources into a library.
 add_mlir_dialect_library(Orchestra
   # List of C++ source files to compile.

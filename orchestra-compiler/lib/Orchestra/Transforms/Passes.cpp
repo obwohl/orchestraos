@@ -116,4 +116,5 @@ void orchestra::registerOrchestraPasses() {
   registerLoweringToGPUPasses();
   registerLoweringToROCDLPasses();
   registerLoweringToXeGPUPasses();
+  registerLowerLinalgToRockPasses();
 }

@@ -36,6 +36,7 @@ add_library(OrchestraTransforms
   LowerOrchestraToStandard.cpp
   LowerOrchestraToGPU.cpp
   LowerOrchestraToXeGPU.cpp
+  LowerLinalgToRock.cpp
   LowerOrchestraToROCDL.cpp
 )
 
