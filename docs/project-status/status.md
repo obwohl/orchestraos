@@ -18,12 +18,11 @@ This section provides a verified, at-a-glance view of implemented features, alig
     *   ✅ **`orchestra.schedule`**: Implemented with a verifier for unique task IDs.
     *   ✅ **`orchestra.task`**: The `target` attribute schema is now finalized and enforced by a verifier.
     *   ✅ **`orchestra.transfer`**: Implemented with canonicalization patterns and a verifier for its attributes.
-    *   ✅ **`orchestra.commit`**: Implemented as a `MemRef`-to-`MemRef` op representing data commitment, not as a simple token.
-    *   ✅ **`orchestra.select`**: Implemented for conditional selection, replacing the old functionality of `orchestra.commit`.
+    *   ✅ **`orchestra.commit`**: Implemented for conditional selection, as per the architectural specification.
     *   🟡 **MLIR Properties Migration**: In progress. The dialect-wide `usePropertiesForAttributes` flag has been enabled, automatically migrating simple inherent attributes (like on `orchestra.transfer`) to property-based storage. Complex attributes (like the `DictionaryAttr` on `orchestra.task`) require custom attribute classes for structured access and are being handled separately.
 
 *   **✅ Transformation & Optimization Framework**
-    *   ✅ **Speculative Execution**: The `--divergence-to-speculation` pass is enabled and correctly lowers `scf.if` to `orchestra.task` and `orchestra.select`. It is **not** disabled.
+    *   ✅ **Speculative Execution**: The `--divergence-to-speculation` pass is enabled and correctly lowers `scf.if` to `orchestra.task` and `orchestra.commit`. It is **not** disabled.
     *   ✅ **Declarative Optimization**: The `-transform-interpreter` is integrated. A test for producer-consumer fusion (`fusion-test.mlir`) is working.
 
 *   **🟡 Backend Lowering Paths**

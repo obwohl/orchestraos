@@ -100,7 +100,7 @@ void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
 }
 
 // Verifies the consistency of operand and result types and sizes.
-mlir::LogicalResult SelectOp::verify() {
+mlir::LogicalResult CommitOp::verify() {
   int32_t num_true = getNumTrue();
   // HACK: The generic op parser does not seem to initialize the property.
   // We manually read the attribute from the dictionary if the property has
@@ -134,17 +134,6 @@ mlir::LogicalResult SelectOp::verify() {
     }
   }
 
-  return mlir::success();
-}
-
-// Verifies that the operand and result are both MemRefTypes.
-mlir::LogicalResult CommitOp::verify() {
-  if (!getOperand().getType().isa<MemRefType>()) {
-    return emitOpError("operand must be a MemRefType");
-  }
-  if (!getResult().getType().isa<MemRefType>()) {
-    return emitOpError("result must be a MemRefType");
-  }
   return mlir::success();
 }
 

@@ -41,29 +41,7 @@ def Orchestra_ScheduleOp : Orchestra_Op<"schedule", []> {
 
 
 
-def Orchestra_CommitOp : Orchestra_Op<"commit", [AllTypesMatch<["operand", "result"]>]> {
-  let summary = "Commits a value to a specific memory space.";
-
-  let description = [{
-    Represents the explicit commitment of a value to a specific memory space.
-    This operation is a hint to the scheduler that the value is ready and
-    can be moved to the target memory.
-  }];
-
-  let arguments = (ins
-    AnyMemRef:$operand
-  );
-
-  let results = (outs
-    AnyMemRef:$result
-  );
-
-  let hasVerifier = 1;
-
-  let assemblyFormat = "$operand attr-dict `:` type($operand)";
-}
-
-def Orchestra_SelectOp : Orchestra_Op<"select", []> {
+def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
   let summary = "Selects between two sets of values based on a condition.";
 
   let description = [{

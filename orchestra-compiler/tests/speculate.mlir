@@ -4,7 +4,7 @@
 // CHECK-NOT: scf.if
 // CHECK: %[[THEN_TASK:.*]] = "orchestra.task"() <{target = {arch = "unknown", device_id = 0 : i32}}>
 // CHECK: %[[ELSE_TASK:.*]] = "orchestra.task"() <{target = {arch = "unknown", device_id = 0 : i32}}>
-// CHECK: "orchestra.select"(%arg0, %[[THEN_TASK]], %[[ELSE_TASK]])
+// CHECK: "orchestra.commit"(%arg0, %[[THEN_TASK]], %[[ELSE_TASK]])
 func.func @test_speculate_candidate(%arg0: i1, %arg1: f32, %arg2: f32) -> f32 {
   %0 = scf.if %arg0 -> (f32) {
     %1 = arith.addf %arg1, %arg1 : f32
