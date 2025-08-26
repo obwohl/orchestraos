@@ -3,7 +3,7 @@
 "orchestra.schedule"() ({
   // CHECK: error: 'orchestra.task' op 'arch' key in 'target' dictionary cannot be empty
   "orchestra.task"() <{target = { arch = "" }}> ({
-    "orchestra.return"() : () -> ()
+    "orchestra.yield"() : () -> ()
   }) : () -> ()
-  "orchestra.return"() : () -> ()
+  "orchestra.yield"() : () -> ()
 }) : () -> ()

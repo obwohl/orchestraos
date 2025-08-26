@@ -12,14 +12,15 @@ This section provides a verified, at-a-glance view of implemented features, alig
 
 *   **✅ Build & Test Environment**
     *   The project builds successfully using CMake/Ninja against LLVM 20.
-    *   The full `lit` test suite (`check-orchestra`) passes (16/16 tests).
+    *   The full `lit` test suite (`check-orchestra`) passes (14/14 tests).
 
 *   **✅ Core Dialect: `OrchestraIR`**
-    *   ✅ **`orchestra.schedule`**: Implemented with a verifier for unique task IDs.
-    *   ✅ **`orchestra.task`**: The `target` attribute schema is now finalized and enforced by a verifier.
+    *   ✅ **`orchestra.schedule`**: Implemented with a verifier that checks for valid child operations.
+    *   ✅ **`orchestra.task`**: Modernized with a C++ helper class (`OrchestraTarget`) that provides a type-safe API for the `target` attribute. The verifier now uses this class to enforce the schema.
     *   ✅ **`orchestra.transfer`**: Implemented with canonicalization patterns and a verifier for its attributes.
-    *   ✅ **`orchestra.commit`**: Implemented for conditional selection, as per the architectural specification.
-    *   🟡 **MLIR Properties Migration**: In progress. The dialect-wide `usePropertiesForAttributes` flag has been enabled, automatically migrating simple inherent attributes (like on `orchestra.transfer`) to property-based storage. Complex attributes (like the `DictionaryAttr` on `orchestra.task`) require custom attribute classes for structured access and are being handled separately.
+    *   ✅ **`orchestra.commit`**: Implemented for conditional selection.
+    *   ✅ **`orchestra.yield`**: The dialect's terminator is now consistently named `yield`.
+    *   ❌ **MLIR Properties Migration**: The planned migration to the MLIR Property system for `orchestra.task` was blocked by a persistent TableGen bug in MLIR 20.1.8. The current C++ helper class is a robust workaround.
 
 *   **✅ Transformation & Optimization Framework**
     *   ✅ **Speculative Execution**: The `--divergence-to-speculation` pass is enabled and correctly lowers `scf.if` to `orchestra.task` and `orchestra.commit`. It is **not** disabled.
@@ -37,11 +38,8 @@ This section provides a verified, at-a-glance view of implemented features, alig
 This section serves as the new, verified to-do list for the project.
 
 *   **Milestone 1: Foundational Architectural Enhancements**
-    *   ✅ **Task 1.1: Finalize `orchestra.task` Target Schema.** Define and enforce a formal schema for the `target` property on `orchestra.task`, including a mandatory `arch` key and optional, target-specific keys.
-    *   🟡 **Task 1.2: Migrate to MLIR Properties System.**
-        *   ✅ **Task 1.2.1: Enable Dialect-wide Property Storage.** The `usePropertiesForAttributes` flag is enabled, transparently converting storage for all inherent attributes.
-        *   ✅ **Task 1.2.2: Add Verifier for `orchestra.transfer`**. A verifier was added to ensure the correctness of its attributes, which now use property storage.
-        *   ✅ **Task 1.2.3: Fortify verifier for `orchestra.task`**. As a pragmatic first step, the C++ verifier has been strengthened to require a `device_id`, increasing the type safety of the `target` attribute. The full custom attribute class is deferred.
+    *   ✅ **Task 1.1: Modernize `orchestra.task` and Normalize Terminators.** The `orchestra.task` operation has been modernized with a type-safe C++ helper class for its `target` attribute, and `orchestra.return` has been renamed to `orchestra.yield` for consistency.
+    *   ❌ **Task 1.2: Migrate to MLIR Properties System.** This task is now blocked pending a future upgrade of the MLIR dependency. The `Property` system in MLIR 20.1.8 has a code generation bug that prevents its use for `orchestra.task`. The C++ helper class serves as a robust workaround.
 
 *   **Milestone 2: AMD GPU Support (rocMLIR Integration)**
     *   [ ] **Task 2.1: Implement `linalg-to-rock` Lowering.** Create a new pass to lower `linalg.generic` operations to the `rock` dialect, guided by the `rocMLIR` kernel generator "contract".

@@ -3,7 +3,7 @@
 "orchestra.schedule"() ({
   // CHECK: error: 'orchestra.task' op requires a string 'arch' key in the 'target' dictionary
   "orchestra.task"() <{target = { not_arch = "foo" }}> ({
-    "orchestra.return"() : () -> ()
+    "orchestra.yield"() : () -> ()
   }) : () -> ()
-  "orchestra.return"() : () -> ()
+  "orchestra.yield"() : () -> ()
 }) : () -> ()

@@ -3,7 +3,7 @@
 "orchestra.schedule"() ({
   // CHECK: error: 'orchestra.task' op requires an 'device_id' key in the 'target' dictionary
   "orchestra.task"() <{target = {arch = "cpu"}}> ({
-    "orchestra.return"() : () -> ()
+    "orchestra.yield"() : () -> ()
   }) : () -> ()
-  "orchestra.return"() : () -> ()
+  "orchestra.yield"() : () -> ()
 }) : () -> ()

@@ -9,48 +9,18 @@
 using namespace mlir;
 using namespace orchestra;
 
-// Verifies the schema of the 'target' attribute.
+// Verifies the schema of the 'target' attribute using the helper class.
 mlir::LogicalResult TaskOp::verify() {
-  auto targetAttr = getTarget();
-  if (!targetAttr) {
-    return emitOpError("requires a 'target' attribute");
-  }
-
-  auto dictAttr = targetAttr.dyn_cast<DictionaryAttr>();
-  if (!dictAttr) {
-    return emitOpError("requires 'target' attribute to be a dictionary");
-  }
-
-  auto archAttr = dictAttr.get("arch").dyn_cast_or_null<StringAttr>();
-  if (!archAttr) {
-    return emitOpError(
-        "requires a string 'arch' key in the 'target' dictionary");
-  }
-
-  if (archAttr.getValue().empty()) {
-    return emitOpError("'arch' key in 'target' dictionary cannot be empty");
-  }
-
-  // Verify that 'device_id' exists and is an integer.
-  auto deviceIdAttr = dictAttr.get("device_id");
-  if (!deviceIdAttr) {
-    return emitOpError("requires an 'device_id' key in the 'target' dictionary");
-  }
-
-  if (!deviceIdAttr.isa<IntegerAttr>()) {
-    return emitOpError("'device_id' key in 'target' dictionary must be an integer");
-  }
-
-  return mlir::success();
+  return getOrchestraTarget().verify(getOperation());
 }
 
 // Verifies that the body of a schedule only contains orchestra.task operations.
 mlir::LogicalResult ScheduleOp::verify() {
   for (auto &op : getBody().front()) {
-    if (!isa<TaskOp, ReturnOp>(op)) {
+    if (!isa<TaskOp, YieldOp>(op)) {
       return op.emitOpError(
-          "only 'orchestra.task' operations are allowed inside a "
-          "'orchestra.schedule'");
+          "only 'orchestra.task' and 'orchestra.yield' operations are allowed "
+          "inside a 'orchestra.schedule'");
     }
   }
   return mlir::success();

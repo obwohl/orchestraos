@@ -24,6 +24,12 @@ def Orchestra_TaskOp : Orchestra_Op<"task", []> {
 
   let regions = (region SizedRegion<1>:$body);
 
+  let extraClassDeclaration = [{
+    OrchestraTarget getOrchestraTarget() {
+      return OrchestraTarget(getTarget());
+    }
+  }];
+
   // Enable the custom C++ verifier.
   let hasVerifier = 1;
 }
@@ -82,8 +88,8 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
 }
 
-def Orchestra_ReturnOp : Orchestra_Op<"return", [Terminator]> {
-  let summary = "A return operation for the orchestra dialect.";
+def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {
+  let summary = "A yield operation for the orchestra dialect.";
   let arguments = (ins Variadic<AnyType>:$operands);
   let results = (outs);
 }

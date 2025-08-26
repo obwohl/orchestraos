@@ -65,8 +65,8 @@ static void cloneAndRemap(mlir::Region &sourceRegion,
     yieldOperands.push_back(mapper.lookupOrDefault(operand));
   }
   // The destination region belongs to an orchestra.task, which needs an
-  // orchestra.return terminator.
-  rewriter.create<orchestra::ReturnOp>(sourceYield.getLoc(), yieldOperands);
+  // orchestra.yield terminator.
+  rewriter.create<orchestra::YieldOp>(sourceYield.getLoc(), yieldOperands);
 }
 
 #include "SpeculateIfOp.pdll.inc"
