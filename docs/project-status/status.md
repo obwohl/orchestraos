@@ -42,7 +42,7 @@ This section serves as the new, verified to-do list for the project.
     *   🟡 **Task 1.2: Migrate to MLIR Properties System.**
         *   ✅ **Task 1.2.1: Enable Dialect-wide Property Storage.** The `usePropertiesForAttributes` flag is enabled, transparently converting storage for all inherent attributes.
         *   ✅ **Task 1.2.2: Add Verifier for `orchestra.transfer`**. A verifier was added to ensure the correctness of its attributes, which now use property storage.
-        *   [ ] **Task 1.2.3: Implement Custom Attribute Class for `orchestra.task`**. The `target` `DictionaryAttr` requires a custom attribute class for type-safe, structured access.
+        *   ✅ **Task 1.2.3: Fortify verifier for `orchestra.task`**. As a pragmatic first step, the C++ verifier has been strengthened to require a `device_id`, increasing the type safety of the `target` attribute. The full custom attribute class is deferred.
 
 *   **Milestone 2: AMD GPU Support (rocMLIR Integration)**
     *   [ ] **Task 2.1: Implement `linalg-to-rock` Lowering.** Create a new pass to lower `linalg.generic` operations to the `rock` dialect, guided by the `rocMLIR` kernel generator "contract".

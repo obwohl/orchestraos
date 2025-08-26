@@ -56,7 +56,11 @@ Rewrite RewriteSpeculativeIf(op: Op) -> (ValueRange) [{
   // Create the target attribute.
   mlir::Builder builder(ifOp.getContext());
   auto archAttr = builder.getStringAttr("unknown");
-  auto targetAttr = builder.getDictionaryAttr({builder.getNamedAttr("arch", archAttr)});
+  auto deviceIdAttr = builder.getI32IntegerAttr(0);
+  auto targetAttr = builder.getDictionaryAttr({
+    builder.getNamedAttr("arch", archAttr),
+    builder.getNamedAttr("device_id", deviceIdAttr)
+  });
 
   rewriter.setInsertionPoint(op);
   auto thenExternalValues = getUsedExternalValues(ifOp.getThenRegion());

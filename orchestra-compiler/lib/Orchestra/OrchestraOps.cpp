@@ -31,6 +31,16 @@ mlir::LogicalResult TaskOp::verify() {
     return emitOpError("'arch' key in 'target' dictionary cannot be empty");
   }
 
+  // Verify that 'device_id' exists and is an integer.
+  auto deviceIdAttr = dictAttr.get("device_id");
+  if (!deviceIdAttr) {
+    return emitOpError("requires an 'device_id' key in the 'target' dictionary");
+  }
+
+  if (!deviceIdAttr.isa<IntegerAttr>()) {
+    return emitOpError("'device_id' key in 'target' dictionary must be an integer");
+  }
+
   return mlir::success();
 }
 
