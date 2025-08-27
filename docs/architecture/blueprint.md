@@ -480,46 +480,66 @@ The successful implementation of a complex compiler depends not only on the qual
 
 Code-Snippet
 
-// In OrchestraOps.td  
-\#ifndef ORCHESTRA\_OPS  
-\#define ORCHESTRA\_OPS
+// In OrchestraOps.td
+#ifndef ORCHESTRA_OPS
+#define ORCHESTRA_OPS
 
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def Orchestra\_Dialect : Dialect {  
-  let name \= "orchestra";  
-  let cppNamespace \= "::mlir::orchestra";  
-  let summary \= "A dialect for high-level orchestration of heterogeneous systems.";  
-  let usePropertiesForAttributes \= 1;  
+def Orchestra_Dialect : Dialect {
+  let name = "orchestra";
+  let cppNamespace = "::mlir::orchestra";
+  let summary = "A dialect for high-level orchestration of heterogeneous systems.";
+  // This flag ensures all attributes defined in 'arguments' are stored
+  // efficiently as properties.
+  let usePropertiesForAttributes = 1;
 }
 
-class Orchestra\_Op\<string mnemonic, list\<Trait\> traits \=\> :  
-    Op\<Orchestra\_Dialect, mnemonic, traits\>;
+class Orchestra_Op<string mnemonic, list<Trait> traits = []> :
+    Op<Orchestra_Dialect, mnemonic, traits>;
 
-//... (Full ODS for orchestra.schedule, orchestra.task, etc. as specified in Section 4)...
+// ... (Full ODS for orchestra.schedule, etc. would go here) ...
 
-def Orchestra\_TaskOp : Orchestra\_Op\<"task",\> {  
-  let summary \= "An asynchronous unit of computation assigned to a resource.";  
-  let arguments \= (ins Variadic\<AnyType\>:$operands);  
-  let results \= (outs Variadic\<AnyType\>:$results);  
-  let regions \= (region AnyRegion:$body);  
-  let properties \=;  
-  let hasVerifier \= 1;  
+def Orchestra_TaskOp : Orchestra_Op<"task", [SingleBlockImplicitTerminator<"YieldOp">]> {
+  let summary = "An asynchronous unit of computation assigned to a resource.";
+  let description = [{
+    Represents a unit of computation assigned to a hardware resource.
+    The `target` attribute dictionary specifies scheduling and hardware constraints.
+  }];
+
+  let arguments = (ins
+    // The `target` attribute is a dictionary containing hardware info
+    // like `arch` and `device_id`. It is stored as a property.
+    DictAttr:$target,
+    Variadic<AnyType>:$operands
+  );
+  let results = (outs Variadic<AnyType>:$results);
+
+  let regions = (region AnyRegion:$body);
+  let hasVerifier = 1;
 }
 
-def Orchestra\_CommitOp : Orchestra\_Op\<"commit",\> {  
-  let summary \= "Selects between two sets of values based on a condition.";  
-  let arguments \= (ins I1:$condition, Variadic\<AnyType\>:$values);  
-  let results \= (outs Variadic\<AnyType\>:$results);  
-  let properties \= \[  
-    Property\<"num\_true", "::mlir::IntegerAttr",  
-             "Number of values belonging to the 'true' branch."\>  
-  \];  
-  let hasVerifier \= 1;  
-  let hasCanonicalizer \= 1;  
+def Orchestra_CommitOp : Orchestra_Op<"commit", []> {
+  let summary = "Selects between two sets of values based on a condition.";
+  let description = [{
+    Selects one set of values from a combined list based on a condition.
+    If the condition is true, the first `num_true` values are returned;
+    otherwise, the remaining values are returned.
+  }];
+
+  let arguments = (ins
+    I1:$condition,
+    Variadic<AnyType>:$values,
+    // The `num_true` attribute is stored as a property.
+    I64Attr:$num_true
+  );
+  let results = (outs Variadic<AnyType>:$results);
+
+  let hasVerifier = 1;
+  let hasCanonicalizer = 1;
 }
 
-\#endif // ORCHESTRA\_OPS
+#endif // ORCHESTRA_OPS
 
 #### **DivergenceProfile.proto**
 
