@@ -19,3 +19,5 @@ add_mlir_dialect_library(Orchestra
   MLIRSupport
   MLIRParser
 )
+
+add_subdirectory(Dialects)

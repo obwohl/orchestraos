@@ -50,6 +50,9 @@ mlir_tablegen(OrchestraCanonicalization.h.inc -gen-rewriters -I ${MLIR_INCLUDE_D
 list(APPEND ORCHESTRA_INCGEN_HDRS
   "${CMAKE_CURRENT_BINARY_DIR}/OrchestraCanonicalization.h.inc")
 
+# --- Add subdirectories for dialects ---
+add_subdirectory(Dialects)
+
 # --- Create a single dependency target ---
 # This creates a CMake target that represents all the generated files.
 # The C++ library in the../lib/Orchestra directory can then simply

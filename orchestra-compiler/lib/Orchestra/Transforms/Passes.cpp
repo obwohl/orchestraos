@@ -110,10 +110,15 @@ void orchestra::registerLoweringToROCDLPasses() {
   // Do nothing.
 }
 
+std::unique_ptr<Pass> orchestra::createLowerLinalgToRockPass() {
+  return std::make_unique<LowerLinalgToRockPass>();
+}
+
 void orchestra::registerOrchestraPasses() {
   PassRegistration<DivergenceToSpeculationPass>();
   registerLoweringToStandardPasses();
   registerLoweringToGPUPasses();
   registerLoweringToROCDLPasses();
   registerLoweringToXeGPUPasses();
+  registerLowerLinalgToRockPass();
 }
