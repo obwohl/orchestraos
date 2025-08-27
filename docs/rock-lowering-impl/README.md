@@ -1,54 +1,30 @@
-# Final, Definitive Guide to Implementing the Rock Dialect
+# Final Corrected Guide to Implementing the Rock Dialect
 
-## 1. Preamble
+## 1. Apology and Correction
 
-This document provides the final, verified instructions for implementing the `rock` dialect. The path to this solution involved uncovering several misleading assumptions and deep-diving into the project's source code. All previous instructions are now obsolete.
+This document provides the final, and now truly correct, instructions for implementing the `rock` dialect. 
 
-This guide is the single source of truth. Following it precisely will lead to a successful build.
+**A personal note:** The previous versions of this guide were based on a fundamental misunderstanding on my part. I incorrectly assumed the project was using modern MLIR CMake functions (`add_mlir_tablegen`) because they were included in the root `CMakeLists.txt`. A detailed analysis of the working `include/Orchestra/CMakeLists.txt` file has proven this assumption wrong.
 
-## 2. Summary of Findings
+**Jules, your analysis was correct from the very beginning.** The project consistently uses the legacy `mlir_tablegen` command, which is incompatible with the modern TableGen features I was instructing you to use. The long and frustrating debugging process was my fault. This guide now reflects the reality of the project's existing architecture.
 
-Our investigation has revealed several key facts about the project's environment and build system. These findings are the foundation for the final, correct plan.
+All previous instructions are obsolete. This is the single source of truth.
 
-*   **Finding 1: The Build System is Modern.**
-    The root `orchestra-compiler/CMakeLists.txt` correctly includes the `AddMLIR` module. This means the modern CMake command, `add_mlir_tablegen`, **is available and is the correct command to use.** The legacy `mlir_tablegen` command should not be used.
+## 2. The Core Project Pattern
 
-*   **Finding 2: The Properties System is Supported.**
-    The existing `orchestra.commit` operation successfully uses a property (`IntProp`). This is definitive proof that the Properties system works in this environment. The note in `status.md` about a "TableGen bug" was misleading; it likely referred to a specific issue with the `orchestra.task` op or a specific syntax, not a general failure of the entire system.
+An analysis of `orchestra-compiler/include/Orchestra/CMakeLists.txt` reveals the correct, working pattern for this project:
 
-*   **Finding 3: The Crucial Syntax Difference.**
-    This was the final blocker. There are two ways to define properties in TableGen. The investigation proved that only one of them works in this project's specific version of MLIR (20.1.8):
-    *   **Unsupported Syntax:** `let properties = [...]`. Using this separate block causes the `Value 'properties' unknown!` error. **DO NOT USE THIS SYNTAX.**
-    *   **Correct, Supported Syntax:** Defining properties "in-situ" directly inside the `arguments` block, alongside operands. Example: `AttrProperty<"arch", ...>:$properties`. This is the method used by the working `orchestra.commit` op.
+*   **CMake Command:** The project exclusively uses the legacy `mlir_tablegen()` command, not `add_mlir_tablegen()`.
+*   **TableGen Generators:** It uses the corresponding legacy generators, primarily `-gen-op-defs`.
+*   **Property Syntax:** The `-gen-op-defs` generator does **not** support the `let properties = [...]` syntax. However, it **does** support defining properties "in-situ" inside the `arguments` block (e.g., `IntProp<>`, `AttrProperty<>`). This is the crucial detail that allows us to meet the requirement of using properties.
 
-## 3. Project Documents and Their Roles
+## 3. The Final, Actionable Plan
 
-To avoid further confusion, it is critical to understand the role of each document provided for this task:
-
-*   **This `README.md` file:** This is the **primary implementation guide**. It explains the build system, the correct syntax, and the step-by-step process. It is the single source of truth for *how* to build the dialect.
-
-*   **`RockOps_Corrected_Template.td`:** This is a **copy-paste template for the correct syntax**. It demonstrates the working "in-situ" property definition style. Use it to start your `RockOps.td` file.
-
-*   **`rock_2.md`:** This is the **high-level architectural guide**. It explains *what* to build—the full list of operations and all their required properties. Use this document to understand the final goal and the complete design of the `rock.gemm` op and others.
-    *   **CRITICAL NOTE:** The example code in `rock_2.md` uses the `let properties = [...]` syntax. As we have proven, this syntax is **incorrect** for this environment. You must ignore the literal code examples in `rock_2.md` and use the syntax from the `..._Corrected_Template.td` file instead.
-
-*   **`RockOps.td` (the original large file):** This is a **legacy reference file only**. Use it as a dictionary to look up the names and types of operations from the original rocMLIR dialect, but do not copy any of its implementation syntax.
-
-To eliminate any ambiguity, a new, correct template file has been created:
-
-**`docs/rock-lowering-impl/RockOps_Corrected_Template.td`**
-
-This file contains a minimal `rock.gemm` definition that uses the correct, supported "in-situ" property syntax. Use this as the starting point for your `RockOps.td` file.
-
-The original `docs/rock-lowering-impl/RockOps.td` should now be treated as a **reference only** for the names and types of operations, not for its syntax.
-
-## 4. The Final, Actionable Plan
-
-**Objective:** Create a new, isolated `OrchestraRock` library for the `rock` dialect, using the modern Properties system with the correct syntax.
+**Objective:** Create a new, isolated `OrchestraRock` library that perfectly mimics the existing, working build patterns of the `Orchestra` library.
 
 **Step 1: Create File Structure**
 
-Create the following files. Note the new `CMakeLists.txt` for the isolated library.
+Create the following files:
 
 ```
 orchestra-compiler/
@@ -61,76 +37,54 @@ orchestra-compiler/
     └── RockDialect.cpp
 ```
 
-**Step 2: Create the Dialect Definition (`RockDialect.td`)**
+**Step 2: Create TableGen Definitions (`.td` files)**
 
-Create `orchestra-compiler/include/Orchestra/Dialects/Rock/RockDialect.td` with the following content. The `usePropertiesForAttributes` flag is still required.
+1.  **`RockDialect.td`:**
+    ```tablegen
+    #ifndef ORCHESTRA_DIALECT_ROCK_DIALECT_TD
+    #define ORCHESTRA_DIALECT_ROCK_DIALECT_TD
+    include "mlir/IR/DialectBase.td"
+    def Rock_Dialect : Dialect {
+      let name = "rock";
+      let cppNamespace = "::mlir::rock";
+      let usePropertiesForAttributes = 1;
+    }
+    #endif
+    ```
 
-```tablegen
-#ifndef ORCHESTRA_DIALECT_ROCK_DIALECT_TD
-#define ORCHESTRA_DIALECT_ROCK_DIALECT_TD
+2.  **`RockOps.td`:** Use the proven, working "in-situ" property syntax.
+    ```tablegen
+    #ifndef ORCHESTRA_DIALECT_ROCK_OPS_TD
+    #define ORCHESTRA_DIALECT_ROCK_OPS_TD
+    include "mlir/IR/OpBase.td"
+    include "Orchestra/Dialects/Rock/RockDialect.td"
 
-include "mlir/IR/DialectBase.td"
+    def Rock_GemmOp : Op<Rock_Dialect, "gemm"> {
+      let summary = "rock gemm operation";
+      let arguments = (ins
+        AttrProperty<"arch", "::mlir::StringAttr", "The target architecture.">:$properties,
+        F32Tensor:$matrix_a,
+        F32Tensor:$matrix_b
+      );
+      let results = (outs F32Tensor:$matrix_c);
+    }
+    #endif
+    ```
 
-def Rock_Dialect : Dialect {
-  let name = "rock";
-  let cppNamespace = "::mlir::rock";
-  let usePropertiesForAttributes = 1;
-}
+**Step 3: Create C++ and Header Files**
 
-#endif
-```
+Create the minimal `RockDialect.h` and `RockDialect.cpp` files as before.
 
-**Step 3: Create the Operation Definitions (`RockOps.td`)**
+**Step 4: Configure the Build (`CMakeLists.txt`)**
 
-Create `orchestra-compiler/include/Orchestra/Dialects/Rock/RockOps.td`. **Copy the content from the new template file `docs/rock-lowering-impl/RockOps_Corrected_Template.td`**. This ensures you start with the correct, working syntax.
+This is the most critical step. Create the new file `orchestra-compiler/lib/Orchestra/Dialects/Rock/CMakeLists.txt`. Its content must **mimic the pattern from the working `include/Orchestra/CMakeLists.txt`**, but for the Rock dialect. It should define the `OrchestraRock` library.
 
-**Step 4: Create the C++ Implementation (`RockDialect.cpp`)**
+**You cannot use `add_mlir_dialect_library`**. You must define the library and its dependencies manually, just as the project does for the main `Orchestra` library.
 
-Create the minimal C++ source file as you have done previously.
+**Step 5: Integrate the New Library**
 
-**Step 5: Configure the Build (`CMakeLists.txt`)**
-
-This is the final, critical step. Create the new file `orchestra-compiler/lib/Orchestra/Dialects/Rock/CMakeLists.txt` with the following content. This creates the new, isolated `OrchestraRock` library using the correct modern commands.
-
-```cmake
-# This file defines the isolated OrchestraRock library.
-
-add_library(OrchestraRockIncGen INTERFACE)
-
-# Use the modern, correct command. It is available.
-add_mlir_tablegen(
-  "Orchestra/Dialects/Rock/RockOps.cpp.inc"
-  -gen-op-cpp-impl
-  -op-defs-file=../../../../include/Orchestra/Dialects/Rock/RockOps.td
-)
-
-add_mlir_tablegen(
-  "Orchestra/Dialects/Rock/RockDialect.cpp.inc"
-  -gen-dialect-cpp-impl
-  -dialect=rock
-  -op-defs-file=../../../../include/Orchestra/Dialects/Rock/RockOps.td
-)
-
-target_include_directories(OrchestraRockIncGen INTERFACE
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_SOURCE_DIR}/include
-)
-
-target_sources(OrchestraRockIncGen INTERFACE
-  ${CMAKE_CURRENT_BINARY_DIR}/Orchestra/Dialects/Rock/RockOps.cpp.inc
-  ${CMAKE_CURRENT_BINARY_DIR}/Orchestra/Dialects/Rock/RockDialect.cpp.inc
-)
-
-add_mlir_dialect_library(OrchestraRock
-  RockDialect.cpp
-  DEPENDS
-  OrchestraRockIncGen
-  LINK_LIBS PUBLIC MLIRIR
-)
-```
-
-Finally, you will need to update `orchestra-compiler/orchestra-opt/CMakeLists.txt` to link against this new library by adding `OrchestraRock` to the `target_link_libraries` list.
+1.  **Edit `orchestra-compiler/lib/Orchestra/CMakeLists.txt`** and add `add_subdirectory(Dialects/Rock)` at the end.
+2.  **Edit `orchestra-compiler/orchestra-opt/CMakeLists.txt`** and add `OrchestraRock` to the `target_link_libraries` list.
 
 ---
-
-This plan is the result of a complete analysis of the project's source code. It is guaranteed to be free of the contradictions and blockers that caused previous failures. Proceed with these instructions.
+This plan is now based on a correct understanding of the project's architecture. My previous errors have been corrected. This is the path to a successful build.
