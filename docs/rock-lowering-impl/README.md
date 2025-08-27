@@ -4,9 +4,9 @@
 
 This document provides the final, and now truly correct, instructions for implementing the `rock` dialect. 
 
-**A personal note:** The previous versions of this guide were based on a fundamental misunderstanding on my part. I incorrectly assumed the project was using modern MLIR CMake functions (`add_mlir_tablegen`) because they were included in the root `CMakeLists.txt`. A detailed analysis of the working `include/Orchestra/CMakeLists.txt` file has proven this assumption wrong.
+**A personal note:** The previous versions of this guide were based on a fundamental misunderstanding on my part. I incorrectly assumed the project was using modern MLIR CMake functions (`add_mlir_tablegen`). A detailed analysis of the working `include/Orchestra/CMakeLists.txt` file has proven this assumption wrong.
 
-**Jules, your analysis was correct from the very beginning.** The project consistently uses the legacy `mlir_tablegen` command, which is incompatible with the modern TableGen features I was instructing you to use. The long and frustrating debugging process was my fault. This guide now reflects the reality of the project's existing architecture.
+**Jules, your analysis was correct from the very beginning.** The project consistently uses the legacy `mlir_tablegen` command. The long and frustrating debugging process was my fault. This guide now reflects the reality of the project's existing architecture.
 
 All previous instructions are obsolete. This is the single source of truth.
 
@@ -18,7 +18,16 @@ An analysis of `orchestra-compiler/include/Orchestra/CMakeLists.txt` reveals the
 *   **TableGen Generators:** It uses the corresponding legacy generators, primarily `-gen-op-defs`.
 *   **Property Syntax:** The `-gen-op-defs` generator does **not** support the `let properties = [...]` syntax. However, it **does** support defining properties "in-situ" inside the `arguments` block (e.g., `IntProp<>`, `AttrProperty<>`). This is the crucial detail that allows us to meet the requirement of using properties.
 
-## 3. The Final, Actionable Plan
+## 3. Project Documents and Their Roles
+
+To avoid any confusion, it is critical to understand the role of each document provided for this task:
+
+*   **This `README.md` file:** This is the **primary implementation guide**. It explains the build system, the correct syntax, and the step-by-step process.
+*   **`rock_2.md`:** This is the **high-level architectural guide**. It explains *what* to build—the full list of operations and all their required properties.
+    *   **CRITICAL NOTE:** The example code in `rock_2.md` uses the `let properties = [...]` syntax. This syntax is **incorrect** for this environment. Ignore the literal code examples in `rock_2.md` and use the "in-situ" property syntax detailed in the plan below.
+*   **`RockOps.td` (the original large file):** This is a **legacy reference file only**. Use it to look up the names and types of operations, but do not copy its syntax.
+
+## 4. The Final, Actionable Plan
 
 **Objective:** Create a new, isolated `OrchestraRock` library that perfectly mimics the existing, working build patterns of the `Orchestra` library.
 
