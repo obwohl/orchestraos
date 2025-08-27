@@ -65,3 +65,6 @@ add_custom_target(OrchestraIncGen ALL
 # useful for IDE integration or other build system logic.
 set(ORCHESTRA_INCGEN_HDRS ${ORCHESTRA_INCGEN_HDRS} PARENT_SCOPE)
 set(ORCHESTRA_INCGEN_SRCS ${ORCHESTRA_INCGEN_SRCS} PARENT_SCOPE)
+
+# Add the Rock dialect as a subdirectory.
+add_subdirectory(Dialects/Rock)
