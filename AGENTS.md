@@ -10,8 +10,6 @@ The core of the project is the `orchestra-compiler`, which implements a custom M
 
 This section outlines the mandatory protocol for working on this repository.
 
-### Core Principles
-
 ### The Development Cycle
 
 1.  **Sanity Check:** Before starting any new work, test the project as it is to ensure the baseline is stable. If this fails, your first task is to fix it.
