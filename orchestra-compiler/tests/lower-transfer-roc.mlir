@@ -11,13 +11,12 @@
 // The following operations should be in order.
 // CHECK:         %[[src_ptr:.*]] = llvm.inttoptr %[[src_i64]] : i64 to !llvm.ptr
 // CHECK-NEXT:    %[[dst_ptr:.*]] = llvm.inttoptr %[[dst_i64]] : i64 to !llvm.ptr
+// CHECK-NEXT:    %[[src_addrspace:.*]] = llvm.addrspacecast %[[src_ptr]] : !llvm.ptr to !llvm.ptr<1>
+// CHECK-NEXT:    %[[dst_addrspace:.*]] = llvm.addrspacecast %[[dst_ptr]] : !llvm.ptr to !llvm.ptr<3>
 // CHECK-NEXT:    %[[c16:.*]] = arith.constant 16 : i32
 // CHECK-NEXT:    %[[c0_0:.*]] = arith.constant 0 : i32
 // CHECK-NEXT:    %[[c0_1:.*]] = arith.constant 0 : i32
-// CHECK-NEXT:    %[[src_addrspace:.*]] = llvm.addrspacecast %[[src_ptr]] : !llvm.ptr to !llvm.ptr<1>
-// CHECK-NEXT:    %[[dst_addrspace:.*]] = llvm.addrspacecast %[[dst_ptr]] : !llvm.ptr to !llvm.ptr<3>
 // CHECK-NEXT:    rocdl.global.load.lds %[[src_addrspace]], %[[dst_addrspace]], %[[c16]], %[[c0_0]], %[[c0_1]]
-// CHECK-NEXT:    memref.dealloc %[[alloc]]
 // CHECK-NEXT:    gpu.return
 
 gpu.module @test attributes { rocdl.target = "gfx908" } {

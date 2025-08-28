@@ -1,3 +1,4 @@
+#include "Orchestra/Dialects/Rock/RockDialect.h"
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/Transforms/Passes.h"
 #include "Orchestra/Transforms/LowerLinalgToRock.h"
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
   registerAllDialects(registry);
 
   registry.insert<mlir::orchestra::OrchestraDialect,
-                  mlir::transform::TransformDialect>();
+                  mlir::rock::RockDialect, mlir::transform::TransformDialect>();
 
   // Register transform dialect extensions.
   mlir::linalg::registerTransformDialectExtension(registry);

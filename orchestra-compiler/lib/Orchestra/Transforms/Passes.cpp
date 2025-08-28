@@ -107,9 +107,7 @@ std::unique_ptr<Pass> orchestra::createDivergenceToSpeculationPass() {
   return std::make_unique<DivergenceToSpeculationPass>();
 }
 
-void orchestra::registerLoweringToROCDLPasses() {
-  // Do nothing.
-}
+void orchestra::registerLoweringToROCDLPasses();
 
 void orchestra::registerOrchestraPasses() {
   PassRegistration<DivergenceToSpeculationPass>();

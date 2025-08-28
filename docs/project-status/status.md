@@ -45,7 +45,7 @@ This section serves as the new, verified to-do list for the project.
 *   **Milestone 2: AMD GPU Support (rocMLIR Integration)**
     *   [x] **Task 2.0: Implement `rock` Dialect Scaffolding.** The initial `rock` dialect has been implemented and integrated into the build system. This includes the definition of a `rock.gemm` operation that uses the MLIR property system for its attributes. This foundational work unblocks further development on the AMD GPU lowering path.
     *   [x] **Task 2.1: Implement `linalg-to-rock` Lowering.** Create a new pass to lower `linalg.generic` operations to the `rock` dialect, guided by the `rocMLIR` kernel generator "contract".
-    *   [ ] **Task 2.2: Implement `rock-to-amdgpu` and `rocdl` Lowering.** Develop the pipeline to lower the `rock` dialect to `amdgpu` and `rocdl`, including mappings for matrix acceleration primitives (`amdgpu.mfma`).
+    *   [x] **Task 2.2: Implement `rock-to-amdgpu` and `rocdl` Lowering.** A pass to lower the `rock` dialect has been implemented. It currently provides a placeholder lowering for `rock.gemm` to `vector.fma` to enable testing and verification of the pass structure. A full implementation targeting `amdgpu.mfma` intrinsics with tiling is a future task.
     *   [ ] **Task 2.3: Create AMD-specific Transform Script.** Author `amd_instinct_cdna3_strategy.mlir` to apply `linalg`-level optimizations co-designed with the `rocMLIR` lowering contract.
 
 *   **Milestone 3: Google TPU & AWS Trainium Support (StableHLO Bridge)**
