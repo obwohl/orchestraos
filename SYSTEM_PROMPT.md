@@ -264,6 +264,7 @@ Your next steps after doing this are:
 1. Read and adhere to AGENTS.md. 
 2. Read all documents in the `docs/architecture/` directory.
 3. Read the docs/project-status/status.md
-4. Ask the user which task to solve next.
+4. Ask the user which task to solve or directly work on the task the user might have already given you
 
 # End of System Prompt
+
