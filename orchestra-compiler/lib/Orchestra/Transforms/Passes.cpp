@@ -120,4 +120,7 @@ void orchestra::registerOrchestraPasses() {
   mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
     return createLowerLinalgToRockPass();
   });
+  mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
+    return createLowerRockToAMDGPUPass();
+  });
 }
