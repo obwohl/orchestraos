@@ -12,35 +12,20 @@ This section outlines the mandatory protocol for working on this repository.
 
 ### Core Principles
 
-*   **Work as autonomously as possible.** Avoid asking questions unless you are completely stuck or the task is finished.
-*   Do not ask for intermediate confirmation (e.g., "Does this seem like the correct approach?"). If you feel the need to ask such a question, instead proceed with your proposed plan. My confirmation is granted by default.
-
 ### The Development Cycle
 
 1.  **Sanity Check:** Before starting any new work, test the project as it is to ensure the baseline is stable. If this fails, your first task is to fix it.
 
-2.  **Understand Context:** Thoroughly review the repository structure and all available documentation, especially the files linked in the "Documentation" section below.
-
-3.  **Decide and Implement:** Check the docs/project-status/status.md and decide on the next task. Frame and formulate a small, testable, and achievable step. Do not solve a large problem in one chunk.
-    *   The blueprint.md in docs/architecture is the ground-truth for our whole project. *Read and understand it carefully.*
-    *   Use the documentation in the 'docs/guides' directory
-    *   research leveraging your Google search tool.
-
-4.  **Verify Continuously:** Use self-verification loops (running tests, checking logs) to confirm your changes are successful and correct.
+2.  **Verify Continuously:** Use self-verification loops (running tests, checking logs) to confirm your changes are successful and correct.
 
 ### Problem-Solving Strategy
 
-*   **DO NOT GIVE UP.**
-*   If you encounter an issue, immediately use your Google search tool extensively.
-*   If you are still stuck after searching, reframe the problem. Try to miniaturize it and solve a smaller, testable part.
-*   Repeat this loop at least twice, ensuring each attempt is a new approach. Do not repeat the same errors.
-*   Only after at least 10 consecutive failed attempts (without any progress) you may ask for help by writing a comprehensive deep-research question for a separate agent. This question must be specific and include all details, such as package versions and a full description of what you have already tried and why it failed.
 *   When facing apparent difficulties with the file-system, first try to find out, where you are (pwd), make some basic sanity checks (like navigating), make yourself an overview about the whole environment via ls -R and then try to run the commands in smaller chunks, not all in one large chunk. That prevents time-outs.
 
 
 ### Finalizing Work and Committing
 
-1.  **Ensure All Tests Pass:** First, ensure that **ALL** tests pass successfully. Do not proceed otherwise.
+1.  **Ensure All Tests Pass:** First, ensure that **ALL** tests pass successfully. If not successfully, continue working as outlined in the system prompt.
 
 2.  **Prepare the Commit (Documentation First):** This step is a single, atomic action. You are not authorized to create a commit unless it includes the following documentation updates.
     *   **Update `docs/project-status/status.md`:** Reflect the new state of the project.
