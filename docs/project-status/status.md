@@ -20,6 +20,7 @@ This section provides a verified, at-a-glance view of implemented features, alig
     *   ✅ **`orchestra.transfer`**: Implemented with canonicalization patterns and a verifier for its attributes.
     *   ✅ **`orchestra.commit`**: Implemented for conditional selection.
     *   ✅ **`orchestra.yield`**: The dialect's terminator is now consistently named `yield`.
+    *   ✅ **`orchestra.barrier`**: A new barrier synchronization operation has been added.
     *   ❌ **MLIR Properties Migration**: The planned migration to the MLIR Property system for `orchestra.task` was blocked by a persistent TableGen bug in MLIR 20.1.8. The current C++ helper class is a robust workaround.
 
 *   **✅ Transformation & Optimization Framework**

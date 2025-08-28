@@ -26,6 +26,17 @@ using namespace mlir::orchestra;
 
 namespace {
 
+class BarrierLowering : public OpRewritePattern<BarrierOp> {
+public:
+  using OpRewritePattern<BarrierOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(BarrierOp op,
+                                PatternRewriter &rewriter) const override {
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
 class LowerOrchestraToStandardPass
     : public mlir::PassWrapper<LowerOrchestraToStandardPass,
                                mlir::OperationPass<mlir::ModuleOp>> {
@@ -42,6 +53,7 @@ public:
     target.addIllegalDialect<OrchestraDialect>();
 
     RewritePatternSet patterns(&getContext());
+    patterns.add<BarrierLowering>(patterns.getContext());
 
     if (failed(applyPartialConversion(
             getOperation(), target, std::move(patterns))))
