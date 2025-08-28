@@ -1,7 +1,7 @@
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/Transforms/Passes.h"
 #include "Orchestra/Transforms/LowerLinalgToRock.h"
-#include "Orchestra/Transforms/LowerLinalgToRock.h"
+#include "Orchestra/Transforms/LowerRockToAMDGPU.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllPasses.h"
@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
   mlir::registerAllPasses();
   mlir::orchestra::registerOrchestraPasses();
   mlir::orchestra::registerLowerLinalgToRockPass();
+  mlir::orchestra::registerLowerRockToAMDGPUPass();
   mlir::registerPassManagerCLOptions();
 
   return mlir::asMainReturnCode(
