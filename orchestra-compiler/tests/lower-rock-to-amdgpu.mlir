@@ -1,6 +1,14 @@
 // RUN: %orchestra-opt %s --lower-linalg-to-rock --lower-rock-to-amdgpu="arch=amdgcn-amd-amdhsa" | FileCheck %s
 
-// CHECK: gpu.module @orchestra_gpu_module
+// CHECK: gpu.module @orchestra_gpu_module {
+// CHECK:   gpu.func @gemm_kernel_0
+// CHECK:     vector.transfer_read
+// CHECK:     vector.transfer_read
+// CHECK:     vector.transfer_read
+// CHECK:     amdgpu.mfma
+// CHECK:     vector.transfer_write
+// CHECK:   }
+// CHECK: }
 // CHECK-LABEL: func.func @main
 // CHECK-NOT: linalg.matmul
 // CHECK-NOT: rock.gemm

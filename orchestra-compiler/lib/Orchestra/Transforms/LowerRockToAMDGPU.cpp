@@ -6,6 +6,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Types.h"
@@ -38,7 +39,8 @@ struct LowerRockToAMDGPUPass
     registry.insert<mlir::rock::RockDialect, mlir::gpu::GPUDialect,
                     mlir::amdgpu::AMDGPUDialect, mlir::arith::ArithDialect,
                     mlir::memref::MemRefDialect,
-                    mlir::bufferization::BufferizationDialect>();
+                    mlir::bufferization::BufferizationDialect,
+                    mlir::vector::VectorDialect>();
   }
 
   Option<std::string> arch{*this, "arch",
@@ -76,13 +78,13 @@ void LowerRockToAMDGPUPass::runOnOperation() {
     mlir::OpBuilder builder(gemmOp);
     mlir::Location loc = gemmOp.getLoc();
 
-    // 1. Convert input tensors to memrefs
+    // 1. Convert input tensors to memrefs for the launch op
     auto rankedTensorTypeA =
         mlir::cast<mlir::RankedTensorType>(gemmOp.getMatrixA().getType());
     auto memrefTypeA =
         mlir::MemRefType::get(rankedTensorTypeA.getShape(),
                               rankedTensorTypeA.getElementType());
-    auto memrefA = builder.create<mlir::bufferization::ToMemrefOp>(
+    auto memrefA_host = builder.create<mlir::bufferization::ToMemrefOp>(
         loc, memrefTypeA, gemmOp.getMatrixA());
 
     auto rankedTensorTypeB =
@@ -90,7 +92,7 @@ void LowerRockToAMDGPUPass::runOnOperation() {
     auto memrefTypeB =
         mlir::MemRefType::get(rankedTensorTypeB.getShape(),
                               rankedTensorTypeB.getElementType());
-    auto memrefB = builder.create<mlir::bufferization::ToMemrefOp>(
+    auto memrefB_host = builder.create<mlir::bufferization::ToMemrefOp>(
         loc, memrefTypeB, gemmOp.getMatrixB());
 
     auto rankedTensorTypeC =
@@ -98,7 +100,7 @@ void LowerRockToAMDGPUPass::runOnOperation() {
     auto memrefTypeC =
         mlir::MemRefType::get(rankedTensorTypeC.getShape(),
                               rankedTensorTypeC.getElementType());
-    auto memrefC = builder.create<mlir::bufferization::ToMemrefOp>(
+    auto memrefC_host = builder.create<mlir::bufferization::ToMemrefOp>(
         loc, memrefTypeC, gemmOp.getMatrixC());
 
     // 2. Create a unique GPU kernel inside the single GPU module
@@ -113,6 +115,38 @@ void LowerRockToAMDGPUPass::runOnOperation() {
     // The create call with a function type already creates the entry block.
     mlir::Block *entryBlock = &gpuFunc.front();
     mlir::OpBuilder bodyBuilder = mlir::OpBuilder::atBlockBegin(entryBlock);
+    
+    // --- Start of merged logic ---
+    mlir::Value memrefA_device = gpuFunc.getArgument(0);
+    mlir::Value memrefB_device = gpuFunc.getArgument(1);
+    mlir::Value memrefC_device = gpuFunc.getArgument(2);
+
+    auto elemType = mlir::cast<mlir::MemRefType>(memrefA_device.getType()).getElementType();
+    auto vectorType = mlir::VectorType::get({16}, elemType);
+    mlir::Value zero = bodyBuilder.create<mlir::arith::ConstantIndexOp>(loc, 0);
+
+    mlir::Value vectorA = bodyBuilder.create<mlir::vector::TransferReadOp>(
+        loc, vectorType, memrefA_device, mlir::ValueRange{zero, zero});
+    mlir::Value vectorB = bodyBuilder.create<mlir::vector::TransferReadOp>(
+        loc, vectorType, memrefB_device, mlir::ValueRange{zero, zero});
+    mlir::Value vectorC = bodyBuilder.create<mlir::vector::TransferReadOp>(
+        loc, vectorType, memrefC_device, mlir::ValueRange{zero, zero});
+
+    auto mfmaOp = bodyBuilder.create<mlir::amdgpu::MFMAOp>(
+        loc, vectorType,
+        bodyBuilder.getI32IntegerAttr(32), bodyBuilder.getI32IntegerAttr(32),
+        bodyBuilder.getI32IntegerAttr(16), bodyBuilder.getI32IntegerAttr(1),
+        vectorA, vectorB, vectorC,
+        bodyBuilder.getI32IntegerAttr(0), bodyBuilder.getI32IntegerAttr(0),
+        mlir::amdgpu::MFMAPermBAttr::get(bodyBuilder.getContext(),
+                                          mlir::amdgpu::MFMAPermB::none),
+        bodyBuilder.getUnitAttr(), bodyBuilder.getUnitAttr(),
+        bodyBuilder.getUnitAttr(), bodyBuilder.getUnitAttr());
+
+    bodyBuilder.create<mlir::vector::TransferWriteOp>(loc, mfmaOp.getDestD(), memrefC_device,
+                                                   mlir::ValueRange{zero, zero});
+    // --- End of merged logic ---
+
     bodyBuilder.create<mlir::gpu::ReturnOp>(loc);
 
     // 3. Create launch op at the original location
@@ -125,11 +159,11 @@ void LowerRockToAMDGPUPass::runOnOperation() {
         loc, gpuFunc, mlir::gpu::KernelDim3{gridDim, gridDim, gridDim},
         mlir::gpu::KernelDim3{blockDim, blockDim, blockDim},
         /*dynamic shmem size*/ nullptr,
-        mlir::ValueRange{memrefA, memrefB, memrefC});
+        mlir::ValueRange{memrefA_host, memrefB_host, memrefC_host});
 
     // 4. Convert output memref back to tensor
     auto resultTensor =
-        builder.create<mlir::bufferization::ToTensorOp>(loc, memrefC);
+        builder.create<mlir::bufferization::ToTensorOp>(loc, memrefC_host);
 
     // 5. Replace uses and erase
     gemmOp.replaceAllUsesWith(resultTensor.getResult());
