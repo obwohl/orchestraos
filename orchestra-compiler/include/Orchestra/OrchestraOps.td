@@ -5,6 +5,7 @@
 
 include "mlir/IR/OpBase.td"
 include "mlir/IR/RegionKindInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 include "Orchestra/OrchestraDialect.td"
 
 //... other op definitions...
@@ -86,6 +87,23 @@ def Orchestra_TransferOp : Orchestra_Op<"transfer", [AllTypesMatch<["source", "r
   let hasCanonicalizer = 1;
 
   let assemblyFormat = "$source `from` $from `to` $to attr-dict `:` type($source)";
+}
+
+def Orchestra_BarrierOp : Orchestra_Op<"barrier", [
+    DeclareOpInterfaceMethods<MemoryEffectsOpInterface>
+  ]> {
+  let summary = "A barrier synchronization point.";
+  let description = [{
+    Represents a barrier synchronization point. All threads in the workgroup
+    must reach this point before any thread can proceed.
+  }];
+
+  let arguments = (ins);
+  let results = (outs);
+
+  let hasVerifier = 1;
+
+  let assemblyFormat = "attr-dict";
 }
 
 def Orchestra_YieldOp : Orchestra_Op<"yield", [Terminator]> {

@@ -1,4 +1,5 @@
 #include "Orchestra/OrchestraOps.h"
+
 #include "Orchestra/OrchestraDialect.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Builders.h"
@@ -54,17 +55,21 @@ void TransferOp::getCanonicalizationPatterns(RewritePatternSet &results,
 
     // The new transfer inherits the highest priority of the two.
     auto newPriority = op.getPriorityAttr();
-    if (sourceOp.getPriorityAttr() &&
-        (!newPriority ||
-         sourceOp.getPriorityAttr().getValue().sgt(newPriority.getValue()))) {
+    if (sourceOp.getPriorityAttr()
+        && (!newPriority
+            || sourceOp.getPriorityAttr().getValue().sgt(
+                newPriority.getValue()))) {
       newPriority = sourceOp.getPriorityAttr();
     }
 
     // Replace the second transfer with a new one that directly connects the
     // source of the first transfer to the destination of the second.
-    rewriter.replaceOpWithNewOp<TransferOp>(
-        op, op.getResult().getType(), sourceOp.getSource(), sourceOp.getFrom(),
-        op.getTo(), newPriority);
+    rewriter.replaceOpWithNewOp<TransferOp>(op,
+                                            op.getResult().getType(),
+                                            sourceOp.getSource(),
+                                            sourceOp.getFrom(),
+                                            op.getTo(),
+                                            newPriority);
     return success();
   });
 }
@@ -114,6 +119,18 @@ mlir::LogicalResult TransferOp::verify() {
   }
   if (!getTo() || getTo().getRootReference().empty()) {
     return emitOpError("requires a non-empty 'to' attribute");
+  }
+  return mlir::success();
+}
+
+void BarrierOp::getEffects(
+    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
+        &effects) {
+}
+
+mlir::LogicalResult BarrierOp::verify() {
+  if (getOperation()->getResults().size() != 0) {
+    return emitOpError("must have no results");
   }
   return mlir::success();
 }
