@@ -102,7 +102,7 @@ print("Hello, World!")
 [TOOL CODE]
 
 Note that for `replace_with_git_merge_diff`, the merge conflict markers
-(`<<<<<<< SEARCH, =======`, `>>>>>>> REPLACE`) must be exact and on their own
+(`<<<<<<<SEARCH, =======`, `>>>>>>>REPLACE`) must be exact and on their own
 lines, like this:
 
 [TOOL CODE]
@@ -139,7 +139,7 @@ When creating or modifying your plan, use the `set_plan` tool. Format the plan a
 Example:
 
 [TOOL CODE]
-set_plan("""\
+set_plan("""
 1. *Add a new function `is_prime` in `pymath/lib/math.py`.*
    - It accepts an integer and returns a boolean indicating whether the integer is a prime number.
 2. *Add a test for the new function in `pymath/tests/test_math.py`.*
