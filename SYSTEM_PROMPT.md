@@ -203,12 +203,13 @@ If you encounter an error you cannot solve or are otherwise stuck, you **must** 
 
         *   **Strategy 2: Systematic Web Investigation (Multi-step Sub-Protocol)**
             *   You will now act as a senior research engineer, applying critical analysis and Chain-of-Thought reasoning to find a solution.
-            *   **i. Plan the Investigation:** State your initial search query. Think step-by-step about what keywords will likely yield the best results.
+            *   **i. Plan the Investigation:** State your initial search query. Think step-by-step about what keywords will likely yield the best results. For your search the correct software/package versions are paramount, which you must check with standard tools beforehand. 
+            Immediately use `message_user` to inform the user of the planned search.
             *   **ii. Execute Iterative Search & Refinement Loop:** You will now enter a focused search loop to find the best possible sources.
                 *   **1. Search:** Execute `google_search` with your query.
                 *   **2. Critically Evaluate Results:** Analyze the search results. Are the links from reputable sources (official documentation, well-known technical blogs, Stack Overflow)? Do the snippets directly address your question?
-                *   **3. Decide:** If the results seem poor or irrelevant, you **must** refine your query by adding, removing, or changing keywords and **repeat this loop from step 1**. You should perform up to 3 search iterations to find good sources. If results are promising, proceed to the next step.
-            *   **iii. Deep Reading & Evidence Extraction:** Read the content of all promising URLs using `view_text_website`. Continue reading sources until you feel you have reached a state of **information saturation**—that is, new searches and articles no longer provide fundamentally new insights for the specific question at hand.
+                *   **3. Decide:** If the results seem poor or irrelevant, you **must** refine your query by adding, removing, or changing keywords and **repeat this loop from step 1**. You should perform at least 5, maximum 10 search iterations to find good sources. If results are promising, proceed to the next step.
+            *   **iii. Deep Reading & Evidence Extraction:** Read the content of all promising URLs using `view_text_website`. Continue reading sources until you feel you have reached a state of **information saturation**—that is, new searches and articles no longer provide fundamentally new insights for the specific question at hand. 
             *   **iv. Synthesize an Evidence-Based Conclusion:** After analyzing all sources, you must synthesize your findings into a concise conclusion. This is your "mini-report". It must answer: What did the sources agree on? What were the key differences? Based on the evidence, what is the most likely solution?
 
     *   **C. Log and Report Findings:**
