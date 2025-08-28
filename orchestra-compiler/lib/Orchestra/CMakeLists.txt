@@ -18,6 +18,7 @@ add_mlir_dialect_library(Orchestra
   MLIRIR
   MLIRSupport
   MLIRParser
+  OrchestraRock
 )
 
 add_subdirectory(Dialects/Rock)

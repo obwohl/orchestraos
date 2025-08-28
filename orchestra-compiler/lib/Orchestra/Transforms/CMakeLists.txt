@@ -37,6 +37,7 @@ add_library(OrchestraTransforms
   LowerOrchestraToGPU.cpp
   LowerOrchestraToXeGPU.cpp
   LowerOrchestraToROCDL.cpp
+  LowerLinalgToRock.cpp
 )
 
 # 5. Add the binary directory to the include path, so that Passes.cpp can find
@@ -58,6 +59,7 @@ target_link_libraries(OrchestraTransforms
   MLIRSupport
   LLVMSupport
   Orchestra
+  OrchestraRock
 )
 
 # 7. Ensure the custom generation target runs before this library is built.
