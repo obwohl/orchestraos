@@ -34,19 +34,15 @@ void LowerLinalgToRockPass::runOnOperation() {
   mlir::MLIRContext *context = &getContext();
   mlir::OpBuilder builder(context);
 
-  func.walk([&](mlir::linalg::GenericOp genericOp) {
-    if (genericOp.getNumDpsInits() != 1 || genericOp.getNumDpsInputs() != 2) {
-      return;
-    }
-
-    builder.setInsertionPoint(genericOp);
+  func.walk([&](mlir::linalg::MatmulOp matmulOp) {
+    builder.setInsertionPoint(matmulOp);
     auto rockGemmOp = builder.create<mlir::rock::GemmOp>(
-        genericOp.getLoc(), genericOp.getDpsInitOperand(0)->get().getType(),
-        builder.getStringAttr(""), genericOp.getDpsInputOperand(0)->get(),
-        genericOp.getDpsInputOperand(1)->get());
+        matmulOp.getLoc(), matmulOp.getDpsInitOperand(0)->get().getType(),
+        builder.getStringAttr(""), matmulOp.getDpsInputOperand(0)->get(),
+        matmulOp.getDpsInputOperand(1)->get());
 
-    genericOp.replaceAllUsesWith(mlir::ValueRange{rockGemmOp.getResult()});
-    genericOp.erase();
+    matmulOp.replaceAllUsesWith(mlir::ValueRange{rockGemmOp.getResult()});
+    matmulOp.erase();
   });
 }
 

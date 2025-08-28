@@ -15,6 +15,7 @@
 #include "mlir/Parser/Parser.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "Orchestra/Transforms/LowerLinalgToRock.h"
 
 using namespace mlir;
 using namespace mlir::orchestra;
@@ -115,8 +116,6 @@ void orchestra::registerOrchestraPasses() {
   registerLoweringToStandardPasses();
   registerLoweringToGPUPasses();
   registerLoweringToROCDLPasses();
-#include "Orchestra/Transforms/LowerLinalgToRock.h"
-
   registerLoweringToXeGPUPasses();
   mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
     return createLowerLinalgToRockPass();
