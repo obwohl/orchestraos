@@ -2,6 +2,7 @@
 
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/Pass/Pass.h"
 #include "Orchestra/Dialects/Rock/RockDialect.h"
 #include "Orchestra/Dialects/Rock/RockOps.h"
@@ -31,17 +32,23 @@ struct LowerLinalgToRockPass
 
 void LowerLinalgToRockPass::runOnOperation() {
   mlir::func::FuncOp func = getOperation();
-  mlir::MLIRContext *context = &getContext();
-  mlir::OpBuilder builder(context);
+  mlir::OpBuilder builder(func);
 
   func.walk([&](mlir::linalg::MatmulOp matmulOp) {
+    if (!matmulOp.hasPureTensorSemantics())
+      return;
+
     builder.setInsertionPoint(matmulOp);
     auto rockGemmOp = builder.create<mlir::rock::GemmOp>(
-        matmulOp.getLoc(), matmulOp.getDpsInitOperand(0)->get().getType(),
-        builder.getStringAttr(""), matmulOp.getDpsInputOperand(0)->get(),
-        matmulOp.getDpsInputOperand(1)->get());
+        matmulOp.getLoc(),
+        matmulOp.getDpsInitOperand(0)->get().getType(),
+        builder.getStringAttr(""), // arch
+        matmulOp.getDpsInputOperand(0)->get(), // matrix_a
+        matmulOp.getDpsInputOperand(1)->get(), // matrix_b
+        matmulOp.getDpsInitOperand(0)->get()   // matrix_c
+        );
 
-    matmulOp.replaceAllUsesWith(mlir::ValueRange{rockGemmOp.getResult()});
+    matmulOp.getResult(0).replaceAllUsesWith(rockGemmOp.getResult());
     matmulOp.erase();
   });
 }

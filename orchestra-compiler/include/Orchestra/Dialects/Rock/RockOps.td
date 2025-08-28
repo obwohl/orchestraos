@@ -13,9 +13,11 @@ def Rock_GemmOp : Op<Rock_Dialect, "gemm"> {
   let arguments = (ins
     StrAttr:$arch,
     F32Tensor:$matrix_a,
-    F32Tensor:$matrix_b
+    F32Tensor:$matrix_b,
+    F32Tensor:$matrix_c
   );
-  let results = (outs F32Tensor:$matrix_c);
+  let results = (outs F32Tensor:$result);
+  let assemblyFormat = "$arch `(` $matrix_a `,` $matrix_b `,` $matrix_c `)` attr-dict `:` type($matrix_a) `,` type($matrix_b) `,` type($matrix_c) `->` type($result)";
 }
 
 #endif // ORCHESTRA_DIALECT_ROCK_OPS_TD
