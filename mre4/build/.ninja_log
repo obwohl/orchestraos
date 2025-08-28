@@ -1,0 +1,18 @@
+# ninja log v5
+7961	8399	1756369151111934582	lib/libMyPass.a	fc7648141f29dfe6
+3	22	1756368091406250897	/app/mre4/build/include/Orchestra/OrchestraDialect.cpp.inc	9fed32bf3f92aa91
+3043	3127	1756368094506569154	lib/Orchestra/libOrchestra.a	39bceac9d1f3fd4f
+3	22	1756368091406250897	include/Orchestra/OrchestraDialect.cpp.inc	9fed32bf3f92aa91
+33	2517	1756368093898506866	lib/Orchestra/CMakeFiles/obj.Orchestra.dir/OrchestraOps.cpp.o	aa2d3578ba097904
+4	22	1756368091406250897	/app/mre4/build/include/Orchestra/OrchestraDialect.h.inc	cf14eb32acaa02da
+5	32	1756368091414251720	/app/mre4/build/include/Orchestra/OrchestraOps.h.inc	ac916f530e1ad762
+4	32	1756368091414251720	/app/mre4/build/include/Orchestra/OrchestraOps.cpp.inc	ace758c36efb9a8e
+5	32	1756368091414251720	include/Orchestra/OrchestraOps.h.inc	ac916f530e1ad762
+32	3043	1756368094422560551	lib/Orchestra/CMakeFiles/obj.Orchestra.dir/OrchestraDialect.cpp.o	a076a26e927782
+6	7961	1756369150671865735	lib/CMakeFiles/MyPass.dir/MyPass.cpp.o	1bf15e3b45e19942
+6	86206	1756369228904619256	mre-opt/CMakeFiles/mre-opt.dir/main.cpp.o	1d46ceeb0764b7d9
+4	22	1756368091406250897	include/Orchestra/OrchestraDialect.h.inc	cf14eb32acaa02da
+4	32	1756368091414251720	include/Orchestra/OrchestraOps.cpp.inc	ace758c36efb9a8e
+18	7690	1756369400444157838	lib/CMakeFiles/MyPass.dir/MyPass.cpp.o	1bf15e3b45e19942
+7690	7837	1756369400588191374	lib/libMyPass.a	fc7648141f29dfe6
+19	91360	1756369484100996955	mre-opt/CMakeFiles/mre-opt.dir/main.cpp.o	1d46ceeb0764b7d9
