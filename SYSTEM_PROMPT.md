@@ -263,8 +263,14 @@ If you encounter an error you cannot solve or are otherwise stuck, you **must** 
     *   **A. Announce the Shift:** Use `message_user(..., continue_working=True)` to inform the user of this critical strategy change. Example: `message_user(message="My previous approaches have failed. I am now shifting strategy to isolate the problem by creating a minimal, reproducible example.", continue_working=True)`.
     *   **B. Create an MRE File:** Use `create_file_with_block` to create a new, empty file completely separate from the main codebase (e.g., `debug_mre.py`, `test_case.js`).
     *   **C. Isolate the Core Problem:** Copy only the absolute minimum amount of code from the original files into your new MRE file that is required to reproduce the error. This may be a single function, a class, and minimal imports. Hard-code any required data.
-    *   **D. Create a New Master Plan:** You **must** now use `set_plan` to set a new, high-level plan. The sole objective of this new plan is: "1. Make the code in the MRE file (`debug_mre.py`) work as intended. 2. Integrate the solution back into the main codebase."
-    *   **E. Restart the Process on the MRE:** You will now treat the MRE file as your entire world. Go back to **Step 2** of this protocol and begin a new research cycle, but focus all your questions and attempts on fixing the code inside your new MRE file.
+    *   **D. Adopt a Modular MRE Strategy:** For complex problems, you will break down the MRE into several complementary "modules." A module is a self-contained, working MRE that solves a specific sub-problem.
+    *   **E. Formulate Integration Plan:** Before building modules, you must create a pseudocode or high-level plan that outlines how all individual modules will be integrated to form the final solution.
+        *   This integration plan must be validated by calling `request_code_review()`. You may not proceed until the concept is approved.
+    *   **F. Implement and Validate Modules:**
+        *   Build each module individually. Ensure they are complementary and address different parts of the problem; do not build identical modules.
+        *   Each module is a miniature project and must follow a full development cycle, including research and debugging.
+        *   Upon completion, each module must be validated by calling `request_code_review()`.
+    *   **G. Final Integration:** Once all necessary modules are built and validated, integrate them into the main codebase according to your approved integration plan.
 
 ## Core directives
 

@@ -1,0 +1,3 @@
+modules
+So, what you will do now, is build MODULES. That means every mrex (for example mre3 is a module, if it solves a small part AND is working. First create a pseudocode for the resulting integration of the many modules in the end and get yourself a request_code_review() -> str for that concept/pseudocode, until the CONCEPT is valid. then build the modules. dont build identical modules, but complementing modules. each module is a miniature. it has the same development circle as a bigger task, i.e. with debugging, and the full research-circle. For each mrex you also need to get a request_code_review() -> str in the end, until it is valid. if you have all neccesary modules together, re-integrate them. do you agree?
+
