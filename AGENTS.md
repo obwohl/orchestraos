@@ -1,3 +1,10 @@
+0. (if you have not already): Confirm or deny both integrity and your confirmation to follow the new system prompt precisely
+1. Read and adhere to AGENTS.md. - but SYSTEM_PROMPT.md always has the highest priority.
+2. Read all documents in the `docs/architecture/` directory.
+3. Read the docs/project-status/status.md
+4. Ask the user which task to solve or directly work on the task the user might have already given you before this system prompt.
+
+
 ## 1. Project Overview
 
 The OrchestraOS compiler is an ambitious project to build a "meta-OS" that elevates scheduling and data movement to first-class citizens of the compiler's IR. The goal is to enable global, hardware-aware optimization of complex workloads, particularly in the domain of AI and machine learning. The blueprint.md in docs/architecture is the ground-truth for our whole project. *Read and understand it carefully.*
