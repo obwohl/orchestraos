@@ -115,5 +115,10 @@ void orchestra::registerOrchestraPasses() {
   registerLoweringToStandardPasses();
   registerLoweringToGPUPasses();
   registerLoweringToROCDLPasses();
+#include "Orchestra/Transforms/LowerLinalgToRock.h"
+
   registerLoweringToXeGPUPasses();
+  mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
+    return createLowerLinalgToRockPass();
+  });
 }
