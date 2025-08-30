@@ -38,8 +38,9 @@ void LowerLinalgToRockPass::runOnOperation() {
     builder.setInsertionPoint(matmulOp);
     auto rockGemmOp = builder.create<mlir::rock::GemmOp>(
         matmulOp.getLoc(), matmulOp.getDpsInitOperand(0)->get().getType(),
-        builder.getStringAttr(""), matmulOp.getDpsInputOperand(0)->get(),
-        matmulOp.getDpsInputOperand(1)->get());
+        builder.getStringAttr("cdna3"), matmulOp.getDpsInputOperand(0)->get(),
+        matmulOp.getDpsInputOperand(1)->get(),
+        matmulOp.getDpsInitOperand(0)->get());
 
     matmulOp.replaceAllUsesWith(mlir::ValueRange{rockGemmOp.getResult()});
     matmulOp.erase();

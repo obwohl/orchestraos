@@ -29,7 +29,7 @@ This section provides a verified, at-a-glance view of implemented features, alig
 
 *   **🟡 Backend Lowering Paths**
     *   ✅ **NVIDIA GPU Lowering**: Supports asynchronous data movement for both Blackwell (TMA) and older architectures (Hopper).
-    *   🟡 **AMD GPU Lowering**: Initial support via `--gpu-arch=rocdl` is present for data movement. Matrix acceleration lowering is not yet implemented.
+    *   🟡 **AMD GPU Lowering**: Initial support via `--gpu-arch=rocdl` is present for data movement. A stub lowering for `rock.gemm` to the `amdgpu` dialect is now implemented. The high-performance `amdgpu.mfma` lowering is currently blocked by verifier issues in the environment.
     *   ❌ **Intel GPU Lowering**: The `xegpu` path is incomplete and its tests are disabled.
     *   ❌ **StableHLO Bridge**: The lowering path to StableHLO and the bridge mechanism for Google/AWS are not yet implemented.
     *   ❌ **Feedback-Driven Optimization (FDO)**: The entire FDO loop is not implemented.
@@ -45,7 +45,7 @@ This section serves as the new, verified to-do list for the project.
 *   **Milestone 2: AMD GPU Support (rocMLIR Integration)**
     *   [x] **Task 2.0: Implement `rock` Dialect Scaffolding.** The initial `rock` dialect has been implemented and integrated into the build system. This includes the definition of a `rock.gemm` operation that uses the MLIR property system for its attributes. This foundational work unblocks further development on the AMD GPU lowering path.
     *   [x] **Task 2.1: Implement `linalg-to-rock` Lowering.** Create a new pass to lower `linalg.generic` operations to the `rock` dialect, guided by the `rocMLIR` kernel generator "contract".
-    *   [ ] **Task 2.2: Implement `rock-to-amdgpu` and `rocdl` Lowering.** Develop the pipeline to lower the `rock` dialect to `amdgpu` and `rocdl`, including mappings for matrix acceleration primitives (`amdgpu.mfma`).
+    *   [~] **Task 2.2: Implement `rock-to-amdgpu` and `rocdl` Lowering.** A stub pass (`--lower-rock-to-amdgpu`) has been implemented, which correctly removes the `rock.gemm` op. The full implementation targeting `amdgpu.mfma` primitives is blocked by a verifier bug in the current MLIR environment that prevents the creation of valid `mfma` operations. The `rocdl` lowering is not yet started.
     *   [ ] **Task 2.3: Create AMD-specific Transform Script.** Author `amd_instinct_cdna3_strategy.mlir` to apply `linalg`-level optimizations co-designed with the `rocMLIR` lowering contract.
 
 *   **Milestone 3: Google TPU & AWS Trainium Support (StableHLO Bridge)**

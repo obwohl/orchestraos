@@ -10,12 +10,14 @@ include "Orchestra/Dialects/Rock/RockDialect.td"
 
 def Rock_GemmOp : Op<Rock_Dialect, "gemm"> {
   let summary = "rock gemm operation";
+  let summary = "rock gemm operation";
   let arguments = (ins
     StrAttr:$arch,
     F32Tensor:$matrix_a,
-    F32Tensor:$matrix_b
+    F32Tensor:$matrix_b,
+    F32Tensor:$matrix_c
   );
-  let results = (outs F32Tensor:$matrix_c);
+  let results = (outs F32Tensor:$result);
 }
 
 #endif // ORCHESTRA_DIALECT_ROCK_OPS_TD

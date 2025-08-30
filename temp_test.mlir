@@ -1,4 +1,4 @@
-func.func @test_invalid_mismatched_true_false_count(%cond: i1, %t1: f32, %f1: f32, %f2: f32) {
-  %0 = orchestra.commit %cond true(%t1) false(%f1, %f2) : (i1, f32, f32, f32) -> f32
-  return
+func.func @mfma_test(%a: vector<64xf32>, %b: vector<64xf32>, %c: vector<32x32xf32>) -> vector<32x32xf32> {
+  %d = "amdgpu.mfma"(%a, %b, %c) {m = 32 : i32, n = 32 : i32, k = 2 : i32, blocks = 1 : i32} : (vector<64xf32>, vector<64xf32>, vector<32x32xf32>) -> vector<32x32xf32>
+  return %d : vector<32x32xf32>
 }
