@@ -11,8 +11,12 @@ func.func @test_gemm(%arg0: tensor<64x128xf32>, %arg1: tensor<128x256xf32>) -> t
   // CHECK:         scf.for
   // CHECK:           %[[ACC:.+]] = arith.constant dense<0.000000e+00> : vector<16xf32>
   // CHECK:           scf.for {{.*}} iter_args({{.*}} = %[[ACC]])
-  // CHECK-DAG:         tensor.extract
-  // CHECK-DAG:         tensor.extract
+  // CHECK-DAG:         vector.transfer_read
+  // CHECK-DAG:         vector.transfer_read
+  // CHECK-DAG:         vector.shape_cast
+  // CHECK-DAG:         vector.shape_cast
+  // CHECK-DAG:         vector.extract
+  // CHECK-DAG:         vector.extract
   // CHECK-DAG:         amdgpu.mfma
   // CHECK:           }
   // CHECK:         }

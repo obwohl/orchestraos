@@ -91,14 +91,43 @@ public:
                         mlir::Value k_iv, mlir::ValueRange kIterArgs) {
                       mlir::Value currentAcc = kIterArgs[0];
 
-                      // This lowering is simplified and does not yet correctly map threads
-                      // to the matrix elements. It just extracts element [0,0] for all threads.
-                      // This is sufficient to test the MFMA signature.
+                      // This lowering now uses vector.transfer_read to load a tile,
+                      // which is the canonical way to bridge from tensor to vector domain.
+                      // It still extracts element 0, so it is not yet functionally correct,
+                      // but it introduces the correct data loading operations.
+                      auto vectorTypeA = mlir::VectorType::get({1, kTileSize}, f32Type);
+                      auto vectorTypeB = mlir::VectorType::get({kTileSize, 1}, f32Type);
+                      auto flatVectorType = mlir::VectorType::get({kTileSize}, f32Type);
+
+                      mlir::Value c0_f32 = builder.create<mlir::arith::ConstantOp>(
+                          loc, f32Type, builder.getF32FloatAttr(0.0));
+
+                      auto identityMapAttr = mlir::AffineMapAttr::get(
+                          mlir::AffineMap::getMultiDimIdentityMap(2, builder.getContext()));
+
+                      // The in_bounds attribute is an array matching the rank of the tensor.
+                      mlir::ArrayAttr inBoundsAttr = builder.getBoolArrayAttr({true, true});
+
+                      auto vecA2D = builder.create<mlir::vector::TransferReadOp>(
+                          loc, vectorTypeA, matrixA, mlir::ValueRange{m_iv, k_iv},
+                          identityMapAttr, c0_f32, /*mask=*/nullptr,
+                          inBoundsAttr);
+
+                      auto vecB2D = builder.create<mlir::vector::TransferReadOp>(
+                          loc, vectorTypeB, matrixB, mlir::ValueRange{k_iv, n_iv},
+                          identityMapAttr, c0_f32, /*mask=*/nullptr,
+                          inBoundsAttr);
+
+                      auto vecA = builder.create<mlir::vector::ShapeCastOp>(
+                          loc, flatVectorType, vecA2D);
+                      auto vecB = builder.create<mlir::vector::ShapeCastOp>(
+                          loc, flatVectorType, vecB2D);
+
                       mlir::Value c0_idx = builder.create<mlir::arith::ConstantIndexOp>(loc, 0);
-                      mlir::Value elemA = builder.create<mlir::tensor::ExtractOp>(
-                          loc, matrixA, mlir::ValueRange{c0_idx, c0_idx});
-                      mlir::Value elemB = builder.create<mlir::tensor::ExtractOp>(
-                          loc, matrixB, mlir::ValueRange{c0_idx, c0_idx});
+                      mlir::Value elemA =
+                          builder.create<mlir::vector::ExtractOp>(loc, vecA, c0_idx);
+                      mlir::Value elemB =
+                          builder.create<mlir::vector::ExtractOp>(loc, vecB, c0_idx);
 
                       // Call the amdgpu.mfma intrinsic.
                       auto mfmaResult = builder.create<mlir::amdgpu::MFMAOp>(
