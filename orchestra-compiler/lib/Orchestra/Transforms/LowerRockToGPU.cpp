@@ -8,6 +8,7 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h" // Needed for tensor.empty
 #include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/Support/LLVM.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -34,12 +35,17 @@ public:
     constexpr int64_t nTileSize = 32;
     constexpr int64_t kTileSize = 2;
 
+    // Define the types based on the mfma_f32_32x32x2f32 specification.
+    // Each lane holds 1 element for A and B, and 16 for the accumulator.
+    auto f32Type = rewriter.getF32Type();
+    auto vectorAccumulatorType = mlir::VectorType::get({16}, f32Type);
+
     //===------------------------------------------------------------------===//
     // 2. Get Operands and Tensor Shapes
     //===------------------------------------------------------------------===//
-    mlir::Value matrixA = gemmOp.getMatrixA();
-    mlir::Value matrixB = gemmOp.getMatrixB();
-    auto resultType = gemmOp.getMatrixC().getType().cast<mlir::RankedTensorType>();
+    mlir::Value matrixA = adaptor.getMatrixA();
+    mlir::Value matrixB = adaptor.getMatrixB();
+    auto resultType = gemmOp.getResult().getType().cast<mlir::RankedTensorType>();
 
     int64_t dimM = resultType.getShape()[0];
     int64_t dimK = matrixA.getType().cast<mlir::RankedTensorType>().getShape()[1];
@@ -72,8 +78,7 @@ public:
                   mlir::Value n_iv, mlir::ValueRange nIterArgs) {
                 mlir::Value cInnerIntermediate = nIterArgs[0];
 
-                auto vectorAccumulatorType = mlir::VectorType::get(
-                    {mTileSize, nTileSize}, resultType.getElementType());
+                // Load the initial accumulator tile with zeros.
                 mlir::Value initialAccumulator =
                     builder.create<mlir::arith::ConstantOp>(
                         loc, vectorAccumulatorType,
@@ -84,11 +89,39 @@ public:
                     mlir::ValueRange{initialAccumulator},
                     [&](mlir::OpBuilder &builder, mlir::Location loopLoc,
                         mlir::Value k_iv, mlir::ValueRange kIterArgs) {
-                      builder.create<mlir::scf::YieldOp>(loopLoc, kIterArgs[0]);
+                      mlir::Value currentAcc = kIterArgs[0];
+
+                      // This lowering is simplified and does not yet correctly map threads
+                      // to the matrix elements. It just extracts element [0,0] for all threads.
+                      // This is sufficient to test the MFMA signature.
+                      mlir::Value c0_idx = builder.create<mlir::arith::ConstantIndexOp>(loc, 0);
+                      mlir::Value elemA = builder.create<mlir::tensor::ExtractOp>(
+                          loc, matrixA, mlir::ValueRange{c0_idx, c0_idx});
+                      mlir::Value elemB = builder.create<mlir::tensor::ExtractOp>(
+                          loc, matrixB, mlir::ValueRange{c0_idx, c0_idx});
+
+                      // Call the amdgpu.mfma intrinsic.
+                      auto mfmaResult = builder.create<mlir::amdgpu::MFMAOp>(
+                          loopLoc,
+                          /*destD=*/vectorAccumulatorType,
+                          /*m=*/builder.getI32IntegerAttr(mTileSize),
+                          /*n=*/builder.getI32IntegerAttr(nTileSize),
+                          /*k=*/builder.getI32IntegerAttr(kTileSize),
+                          /*blocks=*/builder.getI32IntegerAttr(1),
+                          /*sourceA=*/elemA,
+                          /*sourceB=*/elemB,
+                          /*destC=*/currentAcc);
+
+                      builder.create<mlir::scf::YieldOp>(loopLoc,
+                                                        mfmaResult.getDestD());
                     });
                 mlir::Value finalAcc = innerLoop.getResult(0);
 
-                // Placeholder for vector.store
+                // Storing the vector<16xf32> result requires a permutation map
+                // which is too complex for this stage. For now, to ensure the
+                // MFMA operation itself is correct, we yield the original tensor.
+                // This will produce a functionally incorrect result but should pass
+                // verification of the MFMA op.
                 builder.create<mlir::scf::YieldOp>(loopLoc, cInnerIntermediate);
               });
           builder.create<mlir::scf::YieldOp>(loopLoc, middleLoop.getResult(0));

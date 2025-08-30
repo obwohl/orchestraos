@@ -1,4 +1,4 @@
-// RUN: %orchestra-opt --lower-linalg-to-rock %s | FileCheck %s
+// RUN: %orchestra-opt --lower-linalg-to-rock %s | %FileCheck %s
 
 func.func @test_gemm(%arg0: tensor<4x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<4x4xf32>) -> tensor<4x4xf32> {
   %0 = linalg.matmul ins(%arg0, %arg1 : tensor<4x4xf32>, tensor<4x4xf32>)

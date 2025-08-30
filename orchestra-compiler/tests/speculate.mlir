@@ -1,4 +1,4 @@
-// RUN: %orchestra-opt %s --divergence-to-speculation | FileCheck %s
+// RUN: %orchestra-opt %s --divergence-to-speculation | %FileCheck %s
 
 // CHECK-LABEL: func @test_speculate_candidate
 // CHECK-NOT: scf.if
