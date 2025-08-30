@@ -22,7 +22,6 @@ void registerLoweringToStandardPasses();
 void registerLoweringToGPUPasses();
 void registerLoweringToROCDLPasses();
 void registerLoweringToRockPasses();
-void registerLoweringToAMDGPUPasses();
 
 inline void registerLoweringToXeGPUPasses() {
   // Do nothing.

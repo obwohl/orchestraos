@@ -1,5 +1,4 @@
 #include "Orchestra/Transforms/Passes.h"
-#include "Orchestra/Transforms/LowerRockToAMDGPU.h"
 
 #include "Orchestra/OrchestraDialect.h"
 #include "Orchestra/OrchestraOps.h"
@@ -110,11 +109,6 @@ std::unique_ptr<Pass> orchestra::createDivergenceToSpeculationPass() {
 
 void orchestra::registerLoweringToROCDLPasses() {
   // Do nothing.
-}
-
-void mlir::orchestra::registerLoweringToAMDGPUPasses() {
-  mlir::registerPass(
-      []() -> std::unique_ptr<mlir::Pass> { return createLowerRockToAMDGPUPass(); });
 }
 
 void orchestra::registerOrchestraPasses() {

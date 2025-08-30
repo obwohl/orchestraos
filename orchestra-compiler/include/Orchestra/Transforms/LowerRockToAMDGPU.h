@@ -1,14 +1,13 @@
-#ifndef ORCHESTRA_TRANSFORMS_LOWERROCKTOAMDGPU_H
-#define ORCHESTRA_TRANSFORMS_LOWERROCKTOAMDGPU_H
-
-#include "mlir/Pass/Pass.h"
+#ifndef ORCHESTRA_TRANSFORMS_LOWERRockToAMDGPU_H
+#define ORCHESTRA_TRANSFORMS_LOWERRockToAMDGPU_H
 
 namespace mlir {
-namespace orchestra {
+class Pass;
 
-std::unique_ptr<mlir::Pass> createLowerRockToAMDGPUPass();
-
-} // namespace orchestra
+namespace rock {
+std::unique_ptr<mlir::Pass> createLowerRockToAMDGPUConversionPass();
+void registerLowerRockToAMDGPU();
+} // namespace rock
 } // namespace mlir
 
-#endif // ORCHESTRA_TRANSFORMS_LOWERROCKTOAMDGPU_H
+#endif // ORCHESTRA_TRANSFORMS_LOWERRockToAMDGPU_H
