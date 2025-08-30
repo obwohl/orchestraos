@@ -38,6 +38,7 @@ add_library(OrchestraTransforms
   LowerOrchestraToXeGPU.cpp
   LowerOrchestraToROCDL.cpp
   LowerLinalgToRock.cpp
+  LowerRockToGPU.cpp
 )
 
 # 5. Add the binary directory to the include path, so that Passes.cpp can find

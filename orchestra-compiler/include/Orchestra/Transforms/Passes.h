@@ -11,6 +11,7 @@ std::unique_ptr<mlir::Pass> createLowerOrchestraToStandardPass();
 std::unique_ptr<mlir::Pass> createLowerOrchestraToGPUPass();
 std::unique_ptr<mlir::Pass> createLowerOrchestraToROCDLPass();
 std::unique_ptr<mlir::Pass> createLowerLinalgToRockPass();
+std::unique_ptr<mlir::Pass> createLowerRockToGPUPass();
 
 inline std::unique_ptr<mlir::Pass> createLowerOrchestraToXeGPUPass() {
   return nullptr;
