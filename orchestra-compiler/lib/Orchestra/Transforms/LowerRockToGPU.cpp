@@ -36,9 +36,11 @@ public:
     constexpr int64_t kTileSize = 2;
 
     // Define the types based on the mfma_f32_32x32x2f32 specification.
-    // Each lane holds 1 element for A and B, and 16 for the accumulator.
     auto f32Type = rewriter.getF32Type();
-    auto vectorAccumulatorType = mlir::VectorType::get({16}, f32Type);
+    auto vectorTypeA = mlir::VectorType::get({mTileSize, kTileSize}, f32Type);
+    auto vectorTypeB = mlir::VectorType::get({kTileSize, nTileSize}, f32Type);
+    auto vectorAccumulatorType =
+        mlir::VectorType::get({mTileSize, nTileSize}, f32Type);
 
     //===------------------------------------------------------------------===//
     // 2. Get Operands and Tensor Shapes
@@ -78,11 +80,19 @@ public:
                   mlir::Value n_iv, mlir::ValueRange nIterArgs) {
                 mlir::Value cInnerIntermediate = nIterArgs[0];
 
-                // Load the initial accumulator tile with zeros.
+                // Load the initial accumulator tile from the C tensor.
+                mlir::Value c0_f32 = builder.create<mlir::arith::ConstantOp>(
+                    loc, f32Type, builder.getF32FloatAttr(0.0));
+                auto identityMap =
+                    mlir::AffineMap::getMultiDimIdentityMap(2, builder.getContext());
+                mlir::ArrayAttr inBoundsAttr = builder.getBoolArrayAttr({true, true});
+
                 mlir::Value initialAccumulator =
-                    builder.create<mlir::arith::ConstantOp>(
-                        loc, vectorAccumulatorType,
-                        builder.getZeroAttr(vectorAccumulatorType));
+                    builder.create<mlir::vector::TransferReadOp>(
+                        loc, vectorAccumulatorType, cInnerIntermediate,
+                        mlir::ValueRange{m_iv, n_iv},
+                        mlir::AffineMapAttr::get(identityMap), c0_f32,
+                        /*mask=*/nullptr, inBoundsAttr);
 
                 auto innerLoop = builder.create<mlir::scf::ForOp>(
                     loopLoc, c0, kBound, kStep,
@@ -91,67 +101,46 @@ public:
                         mlir::Value k_iv, mlir::ValueRange kIterArgs) {
                       mlir::Value currentAcc = kIterArgs[0];
 
-                      // This lowering now uses vector.transfer_read to load a tile,
-                      // which is the canonical way to bridge from tensor to vector domain.
-                      // It still extracts element 0, so it is not yet functionally correct,
-                      // but it introduces the correct data loading operations.
-                      auto vectorTypeA = mlir::VectorType::get({1, kTileSize}, f32Type);
-                      auto vectorTypeB = mlir::VectorType::get({kTileSize, 1}, f32Type);
-                      auto flatVectorType = mlir::VectorType::get({kTileSize}, f32Type);
-
-                      mlir::Value c0_f32 = builder.create<mlir::arith::ConstantOp>(
-                          loc, f32Type, builder.getF32FloatAttr(0.0));
-
-                      auto identityMapAttr = mlir::AffineMapAttr::get(
-                          mlir::AffineMap::getMultiDimIdentityMap(2, builder.getContext()));
-
-                      // The in_bounds attribute is an array matching the rank of the tensor.
-                      mlir::ArrayAttr inBoundsAttr = builder.getBoolArrayAttr({true, true});
-
-                      auto vecA2D = builder.create<mlir::vector::TransferReadOp>(
+                      auto vecA = builder.create<mlir::vector::TransferReadOp>(
                           loc, vectorTypeA, matrixA, mlir::ValueRange{m_iv, k_iv},
-                          identityMapAttr, c0_f32, /*mask=*/nullptr,
-                          inBoundsAttr);
+                          mlir::AffineMapAttr::get(identityMap), c0_f32,
+                          /*mask=*/nullptr, inBoundsAttr);
 
-                      auto vecB2D = builder.create<mlir::vector::TransferReadOp>(
+                      auto vecB = builder.create<mlir::vector::TransferReadOp>(
                           loc, vectorTypeB, matrixB, mlir::ValueRange{k_iv, n_iv},
-                          identityMapAttr, c0_f32, /*mask=*/nullptr,
-                          inBoundsAttr);
+                          mlir::AffineMapAttr::get(identityMap), c0_f32,
+                          /*mask=*/nullptr, inBoundsAttr);
 
-                      auto vecA = builder.create<mlir::vector::ShapeCastOp>(
-                          loc, flatVectorType, vecA2D);
-                      auto vecB = builder.create<mlir::vector::ShapeCastOp>(
-                          loc, flatVectorType, vecB2D);
+                      // Perform the matrix multiplication on the tiles using vector.contract.
+                      mlir::AffineMap mapA = mlir::AffineMap::get(3, 0, {builder.getAffineDimExpr(0), builder.getAffineDimExpr(2)}, builder.getContext());
+                      mlir::AffineMap mapB = mlir::AffineMap::get(3, 0, {builder.getAffineDimExpr(2), builder.getAffineDimExpr(1)}, builder.getContext());
+                      mlir::AffineMap mapC = mlir::AffineMap::get(3, 0, {builder.getAffineDimExpr(0), builder.getAffineDimExpr(1)}, builder.getContext());
 
-                      mlir::Value c0_idx = builder.create<mlir::arith::ConstantIndexOp>(loc, 0);
-                      mlir::Value elemA =
-                          builder.create<mlir::vector::ExtractOp>(loc, vecA, c0_idx);
-                      mlir::Value elemB =
-                          builder.create<mlir::vector::ExtractOp>(loc, vecB, c0_idx);
-
-                      // Call the amdgpu.mfma intrinsic.
-                      auto mfmaResult = builder.create<mlir::amdgpu::MFMAOp>(
-                          loopLoc,
-                          /*destD=*/vectorAccumulatorType,
-                          /*m=*/builder.getI32IntegerAttr(mTileSize),
-                          /*n=*/builder.getI32IntegerAttr(nTileSize),
-                          /*k=*/builder.getI32IntegerAttr(kTileSize),
-                          /*blocks=*/builder.getI32IntegerAttr(1),
-                          /*sourceA=*/elemA,
-                          /*sourceB=*/elemB,
-                          /*destC=*/currentAcc);
+                      auto iteratorTypes = builder.getArrayAttr({
+                          mlir::vector::IteratorTypeAttr::get(builder.getContext(), mlir::vector::IteratorType::parallel),
+                          mlir::vector::IteratorTypeAttr::get(builder.getContext(), mlir::vector::IteratorType::parallel),
+                          mlir::vector::IteratorTypeAttr::get(builder.getContext(), mlir::vector::IteratorType::reduction)
+                      });
+                      auto contractResult = builder.create<mlir::vector::ContractionOp>(
+                          loopLoc, vecA, vecB, currentAcc,
+                          builder.getAffineMapArrayAttr({mapA, mapB, mapC}),
+                          iteratorTypes);
 
                       builder.create<mlir::scf::YieldOp>(loopLoc,
-                                                        mfmaResult.getDestD());
+                                                        contractResult.getResult());
                     });
                 mlir::Value finalAcc = innerLoop.getResult(0);
 
-                // Storing the vector<16xf32> result requires a permutation map
-                // which is too complex for this stage. For now, to ensure the
-                // MFMA operation itself is correct, we yield the original tensor.
-                // This will produce a functionally incorrect result but should pass
-                // verification of the MFMA op.
-                builder.create<mlir::scf::YieldOp>(loopLoc, cInnerIntermediate);
+                // Store the final accumulated vector back into the C tensor.
+                auto writeOp =
+                    builder.create<mlir::vector::TransferWriteOp>(
+                        loc, finalAcc, cInnerIntermediate,
+                        mlir::ValueRange{m_iv, n_iv},
+                        mlir::AffineMapAttr::get(identityMap),
+                        /*mask=*/nullptr, inBoundsAttr);
+                mlir::Value updatedC = writeOp.getResult();
+
+                builder.create<mlir::scf::YieldOp>(loopLoc, updatedC);
               });
           builder.create<mlir::scf::YieldOp>(loopLoc, middleLoop.getResult(0));
         });
@@ -168,7 +157,7 @@ struct LowerRockToGPUPass
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(LowerRockToGPUPass)
 
   void getDependentDialects(mlir::DialectRegistry &registry) const override {
-    registry.insert<mlir::amdgpu::AMDGPUDialect, mlir::scf::SCFDialect,
+    registry.insert<mlir::scf::SCFDialect,
                     mlir::arith::ArithDialect, mlir::vector::VectorDialect,
                     mlir::tensor::TensorDialect>();
   }
@@ -176,7 +165,7 @@ struct LowerRockToGPUPass
   void runOnOperation() override {
     mlir::ConversionTarget target(getContext());
 
-    target.addLegalDialect<mlir::amdgpu::AMDGPUDialect, mlir::scf::SCFDialect,
+    target.addLegalDialect<mlir::scf::SCFDialect,
                            mlir::arith::ArithDialect, mlir::vector::VectorDialect,
                            mlir::tensor::TensorDialect>();
 
